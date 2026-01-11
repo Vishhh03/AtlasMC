@@ -1,0 +1,14 @@
+name: ProjectAtlas
+version: '${project.version}'
+main: com.projectatlas.AtlasPlugin
+api-version: '1.21'
+authors: [Antigravity]
+description: A multiplayer-first RPG systems plugin.
+commands:
+  atlas:
+    description: Main command for Project Atlas
+    usage: /atlas <subcommand>
+permissions:
+  atlas.admin:
+    description: Allows administrative control over Atlas systems
+    default: op

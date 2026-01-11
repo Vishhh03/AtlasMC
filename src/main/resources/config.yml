@@ -1,0 +1,8 @@
+# Project Atlas Configuration
+economy:
+  starting-balance: 100.0
+
+events:
+  supply-drop:
+    interval-minutes: 30
+    radius: 500
