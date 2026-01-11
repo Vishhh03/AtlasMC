@@ -1,5 +1,5 @@
 name: ProjectAtlas
-version: '${project.version}'
+version: '${version}'
 main: com.projectatlas.AtlasPlugin
 api-version: '1.21'
 authors: [Antigravity]

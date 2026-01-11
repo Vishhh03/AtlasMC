@@ -69,7 +69,7 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
         world.spawn(baseLoc.clone().add(0.0, 0.0, 2.0), org.bukkit.entity.Skeleton::class.java).apply { customName(Component.text("Loot Sniper")); isCustomNameVisible = true }
 
         // 4. Broadcast (Vague)
-        val biome = targetBlock.biome.name.lowercase().replace("_", " ")
+        val biome = targetBlock.biome.toString().lowercase().replace("_", " ")
         plugin.server.broadcast(Component.text("--------------------------------", NamedTextColor.GOLD))
         plugin.server.broadcast(Component.text(">> SUPPLY DROP DETECTED <<", NamedTextColor.RED))
         plugin.server.broadcast(Component.text("Location: Somewhere in a $biome...", NamedTextColor.YELLOW))
