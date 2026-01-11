@@ -54,6 +54,7 @@ The world is meant to:
 
 ### 3.2 Hard Constraints
 - No client-side UI beyond inventories
+- **Inventory GUIs (Chest Menus)** are the primary interface.
 - No high-frequency combat math
 - No true physics simulation
 - All mechanics must be low-tick, state-driven

@@ -11,14 +11,24 @@ import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 
+import com.projectatlas.classes.ClassManager
+import org.bukkit.event.player.PlayerRespawnEvent
+
 class AtlasListener(
     private val identityManager: IdentityManager,
-    private val cityManager: CityManager
+    private val cityManager: CityManager,
+    private val classManager: ClassManager
 ) : Listener {
 
     @EventHandler
     fun onJoin(event: PlayerJoinEvent) {
         identityManager.createOrLoadProfile(event.player)
+        classManager.applyClassEffects(event.player)
+    }
+
+    @EventHandler
+    fun onRespawn(event: PlayerRespawnEvent) {
+        classManager.applyClassEffects(event.player)
     }
 
     @EventHandler

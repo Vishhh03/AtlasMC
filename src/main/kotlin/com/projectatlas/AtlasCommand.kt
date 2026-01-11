@@ -11,10 +11,14 @@ import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
 
+import com.projectatlas.gui.GuiManager
+
 class AtlasCommand(
     private val identityManager: IdentityManager,
     private val economyManager: EconomyManager,
-    private val cityManager: CityManager
+    private val cityManager: CityManager,
+    private val classManager: ClassManager,
+    private val guiManager: GuiManager
 ) : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -24,7 +28,7 @@ class AtlasCommand(
         }
 
         if (args.isEmpty()) {
-            sendHelp(sender)
+            guiManager.openMainMenu(sender)
             return true
         }
 
@@ -34,6 +38,7 @@ class AtlasCommand(
             "pay" -> handlePay(sender, args)
             "city" -> handleCity(sender, args)
             "event" -> handleEvent(sender, args)
+            "class" -> handleClass(sender, args)
             else -> sendHelp(sender)
         }
         return true
@@ -150,8 +155,57 @@ class AtlasCommand(
                     val mayorName = player.server.getOfflinePlayer(city.mayor).name ?: "Unknown"
                     player.sendMessage(Component.text("Territory: ${city.name} (Mayor: $mayorName)", NamedTextColor.AQUA))
                     player.sendMessage(Component.text("Members: ${city.members.size}", NamedTextColor.GRAY))
+                    player.sendMessage(Component.text("Tax: ${city.taxRate}% | Treasury: ${city.treasury}", NamedTextColor.GOLD))
                 } else {
                     player.sendMessage(Component.text("Wilderness", NamedTextColor.GRAY))
+                }
+            }
+            "tax" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas city tax <percentage>", NamedTextColor.RED))
+                    return
+                }
+                
+                val profile = identityManager.getPlayer(player.uniqueId)
+                if (profile?.cityId == null) return
+                val city = cityManager.getCity(profile.cityId!!) ?: return
+                
+                if (city.mayor != player.uniqueId) {
+                    player.sendMessage(Component.text("Only mayor can set tax.", NamedTextColor.RED))
+                    return
+                }
+                
+                val rate = args[2].toDoubleOrNull()
+                if (rate == null || rate < 0 || rate > 100) {
+                    player.sendMessage(Component.text("Invalid percentage (0-100).", NamedTextColor.RED))
+                    return
+                }
+                
+                cityManager.setTaxRate(city.id, rate)
+                player.sendMessage(Component.text("Tax rate set to $rate%", NamedTextColor.GREEN))
+            }
+            "deposit" -> {
+                 if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas city deposit <amount>", NamedTextColor.RED))
+                    return
+                }
+                val amount = args[2].toDoubleOrNull()
+                if (amount == null || amount <= 0) {
+                     player.sendMessage(Component.text("Invalid amount.", NamedTextColor.RED))
+                     return
+                }
+                
+                val profile = identityManager.getPlayer(player.uniqueId) ?: return
+                if (profile.cityId == null) {
+                    player.sendMessage(Component.text("You are not in a city.", NamedTextColor.RED))
+                    return
+                }
+
+                if (economyManager.withdraw(player.uniqueId, amount)) {
+                    cityManager.depositToTreasury(profile.cityId!!, amount)
+                    player.sendMessage(Component.text("Deposited $amount to treasury.", NamedTextColor.GREEN))
+                } else {
+                    player.sendMessage(Component.text("Insufficient funds.", NamedTextColor.RED))
                 }
             }
         }
@@ -179,9 +233,34 @@ class AtlasCommand(
         player.sendMessage(Component.text("/atlas profile - View stats", NamedTextColor.YELLOW))
         player.sendMessage(Component.text("/atlas bal - View balance", NamedTextColor.YELLOW))
         player.sendMessage(Component.text("/atlas pay <player> <amount>", NamedTextColor.YELLOW))
-        player.sendMessage(Component.text("/atlas city <create|claim|invite|join|kick|leave|info>", NamedTextColor.YELLOW))
+        player.sendMessage(Component.text("/atlas city <create|claim|invite|join|kick|leave|info|tax|deposit>", NamedTextColor.YELLOW))
+        player.sendMessage(Component.text("/atlas class choose <name> - Pick a class", NamedTextColor.YELLOW))
         if (player.hasPermission("atlas.admin")) {
             player.sendMessage(Component.text("/atlas event start - Force event", NamedTextColor.RED))
+        }
+    }
+
+    private fun handleClass(player: Player, args: Array<out String>) {
+        if (args.size < 3 || !args[1].equals("choose", true)) {
+            player.sendMessage(Component.text("Usage: /atlas class choose <name>", NamedTextColor.RED))
+            val classes = classManager.getAvailableClasses().joinToString(", ")
+            player.sendMessage(Component.text("Available: $classes", NamedTextColor.GRAY))
+            return
+        }
+        
+        val className = args[2]
+        // Normalize name case (simple hack)
+        val properName = classManager.getAvailableClasses().find { it.equals(className, true) }
+        
+        if (properName == null) {
+            player.sendMessage(Component.text("Invalid class. Choices: ${classManager.getAvailableClasses()}", NamedTextColor.RED))
+            return
+        }
+        
+        if (classManager.setClass(player, properName)) {
+             player.sendMessage(Component.text("You are now a $properName!", NamedTextColor.GREEN))
+        } else {
+             player.sendMessage(Component.text("Failed to set class.", NamedTextColor.RED))
         }
     }
 
@@ -194,7 +273,7 @@ class AtlasCommand(
         
         if (args[0].equals("city", true)) {
             if (args.size == 2) {
-                return listOf("create", "claim", "invite", "join", "kick", "leave", "info").filter { it.startsWith(args[1], true) }
+                return listOf("create", "claim", "invite", "join", "kick", "leave", "info", "tax", "deposit").filter { it.startsWith(args[1], true) }
             }
             // City Invite/Kick autocompletion
             if (args.size == 3 && (args[1].equals("invite", true) || args[1].equals("kick", true))) {

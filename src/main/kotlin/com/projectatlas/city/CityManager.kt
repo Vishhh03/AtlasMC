@@ -95,6 +95,20 @@ class CityManager(private val plugin: AtlasPlugin) {
         // Notify members logic could go here
     }
 
+
+
+    fun depositToTreasury(cityId: String, amount: Double) {
+        val city = cities[cityId] ?: return
+        city.treasury += amount
+        saveCity(city)
+    }
+
+    fun setTaxRate(cityId: String, rate: Double) {
+        val city = cities[cityId] ?: return
+        city.taxRate = rate.coerceIn(0.0, 100.0)
+        saveCity(city)
+    }
+
     fun kickPlayer(mayor: Player, targetName: String) {
         val profile = plugin.identityManager.getPlayer(mayor.uniqueId) ?: return
         val cityId = profile.cityId ?: return

@@ -12,3 +12,9 @@ permissions:
   atlas.admin:
     description: Allows administrative control over Atlas systems
     default: op
+  atlas.player:
+    description: Default player permissions
+    default: true
+  atlas.mayor:
+    description: Permissions for mayors
+    default: true

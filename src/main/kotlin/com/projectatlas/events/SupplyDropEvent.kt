@@ -17,12 +17,14 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
         val centerZ = 0
         val range = plugin.configManager.supplyDropRadius
 
+        // 1. Find Location
         val x = centerX + (random.nextInt(range * 2) - range)
         val z = centerZ + (random.nextInt(range * 2) - range)
         
         val highestBlock = world.getHighestBlockAt(x, z)
         val targetBlock = highestBlock.location.add(0.0, 1.0, 0.0).block
         
+        // 2. Spawn Loot Chest
         targetBlock.type = Material.CHEST
         val chest = targetBlock.state as? Chest ?: return
         
@@ -41,9 +43,19 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
             }
         }
         
+        // 3. Spawn Guards (PvE Challenge)
+        // Spawning 3 Zombies and 1 Skeleton around the chest
+        val loc = targetBlock.location.add(0.5, 0.0, 0.5)
+        world.spawn(loc, org.bukkit.entity.Zombie::class.java).apply { customName(Component.text("Loot Guardian")); isCustomNameVisible = true }
+        world.spawn(loc, org.bukkit.entity.Zombie::class.java).apply { customName(Component.text("Loot Guardian")); isCustomNameVisible = true }
+        world.spawn(loc, org.bukkit.entity.Skeleton::class.java).apply { customName(Component.text("Loot Sniper")); isCustomNameVisible = true }
+
+        // 4. Broadcast (Vague)
+        val biome = targetBlock.biome.name.lowercase().replace("_", " ")
         plugin.server.broadcast(Component.text("--------------------------------", NamedTextColor.GOLD))
         plugin.server.broadcast(Component.text(">> SUPPLY DROP DETECTED <<", NamedTextColor.RED))
-        plugin.server.broadcast(Component.text("Coordinates: X: $x, Z: $z", NamedTextColor.YELLOW))
+        plugin.server.broadcast(Component.text("Location: Somewhere in a $biome...", NamedTextColor.YELLOW))
+        plugin.server.broadcast(Component.text("Hint: ${x - (x % 100)}, ${z - (z % 100)} (Approx)", NamedTextColor.GRAY))
         plugin.server.broadcast(Component.text("--------------------------------", NamedTextColor.GOLD))
     }
 }

@@ -8,6 +8,10 @@ import org.bukkit.plugin.java.JavaPlugin
 
 import com.projectatlas.config.ConfigManager
 
+import com.projectatlas.classes.ClassManager
+
+import com.projectatlas.gui.GuiManager
+
 class AtlasPlugin : JavaPlugin() {
     
     lateinit var configManager: ConfigManager
@@ -15,6 +19,8 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var economyManager: EconomyManager
     lateinit var cityManager: CityManager
     lateinit var eventManager: EventManager
+    lateinit var classManager: ClassManager
+    lateinit var guiManager: GuiManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -28,17 +34,23 @@ class AtlasPlugin : JavaPlugin() {
         economyManager = EconomyManager(identityManager)
         cityManager = CityManager(this)
         eventManager = EventManager(this)
+        classManager = ClassManager(this)
+        guiManager = GuiManager(this)
         
         // Register Events
-        server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager), this)
+        server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, classManager), this)
+        server.pluginManager.registerEvents(guiManager, this)
         
         // Register Commands
-        getCommand("atlas")?.setExecutor(AtlasCommand(identityManager, economyManager, cityManager))
+        getCommand("atlas")?.setExecutor(AtlasCommand(identityManager, economyManager, cityManager, classManager, guiManager))
         
         // Start Scheduler
         eventManager.startScheduler()
         
-        logger.info("Project Atlas has fully loaded v1.0 MVP.")
+        // Start City Buffs (runs every 10 seconds = 200 ticks)
+        server.scheduler.runTaskTimer(this, com.projectatlas.city.CityBuffTask(this), 200L, 200L)
+        
+        logger.info("Project Atlas has fully loaded v1.1 Phase 2.")
     }
 
     override fun onDisable() {
