@@ -141,6 +141,17 @@ Leadership creates responsibility, not immunity.
 - **Tyranny:** Revolts, emigration, legitimacy decay
 - **Inactivity:** Automatic decay & succession
 
+### 6.4 City Infrastructure & Customization
+Cities are not just claims; they are functional engines.
+- **City Core**: A central nexus block that defines the city's heart. If destroyed during a siege, the city falls.
+- **Infrastructure Modules** (Fallout-style base building):
+  - **Defensive**: Arrow Towers (buffs damage), Shield Generators (temp resistance), Reinforced Walls.
+  - **Industrial**: Auto-Smelteries (passive processing), Generators (upkeep reduction).
+  - **Social**: Clinics (Regen II), Academies (XP boost), Markets (Trade tax).
+- **Customization**:
+  - Modular building nodes (buy a "Turret Node", place it to spawn a defensive mob).
+  - Upgradable tiers for all structures.
+
 ---
 
 ## 7. ECONOMY & TRADE SYSTEM
@@ -231,6 +242,14 @@ Failure has permanent consequences.
 
 The world ages.
 
+### 10.3 Siege System (Enhanced Raids)
+- **Targeted Raids**: Raids are not random; they target specific Cities based on Treasury size or Threat level.
+- **Siege Mechanics**:
+  - Waves of custom mobs (Breachers, Snipers, Tanks).
+  - Goal: Destroy the **City Core** or kill the Mayor.
+  - **Base Defense**: Players must build layouts that funnel enemies into killboxes (Tower Defense elements).
+  - **Consequence**: Loss of Treasury, downgrading of Infrastructure levels.
+
 ---
 
 ## 11. ENDGAME & LEGACY
@@ -283,10 +302,11 @@ Mitigation: Strict MVP gating
 - Combat roles
 - Survival pressure
 
-### Phase 3 – Full Vision
-- Politics
-- History
-- Endgame systems
+### Phase 3 – Warfare & Industry
+- **Infrastructure**: Buildable City Modules (Turrets, Generators).
+- **Siege Engine**: Targeted PvE Raids on cities.
+- **Politics**: Elections and Policies.
+- **Legacy**: History recording.
 
 ---
 
