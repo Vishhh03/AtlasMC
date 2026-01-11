@@ -11,10 +11,14 @@ class CityBuffTask(private val plugin: AtlasPlugin) : Runnable {
             val city = plugin.cityManager.getCityAt(chunk)
             
             if (city != null && city.members.contains(player.uniqueId)) {
-                // Player is in their own city - Apply buffs
+                // Player is in their own city - Apply Haste buff
                 player.addPotionEffect(PotionEffect(PotionEffectType.HASTE, 220, 0, false, false, true))
-                // Regen is powerful, maybe only if full hunger? For now, nice small perk.
-                player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 220, 0, false, false, true))
+                
+                // Only apply city Regen if player is NOT a Medic (Medics have infinite Regen from class)
+                val profile = plugin.identityManager.getPlayer(player.uniqueId)
+                if (profile?.playerClass != "Medic") {
+                    player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 220, 0, false, false, true))
+                }
             }
         }
     }

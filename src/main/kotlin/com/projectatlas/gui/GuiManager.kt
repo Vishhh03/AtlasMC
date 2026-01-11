@@ -42,20 +42,15 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
 
     @EventHandler
     fun onClick(event: InventoryClickEvent) {
-        val view = event.view
-        val title = view.title() // Note: This check is fragile in Paper, better to use Holders or Keys. 
-        // For MVP we will use simple Title checks or assume our GUIs don't overlap with standard mechanics heavily yet.
+        val item = event.currentItem ?: return
+        val meta = item.itemMeta ?: return
         
-        // Simple shim for MVP title check (Component to String is tricky)
-        // We will just cancel clicks if the inventory holder is null (custom GUI)
-        if (event.inventory.holder == null) {
-             event.isCancelled = true // Prevent taking items
-             
-             val player = event.whoClicked as Player
-             val item = event.currentItem ?: return
-             
-             handleMenuClick(player, item)
-        }
+        // Only handle clicks on items marked as Atlas GUI items
+        if (!meta.persistentDataContainer.has(menuKey, PersistentDataType.BYTE)) return
+        
+        event.isCancelled = true // Prevent taking items
+        val player = event.whoClicked as Player
+        handleMenuClick(player, item)
     }
 
     private fun handleMenuClick(player: Player, item: ItemStack) {
@@ -91,6 +86,8 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         val meta = item.itemMeta
         meta.displayName(Component.text(name, NamedTextColor.GOLD))
         meta.lore(lore.map { Component.text(it, NamedTextColor.GRAY) })
+        // Mark this item as an Atlas GUI item using Persistent Data
+        meta.persistentDataContainer.set(menuKey, PersistentDataType.BYTE, 1)
         item.itemMeta = meta
         return item
     }

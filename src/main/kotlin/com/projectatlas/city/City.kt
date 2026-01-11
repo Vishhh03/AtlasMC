@@ -6,7 +6,6 @@ data class City(
     val id: String = UUID.randomUUID().toString(),
     var name: String,
     var mayor: UUID,
-    var balance: Double = 0.0,
     val members: MutableList<UUID> = mutableListOf(),
     val claimedChunks: MutableList<String> = mutableListOf(), // format: "worldName:x,z"
     var treasury: Double = 0.0,

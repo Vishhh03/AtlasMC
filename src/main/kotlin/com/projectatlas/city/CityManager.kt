@@ -134,11 +134,19 @@ class CityManager(private val plugin: AtlasPlugin) {
         }
 
         city.removeMember(targetUuid)
-        plugin.identityManager.getPlayer(targetUuid)?.cityId = null // Update prompt if online, simplified for MVP
-        // If offline, IdentityManager load logic needs to handle sync or check on join. 
-        // For MVP, we presume online or simple data model access.
-        // Direct hack for MVP to ensure persistence if offline:
-        // Ideally we load their profile, modify, save.
+        
+        // Handle both online and offline players
+        val onlineProfile = plugin.identityManager.getPlayer(targetUuid)
+        if (onlineProfile != null) {
+            onlineProfile.cityId = null
+        } else {
+            // Player is offline - load their profile, modify, and save
+            val offlineProfile = plugin.identityManager.loadOfflineProfile(targetUuid)
+            if (offlineProfile != null) {
+                offlineProfile.cityId = null
+                plugin.identityManager.saveOfflineProfile(offlineProfile)
+            }
+        }
         
         saveCity(city)
         mayor.sendMessage("Kicked $targetName.")

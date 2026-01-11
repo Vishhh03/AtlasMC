@@ -32,7 +32,7 @@ class ClassManager(private val plugin: AtlasPlugin) {
         // Update Profile
         val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return false
         profile.playerClass = def.name
-        plugin.identityManager.saveProfile(profile)
+        plugin.identityManager.saveProfile(player.uniqueId)
 
         applyClassEffects(player)
         return true

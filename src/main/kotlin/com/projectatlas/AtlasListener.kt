@@ -13,6 +13,9 @@ import org.bukkit.event.player.PlayerQuitEvent
 
 import com.projectatlas.classes.ClassManager
 import org.bukkit.event.player.PlayerRespawnEvent
+import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.EventPriority
+import org.bukkit.block.Container
 
 class AtlasListener(
     private val identityManager: IdentityManager,
@@ -57,6 +60,22 @@ class AtlasListener(
         if (!city.members.contains(player.uniqueId) && !player.hasPermission("atlas.admin")) {
             event.isCancelled = true
             player.sendMessage(Component.text("You cannot build in the territory of ${city.name}!", NamedTextColor.RED))
+        }
+    }
+    
+    // Prevent container access (chests, furnaces, etc.) in city territory
+    @EventHandler(priority = EventPriority.HIGH)
+    fun onInteract(event: PlayerInteractEvent) {
+        val block = event.clickedBlock ?: return
+        val city = cityManager.getCityAt(block.chunk) ?: return
+        val player = event.player
+        
+        // Only protect container interactions
+        if (block.state !is Container) return
+        
+        if (!city.members.contains(player.uniqueId) && !player.hasPermission("atlas.admin")) {
+            event.isCancelled = true
+            player.sendMessage(Component.text("You cannot access containers in ${city.name}!", NamedTextColor.RED))
         }
     }
 }

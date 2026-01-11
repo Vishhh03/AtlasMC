@@ -17,12 +17,31 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
         val centerZ = 0
         val range = plugin.configManager.supplyDropRadius
 
-        // 1. Find Location
-        val x = centerX + (random.nextInt(range * 2) - range)
-        val z = centerZ + (random.nextInt(range * 2) - range)
+        // 1. Find Location (avoid claimed city territory)
+        var x: Int
+        var z: Int
+        var targetBlock: org.bukkit.block.Block
+        var attempts = 0
+        val maxAttempts = 10
         
-        val highestBlock = world.getHighestBlockAt(x, z)
-        val targetBlock = highestBlock.location.add(0.0, 1.0, 0.0).block
+        do {
+            x = centerX + (random.nextInt(range * 2) - range)
+            z = centerZ + (random.nextInt(range * 2) - range)
+            val highestBlock = world.getHighestBlockAt(x, z)
+            targetBlock = highestBlock.location.add(0.0, 1.0, 0.0).block
+            attempts++
+            
+            // Check if this chunk is claimed by a city
+            val claimedCity = plugin.cityManager.getCityAt(targetBlock.chunk)
+            if (claimedCity == null) break // Found wilderness, use this location
+            
+        } while (attempts < maxAttempts)
+        
+        // If all attempts landed in city territory, abort this supply drop
+        if (plugin.cityManager.getCityAt(targetBlock.chunk) != null) {
+            plugin.logger.info("Supply drop aborted: could not find wilderness location after $maxAttempts attempts")
+            return
+        }
         
         // 2. Spawn Loot Chest
         targetBlock.type = Material.CHEST
@@ -43,12 +62,11 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
             }
         }
         
-        // 3. Spawn Guards (PvE Challenge)
-        // Spawning 3 Zombies and 1 Skeleton around the chest
-        val loc = targetBlock.location.add(0.5, 0.0, 0.5)
-        world.spawn(loc, org.bukkit.entity.Zombie::class.java).apply { customName(Component.text("Loot Guardian")); isCustomNameVisible = true }
-        world.spawn(loc, org.bukkit.entity.Zombie::class.java).apply { customName(Component.text("Loot Guardian")); isCustomNameVisible = true }
-        world.spawn(loc, org.bukkit.entity.Skeleton::class.java).apply { customName(Component.text("Loot Sniper")); isCustomNameVisible = true }
+        // 3. Spawn Guards (PvE Challenge) - spread out around the chest
+        val baseLoc = targetBlock.location.add(0.5, 0.0, 0.5)
+        world.spawn(baseLoc.clone().add(2.0, 0.0, 0.0), org.bukkit.entity.Zombie::class.java).apply { customName(Component.text("Loot Guardian")); isCustomNameVisible = true }
+        world.spawn(baseLoc.clone().add(-2.0, 0.0, 0.0), org.bukkit.entity.Zombie::class.java).apply { customName(Component.text("Loot Guardian")); isCustomNameVisible = true }
+        world.spawn(baseLoc.clone().add(0.0, 0.0, 2.0), org.bukkit.entity.Skeleton::class.java).apply { customName(Component.text("Loot Sniper")); isCustomNameVisible = true }
 
         // 4. Broadcast (Vague)
         val biome = targetBlock.biome.name.lowercase().replace("_", " ")

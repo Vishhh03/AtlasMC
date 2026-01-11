@@ -34,10 +34,10 @@ class IdentityManager(private val plugin: AtlasPlugin) {
                 }
             } catch (e: Exception) {
                 plugin.logger.severe("Failed to load data for ${player.name}: ${e.message}")
-                AtlasPlayer(player.uniqueId, player.name)
+                AtlasPlayer(player.uniqueId, player.name, balance = plugin.configManager.startingBalance)
             }
         } else {
-            AtlasPlayer(player.uniqueId, player.name)
+            AtlasPlayer(player.uniqueId, player.name, balance = plugin.configManager.startingBalance)
         }
 
         players[player.uniqueId] = profile
@@ -68,5 +68,32 @@ class IdentityManager(private val plugin: AtlasPlugin) {
         val profile = players[uuid] ?: return
         profile.reputation += amount
         // Logic for bounds or effects can go here
+    }
+    
+    // Load an offline player's profile from disk (for operations like kick)
+    fun loadOfflineProfile(uuid: UUID): AtlasPlayer? {
+        // First check if they're online
+        players[uuid]?.let { return it }
+        
+        // Otherwise load from disk
+        val file = File(dataFolder, "$uuid.json")
+        return if (file.exists()) {
+            try {
+                gson.fromJson(file.readText(), AtlasPlayer::class.java)
+            } catch (e: Exception) {
+                plugin.logger.severe("Failed to load offline data for $uuid: ${e.message}")
+                null
+            }
+        } else null
+    }
+    
+    // Save an offline player's profile directly to disk
+    fun saveOfflineProfile(profile: AtlasPlayer) {
+        val file = File(dataFolder, "${profile.uuid}.json")
+        try {
+            file.writeText(gson.toJson(profile))
+        } catch (e: Exception) {
+            plugin.logger.severe("Failed to save offline data for ${profile.uuid}: ${e.message}")
+        }
     }
 }

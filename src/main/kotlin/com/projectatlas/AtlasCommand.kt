@@ -12,6 +12,7 @@ import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
 
 import com.projectatlas.gui.GuiManager
+import com.projectatlas.classes.ClassManager
 
 class AtlasCommand(
     private val identityManager: IdentityManager,
@@ -268,7 +269,7 @@ class AtlasCommand(
 
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String>? {
         if (args.size == 1) {
-            return listOf("profile", "bal", "pay", "city", "event").filter { it.startsWith(args[0], true) }
+            return listOf("profile", "bal", "pay", "city", "event", "class").filter { it.startsWith(args[0], true) }
         }
         
         if (args[0].equals("city", true)) {
@@ -287,6 +288,15 @@ class AtlasCommand(
         
         if (args[0].equals("event", true) && args.size == 2 && sender.hasPermission("atlas.admin")) {
             return listOf("start").filter { it.startsWith(args[1], true) }
+        }
+        
+        if (args[0].equals("class", true)) {
+            if (args.size == 2) {
+                return listOf("choose").filter { it.startsWith(args[1], true) }
+            }
+            if (args.size == 3 && args[1].equals("choose", true)) {
+                return classManager.getAvailableClasses().filter { it.startsWith(args[2], true) }
+            }
         }
 
         return emptyList()
