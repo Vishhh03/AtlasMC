@@ -10,5 +10,6 @@ data class AtlasPlayer(
     var balance: Double = 100.0,
     var cityId: String? = null,
     var playerClass: String? = null,
+    var lastClassChange: Long = 0L, // Epoch millis - cooldown tracker
     val titles: MutableList<String> = mutableListOf()
 )

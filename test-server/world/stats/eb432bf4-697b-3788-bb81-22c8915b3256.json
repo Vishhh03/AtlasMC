@@ -1,29 +1,38 @@
 {
   "stats": {
-    "minecraft:mined": {
-      "minecraft:short_grass": 21,
-      "minecraft:tall_grass": 4
-    },
     "minecraft:custom": {
-      "minecraft:time_since_rest": 64,
-      "minecraft:walk_one_cm": 1914,
-      "minecraft:leave_game": 1,
-      "minecraft:damage_taken": 250,
-      "minecraft:play_time": 4786,
+      "minecraft:time_since_rest": 21519,
+      "minecraft:walk_one_cm": 22995,
+      "minecraft:leave_game": 2,
+      "minecraft:walk_under_water_one_cm": 1804,
+      "minecraft:damage_taken": 705,
+      "minecraft:play_time": 26241,
       "minecraft:damage_dealt": 172,
-      "minecraft:jump": 48,
-      "minecraft:time_since_death": 0,
-      "minecraft:sprint_one_cm": 4975,
-      "minecraft:fall_one_cm": 1125,
-      "minecraft:total_world_time": 4786,
-      "minecraft:fly_one_cm": 10012,
+      "minecraft:jump": 243,
+      "minecraft:time_since_death": 21436,
+      "minecraft:sprint_one_cm": 25614,
+      "minecraft:open_chest": 1,
+      "minecraft:fall_one_cm": 8300,
+      "minecraft:swim_one_cm": 513,
+      "minecraft:total_world_time": 26241,
+      "minecraft:fly_one_cm": 55420,
+      "minecraft:crouch_one_cm": 157,
+      "minecraft:walk_on_water_one_cm": 7653,
+      "minecraft:sneak_time": 34,
       "minecraft:deaths": 1
     },
     "minecraft:killed_by": {
       "minecraft:zombie": 1
     },
+    "minecraft:mined": {
+      "minecraft:short_grass": 21,
+      "minecraft:tall_grass": 4
+    },
     "minecraft:picked_up": {
       "minecraft:wheat_seeds": 2
+    },
+    "minecraft:used": {
+      "minecraft:golden_apple": 1
     }
   },
   "DataVersion": 4671

@@ -1,6 +1,7 @@
 package com.projectatlas
 
 import com.projectatlas.city.CityManager
+import com.projectatlas.gui.GuiManager
 import com.projectatlas.identity.IdentityManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -10,6 +11,7 @@ import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.event.player.PlayerSwapHandItemsEvent
 
 import com.projectatlas.classes.ClassManager
 import org.bukkit.event.player.PlayerRespawnEvent
@@ -20,7 +22,8 @@ import org.bukkit.block.Container
 class AtlasListener(
     private val identityManager: IdentityManager,
     private val cityManager: CityManager,
-    private val classManager: ClassManager
+    private val classManager: ClassManager,
+    private val guiManager: GuiManager
 ) : Listener {
 
     @EventHandler
@@ -38,6 +41,13 @@ class AtlasListener(
     fun onQuit(event: PlayerQuitEvent) {
         identityManager.unloadProfile(event.player.uniqueId)
     }
+    
+    // HOTKEY: Swap Hand (F key) opens Atlas Menu
+    @EventHandler
+    fun onSwapHand(event: PlayerSwapHandItemsEvent) {
+        event.isCancelled = true
+        guiManager.openMainMenu(event.player)
+    }
 
     // Protection Logic
     @EventHandler
@@ -45,7 +55,6 @@ class AtlasListener(
         val city = cityManager.getCityAt(event.block.chunk) ?: return
         val player = event.player
         
-        // If city exists, check if player is a member
         if (!city.members.contains(player.uniqueId) && !player.hasPermission("atlas.admin")) {
             event.isCancelled = true
             player.sendMessage(Component.text("You cannot build in the territory of ${city.name}!", NamedTextColor.RED))
@@ -63,14 +72,12 @@ class AtlasListener(
         }
     }
     
-    // Prevent container access (chests, furnaces, etc.) in city territory
     @EventHandler(priority = EventPriority.HIGH)
     fun onInteract(event: PlayerInteractEvent) {
         val block = event.clickedBlock ?: return
         val city = cityManager.getCityAt(block.chunk) ?: return
         val player = event.player
         
-        // Only protect container interactions
         if (block.state !is Container) return
         
         if (!city.members.contains(player.uniqueId) && !player.hasPermission("atlas.admin")) {

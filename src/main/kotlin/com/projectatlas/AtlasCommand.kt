@@ -90,7 +90,8 @@ class AtlasCommand(
 
     private fun handleCity(player: Player, args: Array<out String>) {
         if (args.size < 2) {
-            player.sendMessage(Component.text("Usage: /atlas city <create|claim|invite|join|kick|leave|info>", NamedTextColor.RED))
+            // Open City GUI instead of showing usage error
+            guiManager.openCityMenu(player)
             return
         }
 
@@ -101,11 +102,20 @@ class AtlasCommand(
                     return
                 }
                 val name = args[2]
+                val profile = identityManager.getPlayer(player.uniqueId) ?: return
+                
+                // Check cost
+                val cost = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java).configManager.cityCreationCost
+                if (profile.balance < cost) {
+                    player.sendMessage(Component.text("City creation costs $cost gold. You have ${profile.balance}.", NamedTextColor.RED))
+                    return
+                }
+                
                 val city = cityManager.createCity(name, player)
                 if (city != null) {
-                    val profile = identityManager.getPlayer(player.uniqueId)
-                    profile?.cityId = city.id
-                    player.sendMessage(Component.text("City $name created!", NamedTextColor.GREEN))
+                    profile.balance -= cost
+                    profile.cityId = city.id
+                    player.sendMessage(Component.text("City $name created! (-$cost gold)", NamedTextColor.GREEN))
                 } else {
                     player.sendMessage(Component.text("City creation failed (name taken?).", NamedTextColor.RED))
                 }
@@ -122,9 +132,22 @@ class AtlasCommand(
                      player.sendMessage(Component.text("Only the mayor can claim chunks.", NamedTextColor.RED))
                      return
                 }
+                
+                // Calculate chunk cost (scales with territory size)
+                val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+                val cost = plugin.configManager.getChunkClaimCost(city.claimedChunks.size)
+                
+                if (city.treasury < cost) {
+                    player.sendMessage(Component.text("Chunk claim costs ${"%.0f".format(cost)}g from treasury. Treasury has ${city.treasury}g.", NamedTextColor.RED))
+                    return
+                }
 
                 if (cityManager.claimChunk(city.id, player.location.chunk)) {
-                    player.sendMessage(Component.text("Territory claimed!", NamedTextColor.GREEN))
+                    city.treasury -= cost
+                    cityManager.saveCity(city)
+                    player.sendMessage(Component.text("Territory claimed! (-${"%.0f".format(cost)}g from treasury)", NamedTextColor.GREEN))
+                    val nextCost = plugin.configManager.getChunkClaimCost(city.claimedChunks.size)
+                    player.sendMessage(Component.text("Next chunk will cost ${"%.0f".format(nextCost)}g", NamedTextColor.GRAY))
                 } else {
                     player.sendMessage(Component.text("Claim failed (already owned?).", NamedTextColor.RED))
                 }

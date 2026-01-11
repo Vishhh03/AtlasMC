@@ -187,7 +187,7 @@ class CityManager(private val plugin: AtlasPlugin) {
         }
     }
 
-    private fun saveCity(city: City) {
+    fun saveCity(city: City) {
         val file = File(dataFolder, "${city.id}.json")
         try {
             file.writeText(gson.toJson(city))

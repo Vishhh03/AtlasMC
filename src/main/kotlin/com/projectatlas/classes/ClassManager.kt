@@ -10,10 +10,14 @@ import org.bukkit.potion.PotionEffectType
 
 class ClassManager(private val plugin: AtlasPlugin) {
 
-    // Definition of available classes
+    companion object {
+        const val CLASS_CHANGE_COOLDOWN_MS = 24 * 60 * 60 * 1000L // 24 hours in milliseconds
+        const val CLASS_CHANGE_COST = 500.0 // Cost to change class
+    }
+
     private val classes = mapOf(
         "Vanguard" to ClassDefinition("Vanguard", "Tanky warrior", 30.0, 0.2f),
-        "Scout" to ClassDefinition("Scout", "Fast explorer", 20.0, 0.3f), // Default speed is ~0.2
+        "Scout" to ClassDefinition("Scout", "Fast explorer", 20.0, 0.3f),
         "Medic" to ClassDefinition("Medic", "Regenerates health", 20.0, 0.2f)
     )
 
@@ -25,13 +29,78 @@ class ClassManager(private val plugin: AtlasPlugin) {
     )
 
     fun getAvailableClasses(): List<String> = classes.keys.toList()
+    
+    fun getClassChangeCost(): Double = CLASS_CHANGE_COST
+    fun getCooldownHours(): Int = (CLASS_CHANGE_COOLDOWN_MS / (60 * 60 * 1000)).toInt()
 
-    fun setClass(player: Player, className: String): Boolean {
+    /**
+     * Check if player can change class (cooldown + already has class)
+     */
+    fun canChangeClass(player: Player): ClassChangeResult {
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return ClassChangeResult.Error("Profile not found")
+        
+        // First class is free!
+        if (profile.playerClass == null) {
+            return ClassChangeResult.Success
+        }
+        
+        // Check cooldown
+        val now = System.currentTimeMillis()
+        val timeSinceChange = now - profile.lastClassChange
+        if (timeSinceChange < CLASS_CHANGE_COOLDOWN_MS) {
+            val remainingMs = CLASS_CHANGE_COOLDOWN_MS - timeSinceChange
+            val remainingHours = (remainingMs / (60 * 60 * 1000)).toInt()
+            val remainingMins = ((remainingMs % (60 * 60 * 1000)) / (60 * 1000)).toInt()
+            return ClassChangeResult.OnCooldown(remainingHours, remainingMins)
+        }
+        
+        // Check cost
+        if (profile.balance < CLASS_CHANGE_COST) {
+            return ClassChangeResult.InsufficientFunds(CLASS_CHANGE_COST, profile.balance)
+        }
+        
+        return ClassChangeResult.Success
+    }
+
+    fun setClass(player: Player, className: String, bypassChecks: Boolean = false): Boolean {
         val def = classes[className] ?: return false
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return false
+        
+        // Skip if same class
+        if (profile.playerClass == className) {
+            player.sendMessage(Component.text("You are already a $className!", NamedTextColor.YELLOW))
+            return false
+        }
+        
+        if (!bypassChecks) {
+            // Check if this is NOT their first class (first is free)
+            if (profile.playerClass != null) {
+                val check = canChangeClass(player)
+                when (check) {
+                    is ClassChangeResult.OnCooldown -> {
+                        player.sendMessage(Component.text("Class change on cooldown! ${check.hours}h ${check.minutes}m remaining.", NamedTextColor.RED))
+                        return false
+                    }
+                    is ClassChangeResult.InsufficientFunds -> {
+                        player.sendMessage(Component.text("Class change costs ${CLASS_CHANGE_COST}. You have ${check.current}.", NamedTextColor.RED))
+                        return false
+                    }
+                    is ClassChangeResult.Error -> {
+                        player.sendMessage(Component.text(check.message, NamedTextColor.RED))
+                        return false
+                    }
+                    ClassChangeResult.Success -> {
+                        // Deduct cost
+                        profile.balance -= CLASS_CHANGE_COST
+                        player.sendMessage(Component.text("Paid $CLASS_CHANGE_COST for class change.", NamedTextColor.GOLD))
+                    }
+                }
+            }
+        }
         
         // Update Profile
-        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return false
         profile.playerClass = def.name
+        profile.lastClassChange = System.currentTimeMillis()
         plugin.identityManager.saveProfile(player.uniqueId)
 
         applyClassEffects(player)
@@ -57,5 +126,12 @@ class ClassManager(private val plugin: AtlasPlugin) {
                  player.removePotionEffect(PotionEffectType.REGENERATION)
              }
         }
+    }
+
+    sealed class ClassChangeResult {
+        object Success : ClassChangeResult()
+        data class OnCooldown(val hours: Int, val minutes: Int) : ClassChangeResult()
+        data class InsufficientFunds(val required: Double, val current: Double) : ClassChangeResult()
+        data class Error(val message: String) : ClassChangeResult()
     }
 }

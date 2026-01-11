@@ -250,6 +250,18 @@ The world ages.
   - **Base Defense**: Players must build layouts that funnel enemies into killboxes (Tower Defense elements).
   - **Consequence**: Loss of Treasury, downgrading of Infrastructure levels.
 
+### 10.4 NPCs & Quest System
+- **NPC Types**:
+  - **Merchants**: Sell rare items for gold. Spawn at structures.
+  - **Quest Givers**: Offer combat and collection quests.
+- **Dialogue System**: Sequential text with player choices. Opens inventory GUI.
+- **Quest Mechanics**:
+  - **Objectives**: Kill X mobs, Defend location, Collect items.
+  - **Difficulty Tiers**: Easy (100g), Medium (300g), Hard (600g), Nightmare (1500g).
+  - **Time Limits**: Optional countdown. Failure = no reward.
+  - **Boss Bars**: Show progress for Hard+ quests.
+- **Structures**: Random wilderness spawns containing NPCs (Merchant Huts, Quest Camps).
+
 ---
 
 ## 11. ENDGAME & LEGACY

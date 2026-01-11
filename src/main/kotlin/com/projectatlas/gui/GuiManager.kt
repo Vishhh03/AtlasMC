@@ -22,12 +22,15 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
 
     // ========== MAIN MENU ==========
     fun openMainMenu(player: Player) {
-        val inv = Bukkit.createInventory(null, 27, Component.text("Project Atlas Menu", NamedTextColor.DARK_BLUE))
+        val inv = Bukkit.createInventory(null, 36, Component.text("Project Atlas Menu", NamedTextColor.DARK_BLUE))
         
         inv.setItem(10, createGuiItem(Material.PLAYER_HEAD, "Your Profile", "action:profile", "View your stats & class"))
         inv.setItem(12, createGuiItem(Material.DIAMOND_SWORD, "Class Selector", "action:class_menu", "Choose your combat role"))
         inv.setItem(14, createGuiItem(Material.BEACON, "City Management", "action:city_menu", "Manage your city"))
         inv.setItem(16, createGuiItem(Material.GOLD_INGOT, "Economy", "action:economy_menu", "Manage your finances"))
+        
+        // New: Quest Board
+        inv.setItem(22, createGuiItem(Material.WRITABLE_BOOK, "Quest Board", "action:quest_menu", "Take on challenges for gold"))
 
         player.openInventory(inv)
         playClickSound(player)
@@ -57,7 +60,7 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
 
     // ========== CLASS MENU ==========
     fun openClassMenu(player: Player) {
-        val inv = Bukkit.createInventory(null, 27, Component.text("Select Class", NamedTextColor.DARK_GREEN))
+        val inv = Bukkit.createInventory(null, 36, Component.text("Select Class", NamedTextColor.DARK_GREEN))
         
         val profile = plugin.identityManager.getPlayer(player.uniqueId)
         val currentClass = profile?.playerClass
@@ -65,10 +68,26 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         // Show current class indicator
         inv.setItem(4, createInfoItem(Material.BOOK, "Current Class", currentClass ?: "None"))
         
-        inv.setItem(10, createClassItem(Material.IRON_CHESTPLATE, "Vanguard", "action:class_vanguard", currentClass == "Vanguard", "Health: 30", "Role: Tank"))
-        inv.setItem(12, createClassItem(Material.FEATHER, "Scout", "action:class_scout", currentClass == "Scout", "Speed: Fast", "Role: Explorer"))
-        inv.setItem(14, createClassItem(Material.SPLASH_POTION, "Medic", "action:class_medic", currentClass == "Medic", "Regen: Passive", "Role: Healer"))
-        inv.setItem(22, createGuiItem(Material.BARRIER, "Back", "action:main_menu", "Return to Main Menu"))
+        // Show cost/cooldown info
+        val canChange = plugin.classManager.canChangeClass(player)
+        val costInfo = when (canChange) {
+            is com.projectatlas.classes.ClassManager.ClassChangeResult.Success -> {
+                if (currentClass == null) "First class is FREE!" else "Cost: ${plugin.classManager.getClassChangeCost()}g"
+            }
+            is com.projectatlas.classes.ClassManager.ClassChangeResult.OnCooldown -> {
+                "§cCooldown: ${canChange.hours}h ${canChange.minutes}m"
+            }
+            is com.projectatlas.classes.ClassManager.ClassChangeResult.InsufficientFunds -> {
+                "§cNeed ${canChange.required}g (have ${canChange.current})"
+            }
+            else -> "Error"
+        }
+        inv.setItem(13, createInfoItem(Material.CLOCK, "Change Status", costInfo))
+        
+        inv.setItem(19, createClassItem(Material.IRON_CHESTPLATE, "Vanguard", "action:confirm_class_vanguard", currentClass == "Vanguard", "Health: 30", "Role: Tank"))
+        inv.setItem(21, createClassItem(Material.FEATHER, "Scout", "action:confirm_class_scout", currentClass == "Scout", "Speed: Fast", "Role: Explorer"))
+        inv.setItem(23, createClassItem(Material.SPLASH_POTION, "Medic", "action:confirm_class_medic", currentClass == "Medic", "Regen: Passive", "Role: Healer"))
+        inv.setItem(31, createGuiItem(Material.BARRIER, "Back", "action:main_menu", "Return to Main Menu"))
 
         player.openInventory(inv)
     }
@@ -134,6 +153,32 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         player.openInventory(inv)
     }
 
+    // ========== QUEST MENU ==========
+    fun openQuestMenu(player: Player) {
+        val inv = Bukkit.createInventory(null, 36, Component.text("Quest Board", NamedTextColor.DARK_RED))
+        
+        // Check active quest
+        val activeQuest = plugin.questManager.getActiveQuest(player)
+        if (activeQuest != null) {
+            inv.setItem(4, createInfoItem(Material.MAP, "Active Quest", activeQuest.quest.name))
+            inv.setItem(13, createInfoItem(Material.EXPERIENCE_BOTTLE, "Progress", "${activeQuest.progress}/${activeQuest.getTargetCount()}"))
+            if (activeQuest.getRemainingSeconds() != null) {
+                inv.setItem(22, createInfoItem(Material.CLOCK, "Time Left", "${activeQuest.getRemainingSeconds()}s"))
+            }
+            inv.setItem(31, createDangerItem(Material.BARRIER, "Abandon Quest", "action:quest_abandon", "Give up on current quest"))
+        } else {
+            // Difficulty selection
+            inv.setItem(10, createGuiItem(Material.LEATHER_CHESTPLATE, "Easy Quest", "action:quest_easy", "Reward: 100g", "Kill 5 mobs"))
+            inv.setItem(12, createGuiItem(Material.CHAINMAIL_CHESTPLATE, "Medium Quest", "action:quest_medium", "Reward: 300g", "Kill 15 mobs", "Time: 5 min"))
+            inv.setItem(14, createGuiItem(Material.IRON_CHESTPLATE, "Hard Quest", "action:quest_hard", "Reward: 600g", "Kill 20 mobs", "Time: 3 min", "Boss Bar tracking"))
+            inv.setItem(16, createDangerItem(Material.NETHERITE_CHESTPLATE, "NIGHTMARE", "action:quest_nightmare", "Reward: 1500g", "Kill 50 mobs", "Time: 5 min", "For the brave only!"))
+        }
+        
+        inv.setItem(27, createGuiItem(Material.ARROW, "Back", "action:main_menu", "Return to Main Menu"))
+        player.openInventory(inv)
+    }
+
+
     // ========== EVENT HANDLER ==========
     @EventHandler
     fun onClick(event: InventoryClickEvent) {
@@ -160,10 +205,13 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
             "action:city_menu" -> openCityMenu(player)
             "action:economy_menu" -> openEconomyMenu(player)
             
-            // Classes
-            "action:class_vanguard" -> { player.performCommand("atlas class choose Vanguard"); player.closeInventory(); playSuccessSound(player) }
-            "action:class_scout" -> { player.performCommand("atlas class choose Scout"); player.closeInventory(); playSuccessSound(player) }
-            "action:class_medic" -> { player.performCommand("atlas class choose Medic"); player.closeInventory(); playSuccessSound(player) }
+            // Classes (with confirmation flow)
+            "action:confirm_class_vanguard" -> handleClassChange(player, "Vanguard")
+            "action:confirm_class_scout" -> handleClassChange(player, "Scout")
+            "action:confirm_class_medic" -> handleClassChange(player, "Medic")
+            "action:class_vanguard" -> { plugin.classManager.setClass(player, "Vanguard"); player.closeInventory(); playSuccessSound(player) }
+            "action:class_scout" -> { plugin.classManager.setClass(player, "Scout"); player.closeInventory(); playSuccessSound(player) }
+            "action:class_medic" -> { plugin.classManager.setClass(player, "Medic"); player.closeInventory(); playSuccessSound(player) }
             
             // City Actions
             "action:city_create" -> {
@@ -221,6 +269,41 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
             "action:economy_pay" -> {
                 player.closeInventory()
                 player.sendMessage(Component.text("Use /atlas pay <player> <amount> to send money.", NamedTextColor.YELLOW))
+            }
+            
+            // Quests
+            "action:quest_menu" -> openQuestMenu(player)
+            "action:quest_easy" -> {
+                val quest = plugin.questManager.getQuestByDifficulty(com.projectatlas.quests.Difficulty.EASY)
+                if (quest != null) {
+                    plugin.questManager.startQuest(player, quest)
+                    player.closeInventory()
+                }
+            }
+            "action:quest_medium" -> {
+                val quest = plugin.questManager.getQuestByDifficulty(com.projectatlas.quests.Difficulty.MEDIUM)
+                if (quest != null) {
+                    plugin.questManager.startQuest(player, quest)
+                    player.closeInventory()
+                }
+            }
+            "action:quest_hard" -> {
+                val quest = plugin.questManager.getQuestByDifficulty(com.projectatlas.quests.Difficulty.HARD)
+                if (quest != null) {
+                    plugin.questManager.startQuest(player, quest)
+                    player.closeInventory()
+                }
+            }
+            "action:quest_nightmare" -> {
+                val quest = plugin.questManager.getQuestByDifficulty(com.projectatlas.quests.Difficulty.NIGHTMARE)
+                if (quest != null) {
+                    plugin.questManager.startQuest(player, quest)
+                    player.closeInventory()
+                }
+            }
+            "action:quest_abandon" -> {
+                plugin.questManager.abandonQuest(player)
+                player.closeInventory()
             }
         }
     }
@@ -281,5 +364,22 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
     
     private fun playSuccessSound(player: Player) {
         player.playSound(player.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f)
+    }
+    
+    // ========== CLASS CHANGE HELPER ==========
+    private fun handleClassChange(player: Player, className: String) {
+        val profile = plugin.identityManager.getPlayer(player.uniqueId)
+        val isFirstClass = profile?.playerClass == null
+        
+        if (isFirstClass) {
+            // First class is free - just apply it
+            plugin.classManager.setClass(player, className)
+            player.closeInventory()
+            playSuccessSound(player)
+        } else {
+            // Show confirmation with cost
+            val cost = plugin.classManager.getClassChangeCost()
+            openConfirmMenu(player, "Change to $className?", "action:class_$className".lowercase(), "action:class_menu", "This will cost ${cost}g")
+        }
     }
 }

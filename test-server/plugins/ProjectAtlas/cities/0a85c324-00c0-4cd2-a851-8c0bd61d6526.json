@@ -5,7 +5,9 @@
   "members": [
     "eb432bf4-697b-3788-bb81-22c8915b3256"
   ],
-  "claimedChunks": [],
+  "claimedChunks": [
+    "world:16,32"
+  ],
   "treasury": 0.0,
   "taxRate": 0.0
 }
