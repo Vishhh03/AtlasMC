@@ -9,7 +9,9 @@ data class City(
     val members: MutableList<UUID> = mutableListOf(),
     val claimedChunks: MutableList<String> = mutableListOf(), // format: "worldName:x,z"
     var treasury: Double = 0.0,
-    var taxRate: Double = 0.0 // Percentage (0.0 to 100.0)
+    var taxRate: Double = 0.0, // Percentage (0.0 to 100.0)
+    var infrastructure: CityInfrastructure = CityInfrastructure(),
+    var lastSiegeTime: Long = 0L // Cooldown for sieges
 ) {
     fun addMember(uuid: UUID) {
         if (!members.contains(uuid)) members.add(uuid)

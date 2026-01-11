@@ -14,6 +14,7 @@ import com.projectatlas.gui.GuiManager
 import com.projectatlas.achievements.AchievementManager
 import com.projectatlas.npc.NPCManager
 import com.projectatlas.quests.QuestManager
+import com.projectatlas.siege.SiegeManager
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -27,6 +28,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var achievementManager: AchievementManager
     lateinit var npcManager: NPCManager
     lateinit var questManager: QuestManager
+    lateinit var siegeManager: SiegeManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -45,12 +47,14 @@ class AtlasPlugin : JavaPlugin() {
         achievementManager = AchievementManager(this)
         npcManager = NPCManager(this)
         questManager = QuestManager(this)
+        siegeManager = SiegeManager(this)
         
         // Register Events
         server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, classManager, guiManager), this)
         server.pluginManager.registerEvents(guiManager, this)
         server.pluginManager.registerEvents(npcManager, this)
         server.pluginManager.registerEvents(questManager, this)
+        server.pluginManager.registerEvents(siegeManager, this)
         
         // Register Commands
         getCommand("atlas")?.setExecutor(AtlasCommand(identityManager, economyManager, cityManager, classManager, guiManager))

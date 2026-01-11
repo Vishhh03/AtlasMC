@@ -117,7 +117,11 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
                 inv.setItem(21, createGuiItem(Material.WRITABLE_BOOK, "Set Tax Rate", "action:city_tax", "Change tax (Mayor only)"))
                 inv.setItem(22, createGuiItem(Material.NAME_TAG, "Invite Player", "action:city_invite", "Invite someone (Mayor only)"))
                 inv.setItem(23, createGuiItem(Material.TNT, "Kick Player", "action:city_kick", "Remove a member (Mayor only)"))
+                inv.setItem(24, createGuiItem(Material.ANVIL, "Infrastructure", "action:city_infra", "Upgrade defenses (Mayor only)"))
             }
+            
+            // Core Health indicator
+            inv.setItem(16, createInfoItem(Material.HEART_OF_THE_SEA, "Core Health", "${city.infrastructure.coreHealth}/100 HP"))
             
             // Safety: Leave City is RED and requires confirmation
             inv.setItem(28, createDangerItem(Material.IRON_DOOR, "Leave City", "action:confirm_leave_city", "Leave your current city", "§cClick to confirm"))
@@ -137,6 +141,54 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         
         player.openInventory(inv)
         player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f)
+    }
+
+    // ========== INFRASTRUCTURE MENU ==========
+    fun openInfrastructureMenu(player: Player) {
+        val inv = Bukkit.createInventory(null, 45, Component.text("City Infrastructure", NamedTextColor.DARK_GRAY))
+        
+        val profile = plugin.identityManager.getPlayer(player.uniqueId)
+        val city = profile?.cityId?.let { plugin.cityManager.getCity(it) } ?: return
+        val infra = city.infrastructure
+        
+        // Treasury display
+        inv.setItem(4, createInfoItem(Material.GOLD_BLOCK, "Treasury", "${city.treasury}g"))
+        
+        // Walls (damage reduction)
+        val wallCost = infra.getWallUpgradeCost()
+        inv.setItem(19, createGuiItem(Material.STONE_BRICKS, "Walls Lv.${infra.wallLevel}", "action:upgrade_wall",
+            "Damage reduction: ${(infra.getWallDamageReduction() * 100).toInt()}%",
+            if (wallCost != null) "Upgrade: ${wallCost}g" else "MAX LEVEL"))
+        
+        // Turrets (auto-attack during siege)
+        inv.setItem(21, createGuiItem(Material.DISPENSER, "Turrets: ${infra.turretCount}/4", "action:upgrade_turret",
+            "Auto-attack invaders during siege",
+            if (infra.canAddTurret()) "Add: ${com.projectatlas.city.CityInfrastructure.TURRET_COST}g" else "MAX TURRETS"))
+        
+        // Generator (passive income)
+        val genCost = infra.getGeneratorUpgradeCost()
+        inv.setItem(23, createGuiItem(Material.REDSTONE_BLOCK, "Generator Lv.${infra.generatorLevel}", "action:upgrade_generator",
+            "Passive income: ${infra.getPassiveIncome()}g/cycle",
+            if (genCost != null) "Upgrade: ${genCost}g" else "MAX LEVEL"))
+        
+        // Barracks (defender NPCs)
+        val barracksCost = infra.getBarracksUpgradeCost()
+        inv.setItem(25, createGuiItem(Material.IRON_CHESTPLATE, "Barracks Lv.${infra.barracksLevel}", "action:upgrade_barracks",
+            "Defenders during siege: ${infra.getDefenderCount()}",
+            if (barracksCost != null) "Upgrade: ${barracksCost}g" else "MAX LEVEL"))
+        
+        // Core repair
+        if (infra.coreHealth < 100) {
+            val repairCost = (100 - infra.coreHealth) * 10 // 10g per HP
+            inv.setItem(31, createGuiItem(Material.NETHER_STAR, "Repair Core", "action:repair_core",
+                "Current: ${infra.coreHealth}/100 HP",
+                "Cost: ${repairCost}g"))
+        } else {
+            inv.setItem(31, createInfoItem(Material.NETHER_STAR, "Core Status", "100/100 HP (Healthy)"))
+        }
+        
+        inv.setItem(40, createGuiItem(Material.ARROW, "Back", "action:city_menu", "Return to City Menu"))
+        player.openInventory(inv)
     }
 
     // ========== ECONOMY MENU ==========
@@ -264,6 +316,14 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
                 player.closeInventory()
                 player.sendMessage(Component.text("Use /atlas city kick <player> to remove a member.", NamedTextColor.YELLOW))
             }
+            "action:city_infra" -> openInfrastructureMenu(player)
+            
+            // Infrastructure Upgrades
+            "action:upgrade_wall" -> handleUpgrade(player, "wall")
+            "action:upgrade_turret" -> handleUpgrade(player, "turret")
+            "action:upgrade_generator" -> handleUpgrade(player, "generator")
+            "action:upgrade_barracks" -> handleUpgrade(player, "barracks")
+            "action:repair_core" -> handleUpgrade(player, "core")
             
             // Economy
             "action:economy_pay" -> {
@@ -381,5 +441,52 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
             val cost = plugin.classManager.getClassChangeCost()
             openConfirmMenu(player, "Change to $className?", "action:class_$className".lowercase(), "action:class_menu", "This will cost ${cost}g")
         }
+    }
+    
+    // ========== INFRASTRUCTURE UPGRADE HELPER ==========
+    private fun handleUpgrade(player: Player, type: String) {
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
+        val city = profile.cityId?.let { plugin.cityManager.getCity(it) } ?: return
+        val infra = city.infrastructure
+        
+        var cost: Int? = null
+        var canUpgrade = false
+        
+        when (type) {
+            "wall" -> {
+                cost = infra.getWallUpgradeCost()
+                canUpgrade = cost != null && city.treasury >= cost
+                if (canUpgrade) { city.treasury -= cost!!; infra.wallLevel++ }
+            }
+            "turret" -> {
+                cost = com.projectatlas.city.CityInfrastructure.TURRET_COST
+                canUpgrade = infra.canAddTurret() && city.treasury >= cost
+                if (canUpgrade) { city.treasury -= cost; infra.turretCount++ }
+            }
+            "generator" -> {
+                cost = infra.getGeneratorUpgradeCost()
+                canUpgrade = cost != null && city.treasury >= cost
+                if (canUpgrade) { city.treasury -= cost!!; infra.generatorLevel++ }
+            }
+            "barracks" -> {
+                cost = infra.getBarracksUpgradeCost()
+                canUpgrade = cost != null && city.treasury >= cost
+                if (canUpgrade) { city.treasury -= cost!!; infra.barracksLevel++ }
+            }
+            "core" -> {
+                cost = (100 - infra.coreHealth) * 10
+                canUpgrade = infra.coreHealth < 100 && city.treasury >= cost
+                if (canUpgrade) { city.treasury -= cost; infra.coreHealth = 100 }
+            }
+        }
+        
+        if (canUpgrade) {
+            plugin.cityManager.saveCity(city)
+            playSuccessSound(player)
+            player.sendMessage(Component.text("Upgrade complete! (-${cost}g)", NamedTextColor.GREEN))
+        } else {
+            player.sendMessage(Component.text("Cannot upgrade - check funds or max level.", NamedTextColor.RED))
+        }
+        openInfrastructureMenu(player)
     }
 }
