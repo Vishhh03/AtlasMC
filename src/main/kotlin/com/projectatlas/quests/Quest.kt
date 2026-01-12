@@ -12,7 +12,8 @@ data class Quest(
     val difficulty: Difficulty,
     val objective: QuestObjective,
     val timeLimitSeconds: Int? = null, // null = no time limit
-    val reward: Double
+    val reward: Double = 0.0,
+    val hint: String = "Check your surroundings."
 )
 
 enum class Difficulty(val displayName: String, val healthMultiplier: Double, val mobCountMultiplier: Double) {
@@ -25,6 +26,8 @@ enum class Difficulty(val displayName: String, val healthMultiplier: Double, val
 sealed class QuestObjective {
     data class KillMobs(val mobType: EntityType, val count: Int) : QuestObjective()
     data class KillHorde(val waveCount: Int, val mobsPerWave: Int) : QuestObjective()
+    data class FetchItem(val material: org.bukkit.Material, val count: Int) : QuestObjective()
+    data class FindNPC(val npcName: String) : QuestObjective()
 }
 
 /**
@@ -33,12 +36,14 @@ sealed class QuestObjective {
 data class ActiveQuest(
     val quest: Quest,
     val startTime: Long = System.currentTimeMillis(),
-    var progress: Int = 0 // e.g., kills made
+    var progress: Int = 0 // e.g., kills made or items collected
 ) {
     fun isComplete(): Boolean {
         return when (val obj = quest.objective) {
             is QuestObjective.KillMobs -> progress >= obj.count
             is QuestObjective.KillHorde -> progress >= (obj.waveCount * obj.mobsPerWave)
+            is QuestObjective.FetchItem -> progress >= obj.count
+            is QuestObjective.FindNPC -> progress >= 1
         }
     }
     
@@ -58,6 +63,8 @@ data class ActiveQuest(
         return when (val obj = quest.objective) {
             is QuestObjective.KillMobs -> obj.count
             is QuestObjective.KillHorde -> obj.waveCount * obj.mobsPerWave
+            is QuestObjective.FetchItem -> obj.count
+            is QuestObjective.FindNPC -> 1
         }
     }
 }

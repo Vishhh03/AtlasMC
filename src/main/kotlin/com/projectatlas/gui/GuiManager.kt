@@ -118,6 +118,7 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
                 inv.setItem(22, createGuiItem(Material.NAME_TAG, "Invite Player", "action:city_invite", "Invite someone (Mayor only)"))
                 inv.setItem(23, createGuiItem(Material.TNT, "Kick Player", "action:city_kick", "Remove a member (Mayor only)"))
                 inv.setItem(24, createGuiItem(Material.ANVIL, "Infrastructure", "action:city_infra", "Upgrade defenses (Mayor only)"))
+                inv.setItem(25, createGuiItem(Material.BRICKS, "Structure Shop", "action:structure_shop", "Buy building blueprints"))
             }
             
             // Core Health indicator
@@ -317,6 +318,13 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
                 player.sendMessage(Component.text("Use /atlas city kick <player> to remove a member.", NamedTextColor.YELLOW))
             }
             "action:city_infra" -> openInfrastructureMenu(player)
+            "action:structure_shop" -> openStructureShop(player)
+            "action:buy_blueprint_barracks" -> handleBuyBlueprint(player, "Barracks", 1000.0)
+            "action:buy_blueprint_nexus" -> handleBuyBlueprint(player, "Nexus", 5000.0)
+            "action:buy_blueprint_market" -> handleBuyBlueprint(player, "Market", 500.0)
+            "action:buy_blueprint_camp" -> handleBuyBlueprint(player, "Quest Camp", 500.0)
+            "action:buy_blueprint_turret" -> handleBuyBlueprint(player, "Turret", 800.0)
+            "action:buy_blueprint_generator" -> handleBuyBlueprint(player, "Generator", 2000.0)
             
             // Infrastructure Upgrades
             "action:upgrade_wall" -> handleUpgrade(player, "wall")
@@ -488,5 +496,55 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
             player.sendMessage(Component.text("Cannot upgrade - check funds or max level.", NamedTextColor.RED))
         }
         openInfrastructureMenu(player)
+    }
+
+
+    // ========== STRUCTURE SHOP ==========
+    fun openStructureShop(player: Player) {
+        val inv = Bukkit.createInventory(null, 27, Component.text("Structure Blueprints", NamedTextColor.BLUE))
+        
+        inv.setItem(10, createGuiItem(Material.PAPER, "Barracks Blueprint", "action:buy_blueprint_barracks", 
+            "Cost: 1000g", "Spawns Defenders to protect city", "Requires: 7x7 flat space"))
+            
+        inv.setItem(12, createGuiItem(Material.PAPER, "Nexus Blueprint", "action:buy_blueprint_nexus", 
+            "Cost: 5000g", "Grants city-wide buffs", "Requires: 3x3 flat space"))
+            
+        inv.setItem(14, createGuiItem(Material.PAPER, "Market Blueprint", "action:buy_blueprint_market", 
+            "Cost: 500g", "Spawns a Merchant", "Requires: 5x5 flat space"))
+            
+        inv.setItem(16, createGuiItem(Material.PAPER, "Quest Camp Blueprint", "action:buy_blueprint_camp", 
+            "Cost: 500g", "Spawns a Quest Giver", "Requires: 5x5 flat space"))
+            
+            
+
+        inv.setItem(18, createGuiItem(Material.PAPER, "Turret Blueprint", "action:buy_blueprint_turret", 
+            "Cost: 800g", "Defensive tower", "Requires: 3x3 flat space"))
+
+        inv.setItem(20, createGuiItem(Material.PAPER, "Generator Blueprint", "action:buy_blueprint_generator", 
+            "Cost: 2000g", "Industrial Unit", "Requires: 3x3 flat space"))
+            
+        inv.setItem(22, createGuiItem(Material.ARROW, "Back", "action:city_menu", "Return"))
+        player.openInventory(inv)
+    }
+
+    private fun handleBuyBlueprint(player: Player, name: String, cost: Double) {
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
+        if (profile.balance >= cost) {
+            profile.balance -= cost
+            plugin.identityManager.saveProfile(player.uniqueId)
+            
+            val blueprint = ItemStack(Material.PAPER)
+            val meta = blueprint.itemMeta
+            meta.displayName(Component.text("Blueprint: $name", NamedTextColor.AQUA))
+            meta.lore(listOf(Component.text("Right-click ground to build", NamedTextColor.GRAY)))
+            blueprint.itemMeta = meta
+            
+            player.inventory.addItem(blueprint)
+            playSuccessSound(player)
+            player.sendMessage(Component.text("Purchased $name Blueprint!", NamedTextColor.GREEN))
+        } else {
+            player.sendMessage(Component.text("Not enough gold!", NamedTextColor.RED))
+            player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f)
+        }
     }
 }

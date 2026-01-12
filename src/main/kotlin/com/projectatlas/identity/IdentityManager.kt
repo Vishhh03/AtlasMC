@@ -96,4 +96,24 @@ class IdentityManager(private val plugin: AtlasPlugin) {
             plugin.logger.severe("Failed to save offline data for ${profile.uuid}: ${e.message}")
         }
     }
+
+    fun grantXp(player: Player, amount: Long) {
+        val profile = getPlayer(player.uniqueId) ?: return
+        profile.currentXp += amount
+        
+        // Check Level Up
+        // Formula: XP required = Level * 100
+        val required = profile.level * 100L
+        if (profile.currentXp >= required) {
+            profile.currentXp -= required
+            profile.level++
+            
+            player.sendMessage(net.kyori.adventure.text.Component.text("Testing: Level Up! You are now Level ${profile.level}", net.kyori.adventure.text.format.NamedTextColor.GOLD))
+            player.playSound(player.location, org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f)
+            
+            // Re-apply class effects (stats might scale with level later)
+            plugin.classManager.applyClassEffects(player)
+        }
+        saveProfile(player.uniqueId)
+    }
 }

@@ -1,4 +1,5 @@
-# Project Atlas Configuration
+# Project Atlas Default Configuration
+
 economy:
   starting-balance: 100.0
 
@@ -6,3 +7,14 @@ events:
   supply-drop:
     interval-minutes: 30
     radius: 500
+
+city:
+  creation-cost: 1000.0
+  chunk-claim-base-cost: 100.0
+  chunk-claim-scaling: 1.5
+
+menu:
+  # Item to right-click to open menu (e.g., COMPASS, CLOCK, BOOK)
+  trigger-item: COMPASS
+  # If true, player must be sneaking to trigger
+  require-sneaking: false

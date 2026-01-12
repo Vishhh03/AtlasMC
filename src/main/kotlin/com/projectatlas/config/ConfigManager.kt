@@ -1,6 +1,7 @@
 package com.projectatlas.config
 
 import com.projectatlas.AtlasPlugin
+import org.bukkit.Material
 
 class ConfigManager(private val plugin: AtlasPlugin) {
 
@@ -12,6 +13,10 @@ class ConfigManager(private val plugin: AtlasPlugin) {
     var cityCreationCost: Double = 1000.0
     var chunkClaimBaseCost: Double = 100.0
     var chunkClaimScaling: Double = 1.5
+    
+    // Menu Settings
+    var menuTriggerItem: Material = Material.COMPASS
+    var menuTriggerSneaking: Boolean = false // If true, must sneak + right-click
 
     fun loadConfig() {
         plugin.saveDefaultConfig()
@@ -25,7 +30,12 @@ class ConfigManager(private val plugin: AtlasPlugin) {
         chunkClaimBaseCost = config.getDouble("city.chunk-claim-base-cost", 100.0)
         chunkClaimScaling = config.getDouble("city.chunk-claim-scaling", 1.5)
         
-        plugin.logger.info("Configuration loaded. City Creation: $cityCreationCost | Chunk Base: $chunkClaimBaseCost")
+        // Menu trigger item
+        val itemName = config.getString("menu.trigger-item", "COMPASS")
+        menuTriggerItem = Material.matchMaterial(itemName ?: "COMPASS") ?: Material.COMPASS
+        menuTriggerSneaking = config.getBoolean("menu.require-sneaking", false)
+        
+        plugin.logger.info("Configuration loaded. Menu trigger: $menuTriggerItem (sneak: $menuTriggerSneaking)")
     }
     
     fun getChunkClaimCost(currentChunks: Int): Double {

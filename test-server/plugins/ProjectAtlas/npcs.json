@@ -1,0 +1,83 @@
+[
+  {
+    "id": "43c8fc75-27b9-485d-a291-f1e9d7d79e68",
+    "name": "Trader Joe",
+    "type": "MERCHANT",
+    "worldName": "world",
+    "x": -687.0,
+    "y": 67.0,
+    "z": 343.0
+  },
+  {
+    "id": "d2744090-fe0f-49cf-9e79-7ae1dbbbca0c",
+    "name": "Trader Joe",
+    "type": "MERCHANT",
+    "worldName": "world",
+    "x": -467.0,
+    "y": 69.0,
+    "z": 399.0
+  },
+  {
+    "id": "4946a501-3cd1-4250-8ae1-a5ee39f36304",
+    "name": "Ranger Rick",
+    "type": "QUEST_GIVER",
+    "worldName": "world",
+    "x": -696.0,
+    "y": 71.0,
+    "z": 367.0
+  },
+  {
+    "id": "84286c7e-e7b4-46eb-b854-e18658cade18",
+    "name": "Ranger Rick",
+    "type": "QUEST_GIVER",
+    "worldName": "world",
+    "x": -62.0,
+    "y": 67.0,
+    "z": -367.0
+  },
+  {
+    "id": "0b31a4b4-f135-4a9e-92d2-c8b35f3188a5",
+    "name": "Trader Joe",
+    "type": "MERCHANT",
+    "worldName": "world",
+    "x": -887.0,
+    "y": 107.0,
+    "z": -26.0
+  },
+  {
+    "id": "15a0c38d-7e6e-4ac7-b6fd-e9038dd081ad",
+    "name": "Trader Joe",
+    "type": "MERCHANT",
+    "worldName": "world",
+    "x": -225.0,
+    "y": 68.0,
+    "z": 262.0
+  },
+  {
+    "id": "1d90a84b-c41b-4e09-872d-8edccd0a4953",
+    "name": "Trader Joe",
+    "type": "MERCHANT",
+    "worldName": "world",
+    "x": -1038.0,
+    "y": 70.0,
+    "z": 227.0
+  },
+  {
+    "id": "dfa23257-a400-4d2e-b7de-1f16b56ee57f",
+    "name": "Ranger Rick",
+    "type": "QUEST_GIVER",
+    "worldName": "world",
+    "x": -718.0,
+    "y": 64.0,
+    "z": 168.0
+  },
+  {
+    "id": "b22e0190-7481-4320-aa8c-b8383ed9b6f8",
+    "name": "Ranger Rick",
+    "type": "QUEST_GIVER",
+    "worldName": "world",
+    "x": -445.0,
+    "y": 67.0,
+    "z": -588.0
+  }
+]

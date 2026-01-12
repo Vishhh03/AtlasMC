@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap
 class NPCManager(private val plugin: AtlasPlugin) : Listener {
 
     private val npcs = ConcurrentHashMap<String, NPC>()
+    private val tempNpcs = ConcurrentHashMap<String, NPC>() // In-memory only
     private val spawnedEntities = ConcurrentHashMap<String, Entity>()
     private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
     private val dataFile = File(plugin.dataFolder, "npcs.json")
@@ -58,10 +59,15 @@ class NPCManager(private val plugin: AtlasPlugin) : Listener {
     fun despawnNPC(npcId: String) {
         spawnedEntities.remove(npcId)?.remove()
         npcs.remove(npcId)
+        tempNpcs.remove(npcId)
         saveNPCs()
     }
+    
+    fun registerTempNPC(npc: NPC) {
+        tempNpcs[npc.id] = npc
+    }
 
-    fun getNPC(id: String): NPC? = npcs[id]
+    fun getNPC(id: String): NPC? = npcs[id] ?: tempNpcs[id]
 
     @EventHandler
     fun onInteract(event: PlayerInteractEntityEvent) {
@@ -72,13 +78,14 @@ class NPCManager(private val plugin: AtlasPlugin) : Listener {
         val npc = npcs[npcId] ?: return
         val player = event.player
         
-        when (npc.type) {
-            NPCType.MERCHANT -> openMerchantMenu(player, npc)
-            NPCType.QUEST_GIVER -> openQuestMenu(player, npc)
-        }
+        // 1. Check if we are turning in a quest
+        plugin.questManager.checkQuestCompletion(player, npc.name)
+        
+        // Route through Dialogue System
+        plugin.dialogueManager.openDialogue(player, npc)
     }
 
-    private fun openMerchantMenu(player: Player, npc: NPC) {
+    fun openMerchantMenu(player: Player, npc: NPC) {
         val inv = Bukkit.createInventory(null, 27, Component.text("${npc.name} - Shop", NamedTextColor.GOLD))
         
         // Sample merchant items

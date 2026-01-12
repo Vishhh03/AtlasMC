@@ -113,7 +113,7 @@ class ClassManager(private val plugin: AtlasPlugin) {
         val def = classes[className] ?: return
 
         // 1. Max Health
-        player.getAttribute(Attribute.MAX_HEALTH)?.baseValue = def.maxHealth
+        player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = def.maxHealth
         
         // 2. Walk Speed
         player.walkSpeed = def.walkSpeed

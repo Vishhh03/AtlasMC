@@ -11,8 +11,13 @@ import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDeathEvent
+import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.block.Action
+import org.bukkit.Material
+import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import com.projectatlas.history.EventType
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -71,9 +76,48 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
             it.playSound(it.location, Sound.EVENT_RAID_HORN, 2.0f, 0.8f)
         }
         
+        // Spawn Defenders (Barracks)
+        val barracksLevel = city.infrastructure.barracksLevel
+        val world = triggerLocation.world ?: return false
+        
+        if (barracksLevel > 0) {
+            val defenderCount = city.infrastructure.getDefenderCount()
+            for (i in 0 until defenderCount) {
+                world.spawn(triggerLocation, IronGolem::class.java) { golem ->
+                    golem.customName(Component.text("City Defender", NamedTextColor.BLUE))
+                    golem.isCustomNameVisible = true
+                    golem.isPlayerCreated = true // Prevent dropping iron
+                }
+            }
+            plugin.server.broadcast(Component.text("  🛡️ ${defenderCount} Defenders have rallied!", NamedTextColor.BLUE))
+        }
+
+        // Start Turret Task
+        startTurretTask(city, siege)
+        
         // Start first wave
         spawnWave(city, siege, triggerLocation)
         return true
+    }
+    
+    private fun startTurretTask(city: City, siege: ActiveSiege) {
+        // Virtual Turrets: Shoot arrows at mobs every 2 seconds
+        if (city.infrastructure.turretCount <= 0) return
+        
+        plugin.server.scheduler.runTaskTimer(plugin, Runnable {
+            if (!activeSieges.containsKey(city.id)) return@Runnable // Siege ended
+            
+            val targets = siege.spawnedMobs.mapNotNull { plugin.server.getEntity(it) as? LivingEntity }
+            if (targets.isEmpty()) return@Runnable
+            
+            // Fire X shots
+            for (i in 0 until city.infrastructure.turretCount) {
+                val target = targets.randomOrNull() ?: break
+                target.damage(5.0) // Arrow damage
+                target.world.spawnParticle(org.bukkit.Particle.CRIT, target.location.add(0.0, 1.0, 0.0), 10)
+                target.world.playSound(target.location, Sound.ENTITY_ARROW_HIT, 1.0f, 1.0f)
+            }
+        }, 40L, 40L) // Every 2 seconds
     }
 
     private fun spawnWave(city: City, siege: ActiveSiege, location: Location) {
@@ -138,6 +182,12 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
     @EventHandler
     fun onMobKill(event: EntityDeathEvent) {
         val entity = event.entity
+        
+        // Handle Siege Banner usage (Trigger)
+        // Note: This logic belongs in a PlayerInteractEvent, not EntityDeathEvent.
+        // I will add the handler below.
+        
+        if (entity !is LivingEntity) return
         
         // Find which siege this mob belongs to
         for ((cityId, siege) in activeSieges) {
@@ -229,6 +279,7 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
                     Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f
                 )
             }
+            plugin.historyManager.logEvent(city.id, "Defended against a Siege (Wave $WAVES_PER_SIEGE)", EventType.SIEGE)
         } else {
             // Defeat: Lose treasury %
             val loss = city.treasury * 0.25
@@ -241,8 +292,41 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
             plugin.server.broadcast(Component.text("  ✗ ${city.name.uppercase()} FELL!", NamedTextColor.RED))
             plugin.server.broadcast(Component.text("  Treasury -${loss}g, Core -25 HP", NamedTextColor.GRAY))
             plugin.server.broadcast(Component.text("═══════════════════════════════", NamedTextColor.DARK_RED))
+            
+            plugin.historyManager.logEvent(city.id, "City fell to a Siege (Wave ${siege.currentWave})", EventType.SIEGE)
         }
     }
     
     fun getActiveSiege(cityId: String): ActiveSiege? = activeSieges[cityId]
+    
+    @EventHandler
+    fun onPlayerInteract(event: PlayerInteractEvent) {
+        if (event.action != Action.RIGHT_CLICK_BLOCK) return
+        val item = event.item ?: return
+        
+        // Check for Siege Banner
+        if (item.type == Material.RED_BANNER && item.hasItemMeta()) {
+             val displayName = item.itemMeta.displayName()
+             // Simple string check for MVP
+             val text = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(displayName ?: Component.text(""))
+             if (text.contains("Siege Banner")) {
+                 val block = event.clickedBlock ?: return
+                 val city = plugin.cityManager.getCityAt(block.chunk)
+                 
+                 if (city == null) {
+                     event.player.sendMessage(Component.text("You must use this inside a City territory!", NamedTextColor.RED))
+                     return
+                 }
+                 
+                 // Trigger!
+                 if (startSiege(city, block.location.add(0.0, 1.0, 0.0))) {
+                     item.amount -= 1
+                     event.player.sendMessage(Component.text("Siege triggered!", NamedTextColor.RED))
+                 } else {
+                     event.player.sendMessage(Component.text("Cannot siege this city right now (Cooldown or Active).", NamedTextColor.RED))
+                 }
+                 event.isCancelled = true
+             }
+        }
+    }
 }

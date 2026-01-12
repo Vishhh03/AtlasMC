@@ -1,0 +1,25 @@
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :processResources UP-TO-DATE
+
+> Task :compileKotlin FAILED
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/siege/SiegeManager.kt:83:17 Unresolved reference 'world'.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/siege/SiegeManager.kt:83:71 Cannot infer type for this parameter. Please specify it explicitly.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/siege/SiegeManager.kt:84:27 Unresolved reference 'customName'.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/siege/SiegeManager.kt:85:27 Unresolved reference 'isCustomNameVisible'.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/siege/SiegeManager.kt:86:27 Unresolved reference 'isPlayerCreated'.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1s
+2 actionable tasks: 1 executed, 1 up-to-date

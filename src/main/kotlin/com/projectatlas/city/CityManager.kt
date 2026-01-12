@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder
 import com.projectatlas.AtlasPlugin
 import org.bukkit.Chunk
 import org.bukkit.entity.Player
+import com.projectatlas.history.EventType
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -29,6 +30,8 @@ class CityManager(private val plugin: AtlasPlugin) {
         
         cities[city.id] = city
         saveCity(city)
+        
+        plugin.historyManager.logEvent(city.id, "City ${city.name} was founded by ${mayor.name}", EventType.FOUNDING)
         return city
     }
 
@@ -177,6 +180,10 @@ class CityManager(private val plugin: AtlasPlugin) {
         dataFolder.listFiles { _, name -> name.endsWith(".json") }?.forEach { file ->
             try {
                 val city = gson.fromJson(file.readText(), City::class.java)
+                // Fix for Gson not using default values for missing fields
+                if (city.infrastructure == null) {
+                    city.infrastructure = CityInfrastructure()
+                }
                 cities[city.id] = city
                 city.claimedChunks.forEach { chunkKey ->
                     chunkMap[chunkKey] = city.id

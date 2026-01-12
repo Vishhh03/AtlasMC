@@ -15,13 +15,16 @@ import com.projectatlas.gui.GuiManager
 import com.projectatlas.classes.ClassManager
 import com.projectatlas.schematic.SchematicManager
 
+import com.projectatlas.politics.PoliticsManager
+
 class AtlasCommand(
     private val identityManager: IdentityManager,
     private val economyManager: EconomyManager,
     private val cityManager: CityManager,
     private val classManager: ClassManager,
     private val guiManager: GuiManager,
-    private val schematicManager: com.projectatlas.schematic.SchematicManager
+    private val schematicManager: SchematicManager,
+    private val politicsManager: PoliticsManager
 ) : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -45,6 +48,9 @@ class AtlasCommand(
             "help" -> handleHelp(sender)
             "spawn" -> handleSpawn(sender, args)
             "schem" -> handleSchematic(sender, args)
+            "bounty" -> handleBounty(sender, args)
+            "boss" -> handleBoss(sender, args)
+            "relic" -> handleRelic(sender, args)
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
         return true
@@ -237,6 +243,24 @@ class AtlasCommand(
                     player.sendMessage(Component.text("Insufficient funds.", NamedTextColor.RED))
                 }
             }
+            "election" -> {
+                val profile = identityManager.getPlayer(player.uniqueId)
+                if (profile?.cityId == null) return
+                val city = cityManager.getCity(profile.cityId!!) ?: return
+                
+                politicsManager.startElection(city, player)
+            }
+            "vote" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas city vote <player>", NamedTextColor.RED))
+                    return
+                }
+                val profile = identityManager.getPlayer(player.uniqueId)
+                if (profile?.cityId == null) return
+                val city = cityManager.getCity(profile.cityId!!) ?: return
+                
+                politicsManager.castVote(city, player, args[2])
+            }
         }
     }
     
@@ -408,6 +432,89 @@ class AtlasCommand(
                 schematicManager.pasteSchematic(name, player.location)
                 player.sendMessage(Component.text("Pasted '$name'.", NamedTextColor.GREEN))
             }
+        }
+    }
+    
+    private fun handleBounty(player: Player, args: Array<out String>) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        if (args.size < 2) {
+            // List bounties
+            val bounties = plugin.bountyManager.listAllBounties()
+            if (bounties.isEmpty()) {
+                player.sendMessage(Component.text("No active bounties.", NamedTextColor.GRAY))
+                return
+            }
+            player.sendMessage(Component.text("═══ ACTIVE BOUNTIES ═══", NamedTextColor.DARK_RED))
+            bounties.take(10).forEach { b ->
+                player.sendMessage(Component.text("  💀 ${b.targetName}: ${b.amount}g (${b.reason})", NamedTextColor.RED))
+            }
+            return
+        }
+        
+        when (args[1].lowercase()) {
+            "place", "set" -> {
+                if (args.size < 4) {
+                    player.sendMessage(Component.text("Usage: /atlas bounty place <player> <amount> [reason]", NamedTextColor.RED))
+                    return
+                }
+                val targetName = args[2]
+                val amount = args[3].toDoubleOrNull() ?: run {
+                    player.sendMessage(Component.text("Invalid amount.", NamedTextColor.RED))
+                    return
+                }
+                val reason = if (args.size > 4) args.slice(4 until args.size).joinToString(" ") else "Wanted"
+                plugin.bountyManager.placeBounty(player, targetName, amount, reason)
+            }
+            "check" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas bounty check <player>", NamedTextColor.RED))
+                    return
+                }
+                val target = player.server.getOfflinePlayer(args[2])
+                val total = plugin.bountyManager.getTotalBounty(target.uniqueId)
+                if (total <= 0) {
+                    player.sendMessage(Component.text("${target.name} has no bounty.", NamedTextColor.GRAY))
+                } else {
+                    player.sendMessage(Component.text("${target.name}'s bounty: ${total}g", NamedTextColor.GOLD))
+                }
+            }
+        }
+    }
+    
+    private fun handleBoss(player: Player, args: Array<out String>) {
+        if (!player.hasPermission("atlas.admin")) {
+            player.sendMessage(Component.text("No permission.", NamedTextColor.RED))
+            return
+        }
+        
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        if (args.size < 2 || args[1].lowercase() == "spawn") {
+            val type = if (args.size >= 3) args[2] else null
+            if (plugin.worldBossManager.forceSpawn(player, type)) {
+                player.sendMessage(Component.text("World Boss spawned!", NamedTextColor.GREEN))
+            } else {
+                player.sendMessage(Component.text("Failed to spawn (already active or on cooldown).", NamedTextColor.RED))
+            }
+        }
+    }
+    
+    private fun handleRelic(player: Player, args: Array<out String>) {
+        if (!player.hasPermission("atlas.admin")) {
+            player.sendMessage(Component.text("No permission.", NamedTextColor.RED))
+            return
+        }
+        
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        if (args.size < 2 || args[1].lowercase() == "spawn") {
+            plugin.relicManager.spawnRelicInWorld(player.location)
+            player.sendMessage(Component.text("Relic spawned!", NamedTextColor.GREEN))
+        } else if (args[1].lowercase() == "give") {
+            val type = com.projectatlas.relics.RelicManager.RelicType.entries.random()
+            player.inventory.addItem(plugin.relicManager.createRelic(type))
+            player.sendMessage(Component.text("Gave you a ${type.displayName}!", NamedTextColor.GOLD))
         }
     }
 }

@@ -11,11 +11,12 @@ import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
-import org.bukkit.event.player.PlayerSwapHandItemsEvent
+import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.block.Action
+import org.bukkit.event.entity.EntityDeathEvent
 
 import com.projectatlas.classes.ClassManager
 import org.bukkit.event.player.PlayerRespawnEvent
-import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.EventPriority
 import org.bukkit.block.Container
 
@@ -25,6 +26,8 @@ class AtlasListener(
     private val classManager: ClassManager,
     private val guiManager: GuiManager
 ) : Listener {
+    
+    private val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
 
     @EventHandler
     fun onJoin(event: PlayerJoinEvent) {
@@ -42,11 +45,17 @@ class AtlasListener(
         identityManager.unloadProfile(event.player.uniqueId)
     }
     
-    // HOTKEY: Swap Hand (F key) opens Atlas Menu
-    @EventHandler
-    fun onSwapHand(event: PlayerSwapHandItemsEvent) {
+    // HOTKEY: Swap Hands (Default 'F') opens Atlas Menu
+    @EventHandler(priority = EventPriority.HIGH)
+    fun onMenuHotkey(event: org.bukkit.event.player.PlayerSwapHandItemsEvent) {
+        val player = event.player
+        
+        // Ensure sneaking to avoid accidental triggers/navigation conflict? 
+        // User requested "hotkey", usually F. Let's make it Shift+F to be safe, or just F.
+        // Let's go with just F, but cancel the swap so they don't actually swap.
+        
         event.isCancelled = true
-        guiManager.openMainMenu(event.player)
+        guiManager.openMainMenu(player)
     }
 
     // Protection Logic
@@ -72,8 +81,8 @@ class AtlasListener(
         }
     }
     
-    @EventHandler(priority = EventPriority.HIGH)
-    fun onInteract(event: PlayerInteractEvent) {
+    @EventHandler(priority = EventPriority.LOW)
+    fun onContainerAccess(event: PlayerInteractEvent) {
         val block = event.clickedBlock ?: return
         val city = cityManager.getCityAt(block.chunk) ?: return
         val player = event.player
@@ -84,5 +93,11 @@ class AtlasListener(
             event.isCancelled = true
             player.sendMessage(Component.text("You cannot access containers in ${city.name}!", NamedTextColor.RED))
         }
+    }
+    @EventHandler
+    fun onMobKill(event: EntityDeathEvent) {
+        val killer = event.entity.killer ?: return
+        // Grant 10 XP per kill
+        identityManager.grantXp(killer, 10L)
     }
 }
