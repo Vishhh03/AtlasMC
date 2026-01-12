@@ -22,15 +22,28 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
 
     // ========== MAIN MENU ==========
     fun openMainMenu(player: Player) {
-        val inv = Bukkit.createInventory(null, 36, Component.text("Project Atlas Menu", NamedTextColor.DARK_BLUE))
+        val inv = Bukkit.createInventory(null, 54, Component.text("✦ Project Atlas Menu ✦", NamedTextColor.DARK_BLUE))
         
+        // Row 1: Core Features
         inv.setItem(10, createGuiItem(Material.PLAYER_HEAD, "Your Profile", "action:profile", "View your stats & class"))
         inv.setItem(12, createGuiItem(Material.DIAMOND_SWORD, "Class Selector", "action:class_menu", "Choose your combat role"))
         inv.setItem(14, createGuiItem(Material.BEACON, "City Management", "action:city_menu", "Manage your city"))
         inv.setItem(16, createGuiItem(Material.GOLD_INGOT, "Economy", "action:economy_menu", "Manage your finances"))
         
-        // New: Quest Board
-        inv.setItem(22, createGuiItem(Material.WRITABLE_BOOK, "Quest Board", "action:quest_menu", "Take on challenges for gold"))
+        // Row 2: Activities
+        inv.setItem(19, createGuiItem(Material.WRITABLE_BOOK, "Quest Board", "action:quest_menu", "Take on challenges for gold"))
+        inv.setItem(21, createGuiItem(Material.END_PORTAL_FRAME, "Dungeons", "action:dungeon_menu", "Enter instanced challenges"))
+        inv.setItem(23, createGuiItem(Material.SKELETON_SKULL, "Bounties", "action:bounty_menu", "Hunt wanted players"))
+        inv.setItem(25, createGuiItem(Material.DRAGON_HEAD, "World Bosses", "action:boss_info", "View boss event info"))
+        
+        // Row 3: Social & Marketplace
+        inv.setItem(28, createGuiItem(Material.TOTEM_OF_UNDYING, "Party", "action:party_menu", "Manage your party"))
+        inv.setItem(30, createGuiItem(Material.CRAFTING_TABLE, "Blueprint Shop", "action:blueprint_menu", "Buy & sell building designs"))
+        inv.setItem(32, createGuiItem(Material.ENDER_EYE, "Relics", "action:relic_info", "Ancient artifacts info"))
+        inv.setItem(34, createGuiItem(Material.NETHER_STAR, "Achievements", "action:achievement_menu", "Track your progress"))
+        
+        // Bottom row: Help
+        inv.setItem(49, createGuiItem(Material.BOOK, "Help", "action:help", "View all commands"))
 
         player.openInventory(inv)
         playClickSound(player)
@@ -372,6 +385,54 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
             "action:quest_abandon" -> {
                 plugin.questManager.abandonQuest(player)
                 player.closeInventory()
+            }
+            
+            // New Features
+            "action:dungeon_menu" -> {
+                player.closeInventory()
+                player.performCommand("atlas dungeon")
+            }
+            "action:party_menu" -> {
+                player.closeInventory()
+                player.performCommand("atlas party")
+            }
+            "action:bounty_menu" -> {
+                player.closeInventory()
+                player.performCommand("atlas bounty")
+            }
+            "action:blueprint_menu" -> {
+                player.closeInventory()
+                player.performCommand("atlas bp list")
+            }
+            "action:relic_info" -> {
+                player.closeInventory()
+                player.sendMessage(Component.text("═══ RELICS ═══", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD))
+                player.sendMessage(Component.text("Ancient artifacts spawn randomly in the world!", NamedTextColor.GRAY))
+                player.sendMessage(Component.text("Each relic has a unique right-click ability.", NamedTextColor.GRAY))
+                player.sendMessage(Component.text("Listen for announcements when they appear!", NamedTextColor.YELLOW))
+            }
+            "action:achievement_menu" -> {
+                player.closeInventory()
+                val (earned, total) = plugin.achievementManager.getProgress(player)
+                player.sendMessage(Component.text("═══ ACHIEVEMENTS ($earned/$total) ═══", NamedTextColor.GOLD, TextDecoration.BOLD))
+                plugin.achievementManager.getAchievementsForPlayer(player).forEach { (ach, unlocked) ->
+                    val status = if (unlocked) "§a✓" else "§c✗"
+                    player.sendMessage(Component.text("  $status ${ach.name}: ${ach.description} (${ach.reward}g)"))
+                }
+            }
+            "action:boss_info" -> {
+                player.closeInventory()
+                player.sendMessage(Component.text("═══ WORLD BOSSES ═══", NamedTextColor.DARK_RED, TextDecoration.BOLD))
+                if (plugin.worldBossManager.hasActiveBoss()) {
+                    player.sendMessage(Component.text("⚠ A World Boss is currently active!", NamedTextColor.RED))
+                } else {
+                    player.sendMessage(Component.text("No boss active. They spawn periodically!", NamedTextColor.GRAY))
+                }
+                player.sendMessage(Component.text("Contribute damage to earn gold & XP!", NamedTextColor.YELLOW))
+            }
+            "action:help" -> {
+                player.closeInventory()
+                player.performCommand("atlas help")
             }
         }
     }

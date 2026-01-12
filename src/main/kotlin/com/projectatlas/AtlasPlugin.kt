@@ -25,6 +25,7 @@ import com.projectatlas.relics.RelicManager
 import com.projectatlas.worldboss.WorldBossManager
 import com.projectatlas.dungeon.DungeonManager
 import com.projectatlas.party.PartyManager
+import com.projectatlas.marketplace.BlueprintMarketplace
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -49,6 +50,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var worldBossManager: WorldBossManager
     lateinit var dungeonManager: DungeonManager
     lateinit var partyManager: PartyManager
+    lateinit var blueprintMarketplace: BlueprintMarketplace
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -78,6 +80,7 @@ class AtlasPlugin : JavaPlugin() {
         worldBossManager = WorldBossManager(this)
         partyManager = PartyManager(this)
         dungeonManager = DungeonManager(this)
+        blueprintMarketplace = BlueprintMarketplace(this)
         
         // Register Events
         server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, classManager, guiManager), this)
@@ -94,6 +97,7 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(relicManager, this)
         server.pluginManager.registerEvents(worldBossManager, this)
         server.pluginManager.registerEvents(dungeonManager, this)
+        server.pluginManager.registerEvents(blueprintMarketplace, this)
         
         // Register Commands
         // Register Commands

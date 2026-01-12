@@ -54,6 +54,8 @@ class AtlasCommand(
             "relic" -> handleRelic(sender, args)
             "dungeon" -> handleDungeon(sender, args)
             "party" -> handleParty(sender, args)
+            "blueprint", "bp" -> handleBlueprint(sender, args)
+            "menu" -> handleMenu(sender)
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
         return true
@@ -639,5 +641,95 @@ class AtlasCommand(
                 player.sendMessage(Component.text("  /atlas party disband - Disband the party", NamedTextColor.YELLOW))
             }
         }
+    }
+    
+    private fun handleBlueprint(player: Player, args: Array<out String>) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        if (args.size < 2) {
+            player.sendMessage(Component.text("Blueprint Commands:", NamedTextColor.GOLD, TextDecoration.BOLD))
+            player.sendMessage(Component.text("  /atlas bp wand - Get selection wand", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas bp capture <name> <price> - Capture and list", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas bp list - Browse marketplace", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas bp mine - View your blueprints", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas bp preview <name> - Preview a blueprint", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas bp buy <name> - Purchase a blueprint", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas bp place - Place previewed blueprint", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas bp cancel - Cancel preview", NamedTextColor.YELLOW))
+            return
+        }
+        
+        when (args[1].lowercase()) {
+            "wand" -> {
+                plugin.blueprintMarketplace.giveSelectionWand(player)
+            }
+            "capture", "save" -> {
+                if (args.size < 4) {
+                    player.sendMessage(Component.text("Usage: /atlas bp capture <name> <price>", NamedTextColor.RED))
+                    return
+                }
+                val price = args.last().toDoubleOrNull()
+                if (price == null) {
+                    player.sendMessage(Component.text("Invalid price!", NamedTextColor.RED))
+                    return
+                }
+                val name = args.slice(2 until args.size - 1).joinToString(" ")
+                plugin.blueprintMarketplace.captureBlueprint(player, name, price)
+            }
+            "list", "market", "shop" -> {
+                val page = args.getOrNull(2)?.toIntOrNull() ?: 1
+                plugin.blueprintMarketplace.listBlueprints(player, page)
+            }
+            "mine", "my" -> {
+                plugin.blueprintMarketplace.getMyBlueprints(player)
+            }
+            "preview" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas bp preview <name>", NamedTextColor.RED))
+                    return
+                }
+                val name = args.slice(2 until args.size).joinToString(" ")
+                plugin.blueprintMarketplace.startPreview(player, name)
+            }
+            "buy", "purchase" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas bp buy <name>", NamedTextColor.RED))
+                    return
+                }
+                val name = args.slice(2 until args.size).joinToString(" ")
+                plugin.blueprintMarketplace.purchaseBlueprint(player, name)
+            }
+            "place" -> {
+                plugin.blueprintMarketplace.placeBlueprint(player)
+            }
+            "force" -> {
+                plugin.blueprintMarketplace.forcePlaceBlueprint(player)
+            }
+            "cancel" -> {
+                plugin.blueprintMarketplace.cancelPreview(player)
+                player.sendMessage(Component.text("Preview cancelled.", NamedTextColor.YELLOW))
+            }
+            "unlist", "toggle" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas bp unlist <name>", NamedTextColor.RED))
+                    return
+                }
+                val name = args.slice(2 until args.size).joinToString(" ")
+                plugin.blueprintMarketplace.unlistBlueprint(player, name)
+            }
+            "delete" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas bp delete <name>", NamedTextColor.RED))
+                    return
+                }
+                val name = args.slice(2 until args.size).joinToString(" ")
+                plugin.blueprintMarketplace.deleteBlueprint(player, name)
+            }
+        }
+    }
+    
+    private fun handleMenu(player: Player) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        plugin.guiManager.openMainMenu(player)
     }
 }
