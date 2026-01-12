@@ -14,7 +14,10 @@ import com.projectatlas.gui.GuiManager
 import com.projectatlas.achievements.AchievementManager
 import com.projectatlas.npc.NPCManager
 import com.projectatlas.quests.QuestManager
+import com.projectatlas.schematic.SchematicManager
 import com.projectatlas.siege.SiegeManager
+import com.projectatlas.dialogue.DialogueManager
+import com.projectatlas.structures.StructureManager
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -29,6 +32,9 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var npcManager: NPCManager
     lateinit var questManager: QuestManager
     lateinit var siegeManager: SiegeManager
+    lateinit var dialogueManager: DialogueManager
+    lateinit var structureManager: StructureManager
+    lateinit var schematicManager: SchematicManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -48,6 +54,9 @@ class AtlasPlugin : JavaPlugin() {
         npcManager = NPCManager(this)
         questManager = QuestManager(this)
         siegeManager = SiegeManager(this)
+        dialogueManager = DialogueManager(this)
+        structureManager = StructureManager(this)
+        schematicManager = SchematicManager(this)
         
         // Register Events
         server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, classManager, guiManager), this)
@@ -55,9 +64,12 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(npcManager, this)
         server.pluginManager.registerEvents(questManager, this)
         server.pluginManager.registerEvents(siegeManager, this)
+        server.pluginManager.registerEvents(dialogueManager, this)
+        server.pluginManager.registerEvents(com.projectatlas.events.WorldGenListener(this), this)
         
         // Register Commands
-        getCommand("atlas")?.setExecutor(AtlasCommand(identityManager, economyManager, cityManager, classManager, guiManager))
+        // Register Commands
+        getCommand("atlas")?.setExecutor(AtlasCommand(identityManager, economyManager, cityManager, classManager, guiManager, schematicManager))
         
         // Start Scheduler
         eventManager.startScheduler()

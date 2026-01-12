@@ -13,13 +13,15 @@ import org.bukkit.entity.Player
 
 import com.projectatlas.gui.GuiManager
 import com.projectatlas.classes.ClassManager
+import com.projectatlas.schematic.SchematicManager
 
 class AtlasCommand(
     private val identityManager: IdentityManager,
     private val economyManager: EconomyManager,
     private val cityManager: CityManager,
     private val classManager: ClassManager,
-    private val guiManager: GuiManager
+    private val guiManager: GuiManager,
+    private val schematicManager: com.projectatlas.schematic.SchematicManager
 ) : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -40,7 +42,10 @@ class AtlasCommand(
             "city" -> handleCity(sender, args)
             "event" -> handleEvent(sender, args)
             "class" -> handleClass(sender, args)
-            else -> sendHelp(sender)
+            "help" -> handleHelp(sender)
+            "spawn" -> handleSpawn(sender, args)
+            "schem" -> handleSchematic(sender, args)
+            else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
         return true
     }
@@ -252,7 +257,7 @@ class AtlasCommand(
         }
     }
 
-    private fun sendHelp(player: Player) {
+    private fun handleHelp(player: Player) {
         player.sendMessage(Component.text("--- Project Atlas Help ---", NamedTextColor.GOLD))
         player.sendMessage(Component.text("/atlas profile - View stats", NamedTextColor.YELLOW))
         player.sendMessage(Component.text("/atlas bal - View balance", NamedTextColor.YELLOW))
@@ -292,7 +297,7 @@ class AtlasCommand(
 
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String>? {
         if (args.size == 1) {
-            return listOf("profile", "bal", "pay", "city", "event", "class").filter { it.startsWith(args[0], true) }
+            return listOf("profile", "bal", "pay", "city", "event", "class", "spawn").filter { it.startsWith(args[0], true) }
         }
         
         if (args[0].equals("city", true)) {
@@ -322,6 +327,87 @@ class AtlasCommand(
             }
         }
 
+        if (args[0].equals("spawn", true) && args.size == 2 && sender.hasPermission("atlas.admin")) {
+            return listOf("merchant_hut", "quest_camp").filter { it.startsWith(args[1], true) }
+        }
+
+        if (args[0].equals("schem", true) && args.size == 2) {
+            return listOf("pos1", "pos2", "save", "load", "paste").filter { it.startsWith(args[1], true) }
+        }
+
         return emptyList()
+    }
+    
+    private fun handleSpawn(player: Player, args: Array<out String>) {
+        if (!player.hasPermission("atlas.admin")) {
+            player.sendMessage(Component.text("You do not have permission.", NamedTextColor.RED))
+            return
+        }
+        
+        if (args.size < 2) {
+            player.sendMessage(Component.text("Usage: /atlas spawn <structure_type>", NamedTextColor.RED))
+            return
+        }
+        
+        val typeStr = args[1].uppercase()
+        try {
+            val type = com.projectatlas.structures.StructureType.valueOf(typeStr)
+            val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+            plugin.structureManager.spawnStructure(type, player.location)
+            player.sendMessage(Component.text("Spawned structure: $typeStr", NamedTextColor.GREEN))
+        } catch (e: IllegalArgumentException) {
+            player.sendMessage(Component.text("Invalid structure type. Valid: MERCHANT_HUT, QUEST_CAMP", NamedTextColor.RED))
+        }
+    }
+
+    private fun handleSchematic(player: Player, args: Array<out String>) {
+        if (args.size < 2) {
+            player.sendMessage(Component.text("Usage: /atlas schem <pos1|pos2|save|load|paste> [name]", NamedTextColor.RED))
+            return
+        }
+
+        when (args[1].lowercase()) {
+            "pos1" -> {
+                schematicManager.setPos1(player, player.location)
+                player.sendMessage(Component.text("Position 1 set.", NamedTextColor.GREEN))
+            }
+            "pos2" -> {
+                schematicManager.setPos2(player, player.location)
+                player.sendMessage(Component.text("Position 2 set.", NamedTextColor.GREEN))
+            }
+            "save" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas schem save <name>", NamedTextColor.RED))
+                    return
+                }
+                val name = args[2]
+                if (schematicManager.saveSchematic(name, player)) {
+                    player.sendMessage(Component.text("Schematic '$name' saved!", NamedTextColor.GREEN))
+                } else {
+                    player.sendMessage(Component.text("Failed to save. Did you set pos1 and pos2?", NamedTextColor.RED))
+                }
+            }
+            "load" -> {
+                // Just check if it exists
+                if (args.size < 3) return
+                val name = args[2]
+                val schem = schematicManager.loadSchematic(name)
+                if (schem != null) {
+                    player.sendMessage(Component.text("Schematic '$name' found: ${schem.width}x${schem.height}x${schem.length}", NamedTextColor.YELLOW))
+                } else {
+                    player.sendMessage(Component.text("Schematic not found.", NamedTextColor.RED))
+                }
+            }
+            "paste" -> {
+                if (args.size < 3) return
+                if (!player.hasPermission("atlas.admin")) {
+                    player.sendMessage(Component.text("No permission.", NamedTextColor.RED))
+                    return
+                }
+                val name = args[2]
+                schematicManager.pasteSchematic(name, player.location)
+                player.sendMessage(Component.text("Pasted '$name'.", NamedTextColor.GREEN))
+            }
+        }
     }
 }

@@ -33,3 +33,14 @@ tasks.processResources {
         expand(props)
     }
 }
+
+tasks.shadowJar {
+    archiveClassifier.set("shaded")
+    mergeServiceFiles()
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "META-INF/*.kotlin_module")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.build {
+    dependsOn("shadowJar")
+}
