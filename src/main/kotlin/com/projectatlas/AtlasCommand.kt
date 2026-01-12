@@ -5,6 +5,7 @@ import com.projectatlas.economy.EconomyManager
 import com.projectatlas.identity.IdentityManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
@@ -51,6 +52,7 @@ class AtlasCommand(
             "bounty" -> handleBounty(sender, args)
             "boss" -> handleBoss(sender, args)
             "relic" -> handleRelic(sender, args)
+            "dungeon" -> handleDungeon(sender, args)
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
         return true
@@ -515,6 +517,51 @@ class AtlasCommand(
             val type = com.projectatlas.relics.RelicManager.RelicType.entries.random()
             player.inventory.addItem(plugin.relicManager.createRelic(type))
             player.sendMessage(Component.text("Gave you a ${type.displayName}!", NamedTextColor.GOLD))
+        }
+    }
+    
+    private fun handleDungeon(player: Player, args: Array<out String>) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        if (args.size < 2) {
+            // List dungeons
+            player.sendMessage(Component.text("═══ AVAILABLE DUNGEONS ═══", NamedTextColor.DARK_PURPLE, TextDecoration.BOLD))
+            plugin.dungeonManager.getAvailableDungeons().forEach { dungeon ->
+                val stars = "★".repeat(dungeon.difficulty) + "☆".repeat(5 - dungeon.difficulty)
+                player.sendMessage(Component.text("  ${dungeon.displayName}", NamedTextColor.LIGHT_PURPLE))
+                player.sendMessage(Component.text("    $stars | ${dungeon.goldReward}g | ${dungeon.xpReward} XP", NamedTextColor.GRAY))
+            }
+            player.sendMessage(Component.text("Use: /atlas dungeon enter <name>", NamedTextColor.YELLOW))
+            return
+        }
+        
+        when (args[1].lowercase()) {
+            "enter", "join" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas dungeon enter <dungeon_name>", NamedTextColor.RED))
+                    return
+                }
+                
+                val dungeonName = args.slice(2 until args.size).joinToString(" ")
+                val type = com.projectatlas.dungeon.DungeonManager.DungeonType.entries.find { 
+                    it.displayName.equals(dungeonName, true) || it.name.equals(dungeonName.replace(" ", "_"), true)
+                }
+                
+                if (type == null) {
+                    player.sendMessage(Component.text("Dungeon not found! Use /atlas dungeon to see available dungeons.", NamedTextColor.RED))
+                    return
+                }
+                
+                plugin.dungeonManager.enterDungeon(player, type)
+            }
+            "leave", "exit" -> {
+                if (plugin.dungeonManager.isInDungeon(player)) {
+                    plugin.dungeonManager.leaveDungeon(player)
+                    player.sendMessage(Component.text("Left the dungeon.", NamedTextColor.YELLOW))
+                } else {
+                    player.sendMessage(Component.text("You're not in a dungeon!", NamedTextColor.RED))
+                }
+            }
         }
     }
 }

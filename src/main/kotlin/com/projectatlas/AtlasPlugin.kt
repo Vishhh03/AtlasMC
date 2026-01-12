@@ -23,6 +23,7 @@ import com.projectatlas.politics.PoliticsManager
 import com.projectatlas.bounty.BountyManager
 import com.projectatlas.relics.RelicManager
 import com.projectatlas.worldboss.WorldBossManager
+import com.projectatlas.dungeon.DungeonManager
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -45,6 +46,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var bountyManager: BountyManager
     lateinit var relicManager: RelicManager
     lateinit var worldBossManager: WorldBossManager
+    lateinit var dungeonManager: DungeonManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -72,6 +74,7 @@ class AtlasPlugin : JavaPlugin() {
         bountyManager = BountyManager(this)
         relicManager = RelicManager(this)
         worldBossManager = WorldBossManager(this)
+        dungeonManager = DungeonManager(this)
         
         // Register Events
         server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, classManager, guiManager), this)
@@ -87,6 +90,7 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(bountyManager, this)
         server.pluginManager.registerEvents(relicManager, this)
         server.pluginManager.registerEvents(worldBossManager, this)
+        server.pluginManager.registerEvents(dungeonManager, this)
         
         // Register Commands
         // Register Commands
@@ -101,7 +105,7 @@ class AtlasPlugin : JavaPlugin() {
         // Start Relic spawn scheduler
         relicManager.scheduleRandomRelicSpawn()
         
-        logger.info("Project Atlas has fully loaded v1.2 - Innovation Update!")
+        logger.info("Project Atlas has fully loaded v1.3 - Dungeon Update!")
     }
 
     override fun onDisable() {
