@@ -24,6 +24,7 @@ import com.projectatlas.bounty.BountyManager
 import com.projectatlas.relics.RelicManager
 import com.projectatlas.worldboss.WorldBossManager
 import com.projectatlas.dungeon.DungeonManager
+import com.projectatlas.party.PartyManager
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -47,6 +48,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var relicManager: RelicManager
     lateinit var worldBossManager: WorldBossManager
     lateinit var dungeonManager: DungeonManager
+    lateinit var partyManager: PartyManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -74,6 +76,7 @@ class AtlasPlugin : JavaPlugin() {
         bountyManager = BountyManager(this)
         relicManager = RelicManager(this)
         worldBossManager = WorldBossManager(this)
+        partyManager = PartyManager(this)
         dungeonManager = DungeonManager(this)
         
         // Register Events

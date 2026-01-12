@@ -36,7 +36,15 @@ class RelicManager(private val plugin: AtlasPlugin) : Listener {
         TITAN_STONE("Titan Stone", Material.NETHERITE_INGOT, NamedTextColor.DARK_GRAY,
             listOf("§8Core of a fallen titan", "§7Right-click: Strength III + Resistance II (10s)", "§8Cooldown: 3 minutes")),
         STORM_ORB("Storm Orb", Material.HEART_OF_THE_SEA, NamedTextColor.BLUE,
-            listOf("§9Captured lightning essence", "§7Right-click: Strike lightning at target", "§8Cooldown: 1 minute"))
+            listOf("§9Captured lightning essence", "§7Right-click: Strike lightning at target", "§8Cooldown: 1 minute")),
+        SHADOW_CLOAK("Shadow Cloak", Material.BLACK_DYE, NamedTextColor.DARK_GRAY,
+            listOf("§8Woven from pure darkness", "§7Right-click: Invisibility + Speed for 15s", "§8Cooldown: 2 minutes")),
+        BLOOD_RUBY("Blood Ruby", Material.RED_DYE, NamedTextColor.DARK_RED,
+            listOf("§4Gem of the vampire lords", "§7Right-click: Lifesteal aura for 10s", "§8Cooldown: 90 seconds")),
+        GRAVITY_CORE("Gravity Core", Material.CHORUS_FRUIT, NamedTextColor.LIGHT_PURPLE,
+            listOf("§dAnti-gravity fragment", "§7Right-click: Launch into air + Slow Falling", "§8Cooldown: 45 seconds")),
+        NATURES_BLESSING("Nature's Blessing", Material.GOLDEN_APPLE, NamedTextColor.GREEN,
+            listOf("§aBlessing of the forest spirits", "§7Right-click: Regeneration IV + Saturation", "§8Cooldown: 4 minutes"))
     }
     
     private val cooldowns = mutableMapOf<String, Long>() // "uuid:relic" -> timestamp
@@ -149,6 +157,34 @@ class RelicManager(private val plugin: AtlasPlugin) : Listener {
                     player.sendMessage(Component.text("Storm called!", NamedTextColor.BLUE))
                 }
             }
+            RelicType.SHADOW_CLOAK -> {
+                player.addPotionEffect(PotionEffect(PotionEffectType.INVISIBILITY, 300, 0, false, false))
+                player.addPotionEffect(PotionEffect(PotionEffectType.SPEED, 300, 1, false, false))
+                player.world.spawnParticle(Particle.SMOKE, player.location, 50, 0.5, 1.0, 0.5, 0.05)
+                player.playSound(player.location, Sound.ENTITY_PHANTOM_FLAP, 1.0f, 0.5f)
+                player.sendMessage(Component.text("You meld into the shadows...", NamedTextColor.DARK_GRAY))
+            }
+            RelicType.BLOOD_RUBY -> {
+                player.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, 200, 1, false, false))
+                // Mark player for lifesteal (handled elsewhere or simplified)
+                player.world.spawnParticle(Particle.DAMAGE_INDICATOR, player.location, 30, 0.5, 1.0, 0.5)
+                player.playSound(player.location, Sound.ENTITY_WITHER_HURT, 0.5f, 0.5f)
+                player.sendMessage(Component.text("Blood hunger awakens!", NamedTextColor.DARK_RED))
+            }
+            RelicType.GRAVITY_CORE -> {
+                player.velocity = player.velocity.setY(2.5)
+                player.addPotionEffect(PotionEffect(PotionEffectType.SLOW_FALLING, 200, 0, false, false))
+                player.world.spawnParticle(Particle.REVERSE_PORTAL, player.location, 50, 0.5, 0.5, 0.5, 0.1)
+                player.playSound(player.location, Sound.ENTITY_SHULKER_BULLET_HIT, 1.0f, 0.5f)
+                player.sendMessage(Component.text("Gravity defied!", NamedTextColor.LIGHT_PURPLE))
+            }
+            RelicType.NATURES_BLESSING -> {
+                player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 200, 3, false, false))
+                player.addPotionEffect(PotionEffect(PotionEffectType.SATURATION, 200, 1, false, false))
+                player.world.spawnParticle(Particle.HAPPY_VILLAGER, player.location, 50, 1.0, 1.0, 1.0)
+                player.playSound(player.location, Sound.BLOCK_AZALEA_LEAVES_PLACE, 1.0f, 1.0f)
+                player.sendMessage(Component.text("Nature embraces you!", NamedTextColor.GREEN))
+            }
         }
         
         cooldowns[key] = now
@@ -162,6 +198,10 @@ class RelicManager(private val plugin: AtlasPlugin) : Listener {
             RelicType.FROST_HEART -> 120_000L // 2 min
             RelicType.TITAN_STONE -> 180_000L // 3 min
             RelicType.STORM_ORB -> 60_000L // 1 min
+            RelicType.SHADOW_CLOAK -> 120_000L // 2 min
+            RelicType.BLOOD_RUBY -> 90_000L // 90s
+            RelicType.GRAVITY_CORE -> 45_000L // 45s
+            RelicType.NATURES_BLESSING -> 240_000L // 4 min
         }
     }
     

@@ -42,7 +42,11 @@ class WorldBossManager(private val plugin: AtlasPlugin) : Listener {
     enum class BossType(val displayName: String, val entityType: EntityType, val health: Double, val goldReward: Double, val xpReward: Long) {
         ANCIENT_WITHER("The Ancient Wither", EntityType.WITHER, 1000.0, 5000.0, 500),
         CORRUPTED_GUARDIAN("Corrupted Guardian", EntityType.ELDER_GUARDIAN, 500.0, 2500.0, 250),
-        ENDER_TITAN("Ender Titan", EntityType.ENDERMAN, 750.0, 3500.0, 350)
+        ENDER_TITAN("Ender Titan", EntityType.ENDERMAN, 750.0, 3500.0, 350),
+        BLAZING_INFERNO("Blazing Inferno", EntityType.BLAZE, 600.0, 3000.0, 300),
+        PHANTOM_LORD("The Phantom Lord", EntityType.PHANTOM, 400.0, 2000.0, 200),
+        IRON_COLOSSUS("Iron Colossus", EntityType.IRON_GOLEM, 1200.0, 6000.0, 600),
+        VOID_SERPENT("Void Serpent", EntityType.ENDER_DRAGON, 2000.0, 10000.0, 1000)
     }
     
     private var activeBoss: ActiveBoss? = null

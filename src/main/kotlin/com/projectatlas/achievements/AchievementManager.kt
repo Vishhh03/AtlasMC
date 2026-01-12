@@ -21,7 +21,20 @@ class AchievementManager(private val plugin: AtlasPlugin) {
         "tax_collector" to Achievement("Tax Collector", "Deposit 500 gold to treasury", 100.0),
         "supply_hunter" to Achievement("Supply Hunter", "Loot a supply drop chest", 200.0),
         "explorer" to Achievement("Explorer", "Travel 10,000 blocks", 150.0),
-        "veteran" to Achievement("Veteran", "Play for 10 hours", 500.0)
+        "veteran" to Achievement("Veteran", "Play for 10 hours", 500.0),
+        "quest_complete" to Achievement("Quest Master", "Complete your first quest", 100.0),
+        "dungeon_conqueror" to Achievement("Dungeon Conqueror", "Complete your first dungeon", 300.0),
+        "boss_slayer" to Achievement("Boss Slayer", "Contribute to a World Boss kill", 250.0),
+        "relic_hunter" to Achievement("Relic Hunter", "Find your first ancient relic", 200.0),
+        "bounty_hunter" to Achievement("Bounty Hunter", "Claim your first bounty", 300.0),
+        "wanted" to Achievement("Wanted", "Have a bounty placed on you", 50.0),
+        "level_10" to Achievement("Rising Star", "Reach Level 10", 500.0),
+        "level_25" to Achievement("Seasoned Adventurer", "Reach Level 25", 1000.0),
+        "siege_defender" to Achievement("Siege Defender", "Successfully defend against a siege", 400.0),
+        "mayor" to Achievement("Mayor", "Become the mayor of a city", 250.0),
+        "rich" to Achievement("Rich", "Accumulate 10,000 gold", 500.0),
+        "ability_master" to Achievement("Ability Master", "Use your class ability 50 times", 200.0),
+        "dungeon_speed" to Achievement("Speed Runner", "Complete a dungeon with speed bonus", 400.0)
     )
 
     data class Achievement(

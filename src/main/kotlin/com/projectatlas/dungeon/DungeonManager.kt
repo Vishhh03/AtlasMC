@@ -38,12 +38,24 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
         INFERNAL_PIT("Infernal Pit", "Survive 5 waves of hellish creatures", Material.NETHERRACK, 3, 480, 2500.0, 350),
         FROZEN_DEPTHS("Frozen Depths", "Find and destroy 3 ice crystals", Material.BLUE_ICE, 2, 420, 2000.0, 250),
         VOID_ARENA("Void Arena", "Defeat the Ender Champion", Material.END_STONE, 4, 300, 4000.0, 500),
-        ANCIENT_TEMPLE("Ancient Temple", "Solve puzzles and claim the artifact", Material.CHISELED_STONE_BRICKS, 3, 540, 3000.0, 400)
+        ANCIENT_TEMPLE("Ancient Temple", "Solve puzzles and claim the artifact", Material.CHISELED_STONE_BRICKS, 3, 540, 3000.0, 400),
+        PIRATE_COVE("Pirate's Cove", "Loot the treasure while fighting undead pirates", Material.CHEST, 2, 360, 2200.0, 280),
+        BLOOD_MOON("Blood Moon Arena", "Survive as long as possible against endless hordes", Material.REDSTONE_BLOCK, 5, 900, 5000.0, 600),
+        DRAGONS_LAIR("Dragon's Lair", "Slay the ancient dragon and claim its hoard", Material.DRAGON_EGG, 5, 600, 8000.0, 800)
+    }
+
+    enum class DungeonModifier(val displayName: String, val description: String, val rewardMultiplier: Double) {
+        NONE("Normal", "Standard difficulty", 1.0),
+        HARDCORE("Hardcore", "No respawns, 2x rewards", 2.0),
+        SPEED_RUN("Speed Run", "Half time limit, 1.5x rewards", 1.5),
+        NIGHTMARE("Nightmare", "3x mob spawns, 2.5x rewards", 2.5),
+        ELITE("Elite", "Buffed enemies, 3x rewards", 3.0)
     }
 
     data class DungeonInstance(
         val id: UUID = UUID.randomUUID(),
         val type: DungeonType,
+        val modifier: DungeonModifier = DungeonModifier.NONE,
         val players: MutableSet<UUID> = mutableSetOf(),
         val spawnedMobs: MutableSet<UUID> = mutableSetOf(),
         var currentWave: Int = 0,
@@ -56,34 +68,70 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
         var taskId: BukkitTask? = null,
         val returnLocations: MutableMap<UUID, Location> = mutableMapOf(),
         var arenaCenter: Location? = null
-    )
+    ) {
+        // Scaling factor based on party size (1 player = 1.0, 4 players = ~1.8)
+        fun getScalingFactor(): Double {
+            val count = players.size.coerceAtLeast(1)
+            return 1.0 + (count - 1) * 0.25 // Each extra player adds 25% difficulty
+        }
+        
+        fun getMobMultiplier(): Int {
+            val base = when (modifier) {
+                DungeonModifier.NIGHTMARE -> 3
+                DungeonModifier.ELITE -> 2
+                else -> 1
+            }
+            return (base * getScalingFactor()).toInt().coerceAtLeast(1)
+        }
+        
+        fun getTimeLimit(): Int {
+            return when (modifier) {
+                DungeonModifier.SPEED_RUN -> type.timeLimit / 2
+                else -> type.timeLimit
+            }
+        }
+        
+        fun getRewardMultiplier(): Double {
+            return modifier.rewardMultiplier * (1.0 + (players.size - 1) * 0.1) // Small bonus per extra player
+        }
+    }
 
     private val activeInstances = ConcurrentHashMap<UUID, DungeonInstance>() // Player UUID -> Instance
     private val instancesByUUID = ConcurrentHashMap<UUID, DungeonInstance>() // Instance UUID -> Instance
 
-    fun enterDungeon(player: Player, type: DungeonType): Boolean {
+    fun enterDungeon(player: Player, type: DungeonType, modifier: DungeonModifier = DungeonModifier.NONE): Boolean {
         if (activeInstances.containsKey(player.uniqueId)) {
             player.sendMessage(Component.text("You're already in a dungeon!", NamedTextColor.RED))
             return false
         }
 
-        // Create instance
-        val instance = DungeonInstance(type = type)
-        instance.players.add(player.uniqueId)
-        instance.returnLocations[player.uniqueId] = player.location.clone()
+        // Get party members (or just the player if solo)
+        val partyMembers = plugin.partyManager.getOnlinePartyMembers(player)
         
-        activeInstances[player.uniqueId] = instance
+        // Check if any party member is already in a dungeon
+        for (member in partyMembers) {
+            if (activeInstances.containsKey(member.uniqueId)) {
+                player.sendMessage(Component.text("${member.name} is already in a dungeon!", NamedTextColor.RED))
+                return false
+            }
+        }
+
+        // Create instance with modifier
+        val instance = DungeonInstance(type = type, modifier = modifier)
+        
+        // Add all party members
+        for (member in partyMembers) {
+            instance.players.add(member.uniqueId)
+            instance.returnLocations[member.uniqueId] = member.location.clone()
+            activeInstances[member.uniqueId] = instance
+        }
+        
         instancesByUUID[instance.id] = instance
 
-        // Teleport to dungeon area (using the void/nether for isolation)
+        // Teleport to dungeon area
         val dungeonWorld = getDungeonWorld()
         val spawnLoc = findSafeDungeonSpawn(dungeonWorld, instance)
         instance.arenaCenter = spawnLoc.clone()
-        
-        player.teleport(spawnLoc)
-
-        // Build the dungeon arena
-        buildDungeonArena(instance, spawnLoc)
 
         // Create boss bar
         val bar = BossBar.bossBar(
@@ -93,19 +141,31 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
             BossBar.Overlay.NOTCHED_10
         )
         instance.bossBar = bar
-        player.showBossBar(bar)
 
-        // Announce
-        player.sendMessage(Component.empty())
-        player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.DARK_PURPLE))
-        player.sendMessage(Component.text("  ⚔ DUNGEON: ${type.displayName.uppercase()} ⚔", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD))
-        player.sendMessage(Component.text("  ${type.description}", NamedTextColor.GRAY))
-        player.sendMessage(Component.text("  Difficulty: ${"★".repeat(type.difficulty)}${"☆".repeat(5 - type.difficulty)}", NamedTextColor.GOLD))
-        player.sendMessage(Component.text("  Time Limit: ${type.timeLimit / 60}:${String.format("%02d", type.timeLimit % 60)}", NamedTextColor.YELLOW))
-        player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.DARK_PURPLE))
-        player.sendMessage(Component.empty())
+        // Teleport all players and show bar
+        for (member in partyMembers) {
+            member.teleport(spawnLoc.clone().add((partyMembers.indexOf(member) * 2).toDouble(), 0.0, 0.0))
+            member.showBossBar(bar)
+            
+            // Announce
+            member.sendMessage(Component.empty())
+            member.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.DARK_PURPLE))
+            member.sendMessage(Component.text("  ⚔ DUNGEON: ${type.displayName.uppercase()} ⚔", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD))
+            member.sendMessage(Component.text("  ${type.description}", NamedTextColor.GRAY))
+            member.sendMessage(Component.text("  Difficulty: ${"★".repeat(type.difficulty)}${"☆".repeat(5 - type.difficulty)}", NamedTextColor.GOLD))
+            if (modifier != DungeonModifier.NONE) {
+                member.sendMessage(Component.text("  Modifier: ${modifier.displayName} (${modifier.description})", NamedTextColor.AQUA))
+            }
+            member.sendMessage(Component.text("  Party Size: ${instance.players.size} | Scaling: ${String.format("%.0f", instance.getScalingFactor() * 100)}%", NamedTextColor.YELLOW))
+            member.sendMessage(Component.text("  Time Limit: ${instance.getTimeLimit() / 60}:${String.format("%02d", instance.getTimeLimit() % 60)}", NamedTextColor.YELLOW))
+            member.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.DARK_PURPLE))
+            member.sendMessage(Component.empty())
+            
+            member.playSound(member.location, Sound.BLOCK_PORTAL_TRAVEL, 0.5f, 1.5f)
+        }
 
-        player.playSound(player.location, Sound.BLOCK_PORTAL_TRAVEL, 0.5f, 1.5f)
+        // Build arena after teleport
+        buildDungeonArena(instance, spawnLoc)
 
         // Start dungeon logic
         startDungeonLogic(instance)
@@ -137,18 +197,20 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
             // Build based on dungeon type
             val floorMaterial = when (instance.type) {
                 DungeonType.SHADOW_CAVERN -> Material.DEEPSLATE
-                DungeonType.INFERNAL_PIT -> Material.NETHER_BRICKS
+                DungeonType.INFERNAL_PIT, DungeonType.BLOOD_MOON -> Material.NETHER_BRICKS
                 DungeonType.FROZEN_DEPTHS -> Material.PACKED_ICE
-                DungeonType.VOID_ARENA -> Material.END_STONE_BRICKS
+                DungeonType.VOID_ARENA, DungeonType.DRAGONS_LAIR -> Material.END_STONE_BRICKS
                 DungeonType.ANCIENT_TEMPLE -> Material.STONE_BRICKS
+                DungeonType.PIRATE_COVE -> Material.OAK_PLANKS
             }
 
             val wallMaterial = when (instance.type) {
                 DungeonType.SHADOW_CAVERN -> Material.BLACKSTONE
-                DungeonType.INFERNAL_PIT -> Material.MAGMA_BLOCK
+                DungeonType.INFERNAL_PIT, DungeonType.BLOOD_MOON -> Material.MAGMA_BLOCK
                 DungeonType.FROZEN_DEPTHS -> Material.BLUE_ICE
-                DungeonType.VOID_ARENA -> Material.OBSIDIAN
+                DungeonType.VOID_ARENA, DungeonType.DRAGONS_LAIR -> Material.OBSIDIAN
                 DungeonType.ANCIENT_TEMPLE -> Material.MOSSY_STONE_BRICKS
+                DungeonType.PIRATE_COVE -> Material.DARK_OAK_PLANKS
             }
 
             // Clear and build arena
@@ -226,11 +288,11 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
             }
 
             val elapsed = (System.currentTimeMillis() - instance.startTime) / 1000
-            val remaining = instance.type.timeLimit - elapsed
+            val remaining = instance.getTimeLimit() - elapsed
 
             // Update boss bar
             instance.bossBar?.let { bar ->
-                val progress = (remaining.toFloat() / instance.type.timeLimit).coerceIn(0f, 1f)
+                val progress = (remaining.toFloat() / instance.getTimeLimit()).coerceIn(0f, 1f)
                 bar.progress(progress)
                 bar.name(Component.text("⚔ ${instance.type.displayName} - ${remaining / 60}:${String.format("%02d", remaining % 60)} ⚔", NamedTextColor.RED))
             }
@@ -244,10 +306,13 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
             // Type-specific logic
             when (instance.type) {
                 DungeonType.INFERNAL_PIT -> handleWaveLogic(instance)
+                DungeonType.BLOOD_MOON -> handleWaveLogic(instance) // Endless waves
                 DungeonType.VOID_ARENA -> handleBossLogic(instance)
+                DungeonType.DRAGONS_LAIR -> handleBossLogic(instance) // Boss fight
                 DungeonType.SHADOW_CAVERN -> handleMazeLogic(instance)
                 DungeonType.FROZEN_DEPTHS -> handleCrystalLogic(instance)
                 DungeonType.ANCIENT_TEMPLE -> handleTempleLogic(instance)
+                DungeonType.PIRATE_COVE -> handleWaveLogic(instance) // Wave-based
             }
         }, 20L, 20L)
     }
@@ -277,13 +342,22 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
             player.playSound(player.location, Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.5f)
         }
 
-        val mobCount = 3 + wave * 2
+        // Base mob count scaled by party size and modifier
+        val baseMobCount = 3 + wave * 2
+        val scaledMobCount = (baseMobCount * instance.getMobMultiplier()).coerceAtLeast(3)
+        
         val mobTypes = when (instance.type) {
             DungeonType.INFERNAL_PIT -> listOf(EntityType.BLAZE, EntityType.WITHER_SKELETON, EntityType.PIGLIN_BRUTE)
+            DungeonType.BLOOD_MOON -> listOf(EntityType.ZOMBIE, EntityType.SKELETON, EntityType.SPIDER, EntityType.CREEPER, EntityType.WITCH)
+            DungeonType.PIRATE_COVE -> listOf(EntityType.DROWNED, EntityType.ZOMBIE, EntityType.SKELETON)
             else -> listOf(EntityType.ZOMBIE, EntityType.SKELETON, EntityType.SPIDER)
         }
 
-        for (i in 0 until mobCount) {
+        // Scale mob health based on party size
+        val healthMultiplier = instance.getScalingFactor()
+        val isElite = instance.modifier == DungeonModifier.ELITE
+
+        for (i in 0 until scaledMobCount) {
             val angle = Math.random() * Math.PI * 2
             val distance = 8 + Math.random() * 10
             val spawnLoc = center.clone().add(
@@ -293,9 +367,17 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
             )
 
             val mob = center.world?.spawnEntity(spawnLoc, mobTypes.random()) as? LivingEntity ?: continue
-            mob.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0 + wave * 5
+            val baseHealth = 20.0 + wave * 5
+            mob.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = baseHealth * healthMultiplier
             mob.health = mob.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
-            mob.customName(Component.text("Dungeon ${mob.type.name.lowercase().replaceFirstChar { it.uppercase() }}", NamedTextColor.RED))
+            
+            // Elite mobs get extra effects
+            if (isElite) {
+                mob.addPotionEffect(PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0, false, false))
+                mob.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, PotionEffect.INFINITE_DURATION, 0, false, false))
+            }
+            
+            mob.customName(Component.text("${if (isElite) "Elite " else ""}Dungeon ${mob.type.name.lowercase().replaceFirstChar { it.uppercase() }}", NamedTextColor.RED))
             
             instance.spawnedMobs.add(mob.uniqueId)
         }

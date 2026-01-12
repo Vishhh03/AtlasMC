@@ -53,6 +53,7 @@ class AtlasCommand(
             "boss" -> handleBoss(sender, args)
             "relic" -> handleRelic(sender, args)
             "dungeon" -> handleDungeon(sender, args)
+            "party" -> handleParty(sender, args)
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
         return true
@@ -531,18 +532,33 @@ class AtlasCommand(
                 player.sendMessage(Component.text("  ${dungeon.displayName}", NamedTextColor.LIGHT_PURPLE))
                 player.sendMessage(Component.text("    $stars | ${dungeon.goldReward}g | ${dungeon.xpReward} XP", NamedTextColor.GRAY))
             }
-            player.sendMessage(Component.text("Use: /atlas dungeon enter <name>", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("Use: /atlas dungeon enter <name> [modifier]", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("Modifiers: Normal, Hardcore, SpeedRun, Nightmare, Elite", NamedTextColor.GRAY))
             return
         }
         
         when (args[1].lowercase()) {
             "enter", "join" -> {
                 if (args.size < 3) {
-                    player.sendMessage(Component.text("Usage: /atlas dungeon enter <dungeon_name>", NamedTextColor.RED))
+                    player.sendMessage(Component.text("Usage: /atlas dungeon enter <dungeon_name> [modifier]", NamedTextColor.RED))
                     return
                 }
                 
-                val dungeonName = args.slice(2 until args.size).joinToString(" ")
+                // Parse modifier if present
+                var modifier = com.projectatlas.dungeon.DungeonManager.DungeonModifier.NONE
+                val lastArg = args.last().lowercase()
+                val modifierMatch = com.projectatlas.dungeon.DungeonManager.DungeonModifier.entries.find {
+                    it.name.lowercase() == lastArg || it.displayName.lowercase() == lastArg
+                }
+                
+                val dungeonArgs = if (modifierMatch != null) {
+                    modifier = modifierMatch
+                    args.slice(2 until args.size - 1)
+                } else {
+                    args.slice(2 until args.size)
+                }
+                
+                val dungeonName = dungeonArgs.joinToString(" ")
                 val type = com.projectatlas.dungeon.DungeonManager.DungeonType.entries.find { 
                     it.displayName.equals(dungeonName, true) || it.name.equals(dungeonName.replace(" ", "_"), true)
                 }
@@ -552,7 +568,7 @@ class AtlasCommand(
                     return
                 }
                 
-                plugin.dungeonManager.enterDungeon(player, type)
+                plugin.dungeonManager.enterDungeon(player, type, modifier)
             }
             "leave", "exit" -> {
                 if (plugin.dungeonManager.isInDungeon(player)) {
@@ -561,6 +577,66 @@ class AtlasCommand(
                 } else {
                     player.sendMessage(Component.text("You're not in a dungeon!", NamedTextColor.RED))
                 }
+            }
+            "modifiers" -> {
+                player.sendMessage(Component.text("═══ DUNGEON MODIFIERS ═══", NamedTextColor.AQUA, TextDecoration.BOLD))
+                com.projectatlas.dungeon.DungeonManager.DungeonModifier.entries.forEach { mod ->
+                    player.sendMessage(Component.text("  ${mod.displayName}", NamedTextColor.YELLOW))
+                    player.sendMessage(Component.text("    ${mod.description} (${mod.rewardMultiplier}x rewards)", NamedTextColor.GRAY))
+                }
+            }
+        }
+    }
+    
+    private fun handleParty(player: Player, args: Array<out String>) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        if (args.size < 2) {
+            plugin.partyManager.showPartyInfo(player)
+            return
+        }
+        
+        when (args[1].lowercase()) {
+            "create" -> {
+                plugin.partyManager.createParty(player)
+            }
+            "invite" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas party invite <player>", NamedTextColor.RED))
+                    return
+                }
+                plugin.partyManager.invitePlayer(player, args[2])
+            }
+            "accept" -> {
+                plugin.partyManager.acceptInvite(player)
+            }
+            "decline" -> {
+                plugin.partyManager.declineInvite(player)
+            }
+            "leave" -> {
+                plugin.partyManager.leaveParty(player)
+            }
+            "kick" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas party kick <player>", NamedTextColor.RED))
+                    return
+                }
+                plugin.partyManager.kickPlayer(player, args[2])
+            }
+            "disband" -> {
+                plugin.partyManager.disbandParty(player)
+            }
+            "info" -> {
+                plugin.partyManager.showPartyInfo(player)
+            }
+            else -> {
+                player.sendMessage(Component.text("Party commands:", NamedTextColor.GOLD))
+                player.sendMessage(Component.text("  /atlas party create - Create a party", NamedTextColor.YELLOW))
+                player.sendMessage(Component.text("  /atlas party invite <player> - Invite someone", NamedTextColor.YELLOW))
+                player.sendMessage(Component.text("  /atlas party accept/decline - Respond to invite", NamedTextColor.YELLOW))
+                player.sendMessage(Component.text("  /atlas party leave - Leave your party", NamedTextColor.YELLOW))
+                player.sendMessage(Component.text("  /atlas party kick <player> - Kick a member", NamedTextColor.YELLOW))
+                player.sendMessage(Component.text("  /atlas party disband - Disband the party", NamedTextColor.YELLOW))
             }
         }
     }
