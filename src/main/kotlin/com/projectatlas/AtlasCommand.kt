@@ -324,48 +324,7 @@ class AtlasCommand(
 
     // --- Tab Completion ---
 
-    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String>? {
-        if (args.size == 1) {
-            return listOf("profile", "bal", "pay", "city", "event", "class", "spawn").filter { it.startsWith(args[0], true) }
-        }
-        
-        if (args[0].equals("city", true)) {
-            if (args.size == 2) {
-                return listOf("create", "claim", "invite", "join", "kick", "leave", "info", "tax", "deposit").filter { it.startsWith(args[1], true) }
-            }
-            // City Invite/Kick autocompletion
-            if (args.size == 3 && (args[1].equals("invite", true) || args[1].equals("kick", true))) {
-                return null // Return null to let Bukkit autocomplete player names
-            }
-        }
-        
-        if (args[0].equals("pay", true) && args.size == 2) {
-            return null // Player names
-        }
-        
-        if (args[0].equals("event", true) && args.size == 2 && sender.hasPermission("atlas.admin")) {
-            return listOf("start").filter { it.startsWith(args[1], true) }
-        }
-        
-        if (args[0].equals("class", true)) {
-            if (args.size == 2) {
-                return listOf("choose").filter { it.startsWith(args[1], true) }
-            }
-            if (args.size == 3 && args[1].equals("choose", true)) {
-                return classManager.getAvailableClasses().filter { it.startsWith(args[2], true) }
-            }
-        }
-
-        if (args[0].equals("spawn", true) && args.size == 2 && sender.hasPermission("atlas.admin")) {
-            return listOf("merchant_hut", "quest_camp").filter { it.startsWith(args[1], true) }
-        }
-
-        if (args[0].equals("schem", true) && args.size == 2) {
-            return listOf("pos1", "pos2", "save", "load", "paste").filter { it.startsWith(args[1], true) }
-        }
-
-        return emptyList()
-    }
+    // --- Tab Completion handling moved to bottom of file ---
     
     private fun handleSpawn(player: Player, args: Array<out String>) {
         if (!player.hasPermission("atlas.admin")) {
@@ -731,5 +690,102 @@ class AtlasCommand(
     private fun handleMenu(player: Player) {
         val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
         plugin.guiManager.openMainMenu(player)
+    }
+
+    // ============ TAB COMPLETION ============
+    override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
+        if (sender !is Player) return emptyList()
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        return when (args.size) {
+            1 -> listOf(
+                "profile", "balance", "pay", "city", "class", "help", "menu",
+                "dungeon", "party", "bounty", "boss", "relic", "blueprint", "bp", "schem", "spawn"
+            ).filter { it.startsWith(args[0].lowercase()) }
+            
+            2 -> when (args[0].lowercase()) {
+                "class" -> listOf("select", "info").filter { it.startsWith(args[1].lowercase()) }
+                "city" -> listOf("create", "join", "leave", "claim", "deposit", "tax", "invite", "kick", "info", "election", "vote")
+                    .filter { it.startsWith(args[1].lowercase()) }
+                "dungeon" -> listOf("enter", "leave", "modifiers")
+                    .filter { it.startsWith(args[1].lowercase()) }
+                "party" -> listOf("create", "invite", "accept", "decline", "leave", "kick", "disband", "info")
+                    .filter { it.startsWith(args[1].lowercase()) }
+                "bounty" -> listOf("place", "check", "list")
+                    .filter { it.startsWith(args[1].lowercase()) }
+                "boss" -> listOf("spawn", "info")
+                    .filter { it.startsWith(args[1].lowercase()) }
+                "relic" -> listOf("give", "spawn", "list")
+                    .filter { it.startsWith(args[1].lowercase()) }
+                "blueprint", "bp" -> listOf("wand", "capture", "list", "mine", "preview", "buy", "place", "cancel", "unlist", "delete")
+                    .filter { it.startsWith(args[1].lowercase()) }
+                "schem" -> listOf("pos1", "pos2", "save", "load", "paste").filter { it.startsWith(args[1].lowercase()) }
+                "spawn" -> listOf("merchant_hut", "quest_camp").filter { it.startsWith(args[1].lowercase()) }
+                "pay" -> org.bukkit.Bukkit.getOnlinePlayers().map { it.name }
+                    .filter { it.lowercase().startsWith(args[1].lowercase()) }
+                else -> emptyList()
+            }
+            
+            3 -> when (args[0].lowercase()) {
+                "class" -> if (args[1].lowercase() == "select") {
+                    listOf("Vanguard", "Scout", "Medic").filter { it.lowercase().startsWith(args[2].lowercase()) }
+                } else emptyList()
+                
+                "dungeon" -> if (args[1].lowercase() in listOf("enter", "join")) {
+                    com.projectatlas.dungeon.DungeonManager.DungeonType.entries
+                        .map { it.displayName }
+                        .filter { it.lowercase().startsWith(args[2].lowercase()) }
+                } else emptyList()
+                
+                "party" -> if (args[1].lowercase() in listOf("invite", "kick")) {
+                    org.bukkit.Bukkit.getOnlinePlayers().map { it.name }
+                        .filter { it.lowercase().startsWith(args[2].lowercase()) }
+                } else emptyList()
+                
+                "bounty" -> if (args[1].lowercase() in listOf("place", "check")) {
+                    org.bukkit.Bukkit.getOnlinePlayers().map { it.name }
+                        .filter { it.lowercase().startsWith(args[2].lowercase()) }
+                } else emptyList()
+                
+                "blueprint", "bp" -> when (args[1].lowercase()) {
+                    "preview", "buy", "unlist", "delete" -> {
+                        plugin.blueprintMarketplace.let { bp ->
+                            // Get blueprint names
+                            listOf("<blueprint_name>") // Logic to get names can be improved later
+                        }
+                    }
+                    else -> emptyList()
+                }
+                
+                "boss" -> if (args[1].lowercase() == "spawn") {
+                    com.projectatlas.worldboss.WorldBossManager.BossType.entries
+                        .map { it.name }
+                        .filter { it.lowercase().startsWith(args[2].lowercase()) }
+                } else emptyList()
+                
+                "relic" -> if (args[1].lowercase() == "give") {
+                    com.projectatlas.relics.RelicManager.RelicType.entries
+                        .map { it.name }
+                        .filter { it.lowercase().startsWith(args[2].lowercase()) }
+                } else emptyList()
+                
+                "city" -> when (args[1].lowercase()) {
+                    "invite", "kick" -> org.bukkit.Bukkit.getOnlinePlayers().map { it.name }
+                        .filter { it.lowercase().startsWith(args[2].lowercase()) }
+                    "vote" -> org.bukkit.Bukkit.getOnlinePlayers().map { it.name }
+                        .filter { it.lowercase().startsWith(args[2].lowercase()) }
+                    else -> emptyList()
+                }
+                
+                else -> emptyList()
+            }
+            
+            // For dungeon enter, suggest modifiers after dungeon name
+            else -> if (args[0].lowercase() in listOf("dungeon") && args[1].lowercase() in listOf("enter", "join") && args.size >= 4) {
+                com.projectatlas.dungeon.DungeonManager.DungeonModifier.entries
+                    .map { it.name }
+                    .filter { it.lowercase().startsWith(args.last().lowercase()) }
+            } else emptyList()
+        }
     }
 }

@@ -19,6 +19,7 @@ import org.bukkit.potion.PotionEffectType
 import org.bukkit.scheduler.BukkitTask
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import com.projectatlas.achievements.AchievementManager
 
 /**
  * Dungeon Instance System - Private challenge realms with objectives and rewards!
@@ -495,6 +496,9 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
             player.sendMessage(Component.text("  Time: ${elapsed / 60}:${String.format("%02d", elapsed % 60)}", NamedTextColor.GRAY))
             if (bonus > 1.0) {
                 player.sendMessage(Component.text("  SPEED BONUS: x1.5!", NamedTextColor.AQUA))
+                // Achievement: Speed Run
+            // Achievement: Speed Run
+                plugin.achievementManager.awardAchievement(player, "dungeon_speed")
             }
             player.sendMessage(Component.text("  Rewards:", NamedTextColor.WHITE))
             player.sendMessage(Component.text("    +${(instance.type.goldReward * bonus).toLong()}g", NamedTextColor.GOLD))
@@ -516,9 +520,14 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
                 val relic = plugin.relicManager.createRelic(com.projectatlas.relics.RelicManager.RelicType.entries.random())
                 player.inventory.addItem(relic)
                 player.sendMessage(Component.text("★ BONUS: You found a Relic!", NamedTextColor.LIGHT_PURPLE))
+                // Achievement: Relic Hunter
+                plugin.achievementManager.awardAchievement(player, "relic_hunter")
             }
 
             player.playSound(player.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f)
+            
+            // Achievement: Dungeon Conqueror
+            plugin.achievementManager.awardAchievement(player, "dungeon_conqueror")
 
             // Return after delay
             plugin.server.scheduler.runTaskLater(plugin, Runnable {

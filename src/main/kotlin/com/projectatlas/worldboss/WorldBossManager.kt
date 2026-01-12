@@ -24,6 +24,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.scheduler.BukkitTask
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import com.projectatlas.achievements.AchievementManager
 
 /**
  * World Boss Events - Massive bosses that require coordinated effort!
@@ -187,6 +188,9 @@ class WorldBossManager(private val plugin: AtlasPlugin) : Listener {
                 }
                 plugin.identityManager.grantXp(onlinePlayer, xpReward)
                 onlinePlayer.playSound(onlinePlayer.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f)
+                
+                // Achievement: Boss Slayer
+                plugin.achievementManager.awardAchievement(onlinePlayer, "boss_slayer")
             }
         }
         

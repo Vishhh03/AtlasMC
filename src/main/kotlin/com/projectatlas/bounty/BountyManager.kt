@@ -12,6 +12,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import com.projectatlas.achievements.AchievementManager
 
 /**
  * Bounty System - Players can place bounties on other players.
@@ -109,6 +110,12 @@ class BountyManager(private val plugin: AtlasPlugin) : Listener {
         plugin.server.broadcast(Component.empty())
         
         killer.playSound(killer.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f)
+        
+        // Achievement: Bounty Hunter
+        plugin.achievementManager.awardAchievement(killer, "bounty_hunter")
+        
+        // Achievement: Wanted (for victim who had a bounty)
+        plugin.achievementManager.awardAchievement(victim, "wanted")
         
         // Log to history if victim had a city
         val victimProfile = plugin.identityManager.getPlayer(victim.uniqueId)
