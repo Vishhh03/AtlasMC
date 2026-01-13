@@ -287,6 +287,16 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
     
     fun getActiveQuest(player: Player): ActiveQuest? = activeQuests[player.uniqueId]
     
+    fun hasActiveQuest(player: Player): Boolean = activeQuests.containsKey(player.uniqueId)
+    
+    /**
+     * Complete quest manually (from QuestBoardManager turn-in)
+     */
+    fun completeQuestManual(player: Player) {
+        val activeQuest = activeQuests[player.uniqueId] ?: return
+        completeQuest(player, activeQuest)
+    }
+    
     private fun checkQuestTimeout(player: Player) {
         val activeQuest = activeQuests[player.uniqueId] ?: return
         

@@ -49,11 +49,12 @@ class WanderingNPCListener(private val plugin: AtlasPlugin) : Listener {
                 else if (roll < 0.20) spawnUndeadMiner(player)
                 else if (roll < 0.30) spawnMinersCache(player)
             } else {
-                // Surface Events (30% chance)
+                // Surface Events (35% chance)
                 when {
-                    roll < 0.10 -> spawnWandererNear(player) // 10%
-                    roll < 0.20 -> spawnBanditAmbush(player) // 10%
-                    roll < 0.30 -> spawnTreasureCache(player) // 10%
+                    roll < 0.10 -> spawnWandererNear(player)   // 10%
+                    roll < 0.20 -> spawnBanditAmbush(player)   // 10%
+                    roll < 0.30 -> spawnTreasureCache(player)  // 10%
+                    roll < 0.35 -> spawnQuestBoard(player)     // 5%
                 }
             }
         }
@@ -241,6 +242,11 @@ class WanderingNPCListener(private val plugin: AtlasPlugin) : Listener {
         if (ground.type == Material.WATER || ground.type == Material.LAVA) return null
         
         return org.bukkit.Location(world, baseLoc.x, y + 1.0, baseLoc.z)
+    }
+    
+    // --- Quest Board Spawning ---
+    private fun spawnQuestBoard(player: Player) {
+        plugin.questBoardManager.spawnRandomQuestBoard(player)
     }
 
     private fun scheduleDespawn(entity: org.bukkit.entity.Entity, delayTicks: Long) {
