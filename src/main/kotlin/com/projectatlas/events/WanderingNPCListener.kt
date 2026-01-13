@@ -40,15 +40,83 @@ class WanderingNPCListener(private val plugin: AtlasPlugin) : Listener {
             // Only triggers in Wilderness (Not in a city)
             if (plugin.cityManager.getCityAt(player.chunk) != null) return@forEach
             
+            val isCave = player.location.y < 50 && player.location.block.lightFromSky < 5
             val roll = random.nextDouble()
             
-            // 30% chance of event every 30s
-            when {
-                roll < 0.10 -> spawnWandererNear(player) // 10%
-                roll < 0.20 -> spawnBanditAmbush(player) // 10%
-                roll < 0.30 -> spawnTreasureCache(player) // 10%
+            if (isCave) {
+                // Cave Events (30% chance)
+                if (roll < 0.10) spawnSpiderSwarm(player)
+                else if (roll < 0.20) spawnUndeadMiner(player)
+                else if (roll < 0.30) spawnMinersCache(player)
+            } else {
+                // Surface Events (30% chance)
+                when {
+                    roll < 0.10 -> spawnWandererNear(player) // 10%
+                    roll < 0.20 -> spawnBanditAmbush(player) // 10%
+                    roll < 0.30 -> spawnTreasureCache(player) // 10%
+                }
             }
         }
+    }
+    
+    // --- Cave Events ---
+    
+    private fun spawnSpiderSwarm(player: Player) {
+        val spawnLoc = getSafeSpawnLocation(player) ?: return
+        
+        player.sendMessage(Component.text("You hear skittering in the dark...", NamedTextColor.DARK_PURPLE).decorate(TextDecoration.ITALIC))
+        player.playSound(player.location, Sound.ENTITY_SPIDER_AMBIENT, 1.0f, 1.5f)
+        
+        repeat(random.nextInt(3) + 3) { // 3-5 Spiders
+            player.world.spawn(spawnLoc, org.bukkit.entity.CaveSpider::class.java) { spider ->
+                spider.customName(Component.text("Deep Crawler", NamedTextColor.DARK_RED))
+                scheduleDespawn(spider, 2400L)
+            }
+        }
+    }
+    
+    private fun spawnUndeadMiner(player: Player) {
+        val spawnLoc = getSafeSpawnLocation(player) ?: return
+        
+        player.sendMessage(Component.text("A fallen miner rises...", NamedTextColor.GOLD))
+        player.playSound(player.location, Sound.ENTITY_ZOMBIE_AMBIENT, 1.0f, 0.5f)
+        
+        player.world.spawn(spawnLoc, org.bukkit.entity.Zombie::class.java) { zombie ->
+            zombie.customName(Component.text("Undead Miner", NamedTextColor.GOLD))
+            zombie.isCustomNameVisible = true
+            zombie.equipment.helmet = ItemStack(Material.IRON_HELMET)
+            zombie.equipment.chestplate = ItemStack(Material.CHAINMAIL_CHESTPLATE)
+            zombie.equipment.setItemInMainHand(ItemStack(Material.IRON_PICKAXE))
+            
+            // Drop raw gold/iron chance
+            zombie.equipment.setItemInOffHand(ItemStack(Material.RAW_GOLD, 3))
+            zombie.equipment.itemInOffHandDropChance = 0.5f
+            
+            scheduleDespawn(zombie, 3600L)
+        }
+    }
+    
+    private fun spawnMinersCache(player: Player) {
+        val spawnLoc = getSafeSpawnLocation(player) ?: return
+        spawnLoc.block.type = Material.BARREL
+        
+        val barrel = spawnLoc.block.state as? org.bukkit.block.Barrel ?: return
+        
+        // Cave Loot
+        val loot = listOf(
+            ItemStack(Material.COAL, random.nextInt(16) + 5),
+            ItemStack(Material.TORCH, random.nextInt(32) + 10),
+            ItemStack(Material.RAW_IRON, random.nextInt(10) + 2),
+            ItemStack(Material.TNT, random.nextInt(2) + 1),
+            ItemStack(Material.GOLDEN_APPLE, 1)
+        )
+        loot.forEach { 
+            if (random.nextBoolean()) barrel.inventory.addItem(it)
+        }
+        
+        barrel.update()
+        player.world.spawnParticle(Particle.END_ROD, spawnLoc.clone().add(0.5, 1.0, 0.5), 10)
+        player.sendMessage(Component.text("You spot a lost supply cache!", NamedTextColor.YELLOW))
     }
     
     // --- 1. Wandering NPC ---
