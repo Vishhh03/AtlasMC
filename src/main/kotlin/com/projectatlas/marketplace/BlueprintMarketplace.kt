@@ -174,22 +174,22 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
             return false
         }
 
-        if (price < 10) {
-            player.sendMessage(Component.text("Minimum price is 10g!", NamedTextColor.RED))
+        if (price < plugin.configManager.blueprintMinPrice) {
+            player.sendMessage(Component.text("Minimum price is ${plugin.configManager.blueprintMinPrice}g!", NamedTextColor.RED))
             return false
         }
 
         // Check size limits
         val dims = getSelectionDimensions(session)
-        val maxSize = 64
+        val maxSize = plugin.configManager.blueprintMaxDimension
         if (dims.first > maxSize || dims.second > maxSize || dims.third > maxSize) {
             player.sendMessage(Component.text("Maximum size is ${maxSize}x${maxSize}x${maxSize}!", NamedTextColor.RED))
             return false
         }
 
         val totalBlocks = dims.first * dims.second * dims.third
-        if (totalBlocks > 50000) {
-            player.sendMessage(Component.text("Too many blocks! Maximum is 50,000.", NamedTextColor.RED))
+        if (totalBlocks > plugin.configManager.blueprintMaxBlocks) {
+            player.sendMessage(Component.text("Too many blocks! Maximum is ${plugin.configManager.blueprintMaxBlocks}.", NamedTextColor.RED))
             return false
         }
 
@@ -240,8 +240,8 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
             }
         }
 
-        if (capturedCount < 5) {
-            player.sendMessage(Component.text("Too few blocks! Need at least 5 non-air blocks.", NamedTextColor.RED))
+        if (capturedCount < plugin.configManager.blueprintMinBlocks) {
+            player.sendMessage(Component.text("Too few blocks! Need at least ${plugin.configManager.blueprintMinBlocks} non-air blocks.", NamedTextColor.RED))
             return false
         }
 
@@ -420,15 +420,15 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
         profile.balance -= blueprint.price
         plugin.identityManager.saveProfile(player.uniqueId)
 
-        // Pay creator (90% to creator, 10% marketplace fee)
-        val creatorShare = blueprint.price * 0.9
+        // Pay creator (Revenue sharing from config)
+        val creatorShare = blueprint.price * (plugin.configManager.blueprintCreatorRevenue / 100.0)
         val creatorProfile = plugin.identityManager.getPlayer(blueprint.creatorUUID)
         if (creatorProfile != null) {
             creatorProfile.balance += creatorShare
             plugin.identityManager.saveProfile(blueprint.creatorUUID)
             
             // Notify creator if online
-            Bukkit.getPlayer(blueprint.creatorUUID)?.sendMessage(
+             Bukkit.getPlayer(blueprint.creatorUUID)?.sendMessage(
                 Component.text("💰 ${player.name} purchased your blueprint '${blueprint.name}'! +${creatorShare}g", NamedTextColor.GOLD)
             )
         }

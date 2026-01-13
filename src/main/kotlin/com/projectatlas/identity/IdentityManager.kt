@@ -7,6 +7,7 @@ import org.bukkit.entity.Player
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import com.projectatlas.skills.SkillTreeManager
 
 class IdentityManager(private val plugin: AtlasPlugin) {
     private val players = ConcurrentHashMap<UUID, AtlasPlayer>()
@@ -112,7 +113,8 @@ class IdentityManager(private val plugin: AtlasPlugin) {
             player.playSound(player.location, org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f)
             
             // Re-apply class effects (stats might scale with level later)
-            plugin.classManager.applyClassEffects(player)
+            // Re-apply skill effects
+            plugin.skillTreeManager.applyAllSkillEffects(player)
         }
         saveProfile(player.uniqueId)
     }

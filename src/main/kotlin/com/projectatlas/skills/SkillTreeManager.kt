@@ -60,7 +60,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             "origin", "Awakening", "Your journey begins here.",
             Material.NETHER_STAR, SkillCategory.MASTERY, NodeTier.NOTABLE,
             listOf("combat_start", "defense_start", "mobility_start", "mining_start", "archery_start", "dark_start", "utility_start"),
-            SkillEffect.MaxHealth(2.0), cost = 0 // Free starting node
+            SkillEffect.MaxHealth(plugin.configManager.skillHealthBonus), cost = 0 // Free starting node
         )
         
         // ═══════════════════════════════════════════════════════════
@@ -69,8 +69,16 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         nodes["combat_start"] = SkillNode(
             "combat_start", "Warrior's Path", "Begin the path of combat.",
             Material.IRON_SWORD, SkillCategory.COMBAT, NodeTier.MINOR,
-            listOf("origin", "sword_1", "axe_1", "leech_1", "execute_1"),
-            SkillEffect.MeleeDamage(1.05)
+            listOf("origin", "sword_1", "axe_1", "leech_1", "execute_1", "fireball_1"),
+            SkillEffect.MeleeDamage(plugin.configManager.skillMeleeMult)
+        )
+        
+        // Active Ability: Fireball
+        nodes["fireball_1"] = SkillNode(
+            "fireball_1", "Fireball", "Active: Shoot a fireball (Blaze Rod)",
+            Material.BLAZE_ROD, SkillCategory.COMBAT, NodeTier.KEYSTONE,
+            listOf("combat_start"),
+            SkillEffect.ActiveFireball(plugin.configManager.fireballCooldownTicks), cost = 3
         )
         
         // Sword Branch
@@ -78,7 +86,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             "sword_1", "Blade Adept", "+10% Sword Damage",
             Material.STONE_SWORD, SkillCategory.COMBAT, NodeTier.MINOR,
             listOf("combat_start", "sword_2"),
-            SkillEffect.SwordDamage(1.10)
+            SkillEffect.SwordDamage(plugin.configManager.skillSwordMult)
         )
         nodes["sword_2"] = SkillNode(
             "sword_2", "Blade Master", "+15% Sword Damage",
@@ -98,7 +106,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             "axe_1", "Axe Training", "+10% Axe Damage",
             Material.STONE_AXE, SkillCategory.COMBAT, NodeTier.MINOR,
             listOf("combat_start", "axe_2"),
-            SkillEffect.AxeDamage(1.10)
+            SkillEffect.AxeDamage(plugin.configManager.skillAxeMult)
         )
         nodes["axe_2"] = SkillNode(
             "axe_2", "Cleaver", "+15% Axe Damage",
@@ -118,7 +126,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             "leech_1", "Vampiric Strikes", "Leech 5% damage as health",
             Material.REDSTONE, SkillCategory.COMBAT, NodeTier.NOTABLE,
             listOf("combat_start", "leech_2"),
-            SkillEffect.LifeLeech(0.05)
+            SkillEffect.LifeLeech(plugin.configManager.skillLifeLeechBase)
         )
         nodes["leech_2"] = SkillNode(
             "leech_2", "Blood Drinker", "Leech 10% damage as health",
@@ -146,7 +154,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             "crit_1", "Precision", "+5% Critical Chance",
             Material.SPECTRAL_ARROW, SkillCategory.COMBAT, NodeTier.MINOR,
             listOf("sword_2", "crit_2"),
-            SkillEffect.CritChance(0.05)
+            SkillEffect.CritChance(plugin.configManager.skillCritChanceBase)
         )
         nodes["crit_2"] = SkillNode(
             "crit_2", "Deadly Aim", "+10% Critical Chance",
@@ -269,6 +277,14 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             SkillEffect.FireResistance(0)
         )
         
+        // Active Ability: Shield Wall
+        nodes["shield_wall_1"] = SkillNode(
+            "shield_wall_1", "Shield Wall", "Active: Raise a protective barrier",
+            Material.SHIELD, SkillCategory.DEFENSE, NodeTier.KEYSTONE,
+            listOf("defense_start"),
+            SkillEffect.ActiveShieldWall(plugin.configManager.shieldWallDurationTicks, plugin.configManager.shieldWallCooldownTicks), cost = 3
+        )
+        
         // ═══════════════════════════════════════════════════════════
         // MOBILITY BRANCH (Cyan) - Speed, Jumps, Dashes
         // ═══════════════════════════════════════════════════════════
@@ -276,7 +292,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             "mobility_start", "Runner's Path", "Begin the path of speed.",
             Material.FEATHER, SkillCategory.MOBILITY, NodeTier.MINOR,
             listOf("origin", "speed_1", "jump_1", "dash_1", "nofall_1"),
-            SkillEffect.MovementSpeed(0.02f)
+            SkillEffect.MovementSpeed(plugin.configManager.skillMovementSpeedBonus * 2)
         )
         
         // Speed Branch
@@ -315,10 +331,10 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         
         // Dash (Warframe/Hollow Knight)
         nodes["dash_1"] = SkillNode(
-            "dash_1", "Shadow Step", "Dash forward (5s cooldown)",
+            "dash_1", "Shadow Step", "Dash forward",
             Material.ENDER_PEARL, SkillCategory.MOBILITY, NodeTier.KEYSTONE,
             listOf("mobility_start"),
-            SkillEffect.Dash(100, 5.0), cost = 3
+            SkillEffect.Dash(plugin.configManager.dashCooldownTicks, 5.0), cost = 3
         )
         
         // No Fall Damage (Feather Falling Max)
@@ -490,7 +506,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             "utility_start", "Adventurer's Kit", "Quality of life improvements.",
             Material.BUNDLE, SkillCategory.UTILITY, NodeTier.MINOR,
             listOf("origin", "night_vision_1", "water_breathing_1", "soulbind_1", "lumberjack_1", "xp_bonus_1"),
-            SkillEffect.XpBonus(1.05)
+            SkillEffect.XpBonus(plugin.configManager.skillXpBonusBase - 0.20) // 1.05 default
         )
         
         nodes["night_vision_1"] = SkillNode(
@@ -524,6 +540,14 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             SkillEffect.XpBonus(1.25)
         )
         
+        // Active Ability: Healing Pulse
+        nodes["healing_pulse_1"] = SkillNode(
+            "healing_pulse_1", "Healing Pulse", "Active: Heal nearby allies",
+            Material.BEACON, SkillCategory.UTILITY, NodeTier.KEYSTONE,
+            listOf("utility_start"),
+            SkillEffect.ActiveHealingPulse(plugin.configManager.healingPulseAmount, plugin.configManager.healingPulseCooldownTicks), cost = 3
+        )
+        
         return nodes
     }
     
@@ -539,6 +563,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         
         // Combat (Top) - Row 5-6
         grid[7][5] = "combat_start"
+        grid[8][5] = "fireball_1" 
         grid[6][4] = "sword_1"
         grid[5][3] = "sword_2"
         grid[4][2] = "sword_3"
@@ -553,6 +578,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         
         // Defense (Left) - Column 3-5
         grid[5][7] = "defense_start"
+        grid[5][6] = "shield_wall_1"
         grid[4][7] = "health_1"
         grid[3][7] = "health_2"
         grid[2][7] = "health_3"
@@ -584,6 +610,11 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         
         // Archery (Bottom-Right) - Row 9-11
         grid[8][9] = "archery_start"
+        grid[7][9] = "healing_pulse_1" // Near Utility Start? No utility_start is not placed in grid yet
+        
+        // Utility Start Fix - Place it
+        grid[9][6] = "utility_start" // Close to mobility?
+        grid[9][5] = "healing_pulse_1"
         grid[9][10] = "bow_1"
         grid[10][11] = "bow_2"
         grid[11][12] = "bow_3"

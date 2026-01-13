@@ -9,8 +9,6 @@ data class AtlasPlayer(
     var alignment: Int = 0, // -100 to 100
     var balance: Double = 100.0,
     var cityId: String? = null,
-    var playerClass: String? = null, // Deprecated - kept for migration
-    var lastClassChange: Long = 0L,
     var currentXp: Long = 0,
     var level: Int = 1,
     val titles: MutableList<String> = mutableListOf(),

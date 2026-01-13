@@ -33,13 +33,42 @@ class ConfigManager(private val plugin: AtlasPlugin) {
     
     // Classes
     var classChangeCooldownHours: Int = 24
-    var abilityCooldownSeconds: Int = 30
+    // Abilities
+    var abilityCooldownSeconds: Int = 30 // Fallback
+    var fireballCooldownTicks: Int = 100
+    var shieldWallCooldownTicks: Int = 400
+    var shieldWallDurationTicks: Int = 100
+    var healingPulseCooldownTicks: Int = 300
+    var healingPulseAmount: Double = 8.0
+    var dashCooldownTicks: Int = 100
+    var dashVelocity: Double = 1.5
+    
+    // Infrastructure
+    var turretCost: Int = 1500
+    var wallCosts: List<Int> = listOf(0, 500, 1000, 2000, 4000, 8000)
+    var generatorCosts: List<Int> = listOf(0, 1000, 2500, 5000)
+    var barracksCosts: List<Int> = listOf(0, 2000, 4000, 8000)
+    var wallDamageReductionPerLevel: Double = 0.10
+    var generatorIncomePerLevel: Double = 25.0
+    var barracksDefendersPerLevel: Int = 2
     
     // Dungeons
     var dungeonMaxSize: Int = 64
     var dungeonTimeBonusThreshold: Double = 0.5
     var dungeonSpeedBonusMultiplier: Double = 1.5
     var dungeonRelicDropChance: Double = 0.20
+    
+    // Skill Tree Mults
+    var skillHealthBonus: Double = 2.0
+    var skillMeleeMult: Double = 1.05
+    var skillSwordMult: Double = 1.10
+    var skillAxeMult: Double = 1.10
+    var skillBowMult: Double = 1.05
+    var skillMiningSpeedMult: Double = 1.0
+    var skillMovementSpeedBonus: Float = 0.01f
+    var skillLifeLeechBase: Double = 0.05
+    var skillCritChanceBase: Double = 0.05
+    var skillXpBonusBase: Double = 1.25
     
     // Party
     var partyMaxSize: Int = 4
@@ -48,6 +77,10 @@ class ConfigManager(private val plugin: AtlasPlugin) {
     // Bounty
     var bountyMinimum: Double = 50.0
     var bountyMaximum: Double = 100000.0
+    
+    // Quests
+    var questBaseXpReward: Long = 100L
+    var questTaxCityTreasury: Boolean = true
     
     // Blueprints
     var blueprintMaxDimension: Int = 64
@@ -104,7 +137,24 @@ class ConfigManager(private val plugin: AtlasPlugin) {
         
         // Classes
         classChangeCooldownHours = config.getInt("classes.change-cooldown-hours", 24)
-        abilityCooldownSeconds = config.getInt("classes.ability-cooldown-seconds", 30)
+        // Abilities
+        abilityCooldownSeconds = config.getInt("abilities.default-cooldown-seconds", 30)
+        fireballCooldownTicks = config.getInt("abilities.fireball.cooldown-ticks", 100)
+        shieldWallCooldownTicks = config.getInt("abilities.shield-wall.cooldown-ticks", 400)
+        shieldWallDurationTicks = config.getInt("abilities.shield-wall.duration-ticks", 100)
+        healingPulseCooldownTicks = config.getInt("abilities.healing-pulse.cooldown-ticks", 300)
+        healingPulseAmount = config.getDouble("abilities.healing-pulse.amount", 8.0)
+        dashCooldownTicks = config.getInt("abilities.dash.cooldown-ticks", 100)
+        dashVelocity = config.getDouble("abilities.dash.velocity", 1.5)
+        
+        // Infrastructure
+        turretCost = config.getInt("infrastructure.turret-cost", 1500)
+        wallCosts = config.getIntegerList("infrastructure.wall-costs").takeIf { it.isNotEmpty() } ?: listOf(0, 500, 1000, 2000, 4000, 8000)
+        generatorCosts = config.getIntegerList("infrastructure.generator-costs").takeIf { it.isNotEmpty() } ?: listOf(0, 1000, 2500, 5000)
+        barracksCosts = config.getIntegerList("infrastructure.barracks-costs").takeIf { it.isNotEmpty() } ?: listOf(0, 2000, 4000, 8000)
+        wallDamageReductionPerLevel = config.getDouble("infrastructure.wall-reduction-per-level", 0.10)
+        generatorIncomePerLevel = config.getDouble("infrastructure.generator-income-per-level", 25.0)
+        barracksDefendersPerLevel = config.getInt("infrastructure.barracks-defenders-per-level", 2)
         
         // Dungeons
         dungeonMaxSize = config.getInt("dungeons.max-size-blocks", 64)
@@ -115,6 +165,22 @@ class ConfigManager(private val plugin: AtlasPlugin) {
         // Party
         partyMaxSize = config.getInt("party.max-size", 4)
         partyInviteTimeoutSeconds = config.getInt("party.invite-timeout-seconds", 60)
+        
+        // Skill Tree Mults
+        skillHealthBonus = config.getDouble("skills.health-bonus", 2.0)
+        skillMeleeMult = config.getDouble("skills.melee-multiplier", 1.05)
+        skillSwordMult = config.getDouble("skills.sword-multiplier", 1.10)
+        skillAxeMult = config.getDouble("skills.axe-multiplier", 1.10)
+        skillBowMult = config.getDouble("skills.bow-multiplier", 1.05)
+        skillMiningSpeedMult = config.getDouble("skills.mining-speed-multiplier", 1.0)
+        skillMovementSpeedBonus = config.getDouble("skills.speed-bonus", 0.01).toFloat()
+        skillLifeLeechBase = config.getDouble("skills.leech-base", 0.05)
+        skillCritChanceBase = config.getDouble("skills.crit-chance-base", 0.05)
+        skillXpBonusBase = config.getDouble("skills.xp-bonus-base", 1.25)
+        
+        // Quests
+        questBaseXpReward = config.getLong("quests.base-xp-reward", 100L)
+        questTaxCityTreasury = config.getBoolean("quests.tax-to-city", true)
         
         // Bounty
         bountyMinimum = config.getDouble("bounty.minimum-amount", 50.0)

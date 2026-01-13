@@ -1,6 +1,7 @@
 package com.projectatlas.classes
 
 import com.projectatlas.AtlasPlugin
+import com.projectatlas.skills.SkillTreeManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Material
@@ -17,81 +18,93 @@ import java.util.concurrent.ConcurrentHashMap
 
 class AbilityListener(private val plugin: AtlasPlugin) : Listener {
     
-    private val cooldowns = ConcurrentHashMap<UUID, Long>()
+    // Key: "UUID_AbilityID" -> Timestamp
+    private val cooldowns = ConcurrentHashMap<String, Long>()
 
     @EventHandler
     fun onRightClick(event: PlayerInteractEvent) {
         // Must be right-click
         if (event.action != Action.RIGHT_CLICK_AIR && event.action != Action.RIGHT_CLICK_BLOCK) return
         
-        // Item check: Must be holding specific items? 
-        // For simplicity: Sword for Vanguard, Feather for Scout, Golden Apple/Dye for Medic?
-        // Let's stick to: "Holding any sword/axe" or just "Sneak + Right Click empty hand"?
-        // CDD says "Right-click usually triggers them."
-        // Let's implement: Right-Click with SWORD (Vanguard), FEATHER (Scout), POPPY/DYE (Medic).
-        // Or simpler: Right-Click with Class Item.
-        
         val player = event.player
-        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
-        val className = profile.playerClass ?: return
+        val item = player.inventory.itemInMainHand.type
+        val unlocked = plugin.skillTreeManager.getUnlockedNodes(player)
         
-        if (!isHoldingClassItem(player, className)) return
+        // 1. Fireball (Blaze Rod)
+        if (item == Material.BLAZE_ROD && "fireball_1" in unlocked) {
+            val cooldown = plugin.configManager.fireballCooldownTicks * 50L
+            castAbility(player, "fireball_1", cooldown) {
+                castFireball(player)
+            }
+        }
         
-        // Cooldown Check
+        // 2. Shield Wall (Shield or Sword)
+        else if ((item == Material.SHIELD || item.name.contains("SWORD")) && "shield_wall_1" in unlocked) {
+            val cooldown = plugin.configManager.shieldWallCooldownTicks * 50L
+            castAbility(player, "shield_wall_1", cooldown) {
+                castShieldWall(player)
+            }
+        }
+        
+        // 3. Healing Pulse (Beacon or Golden Apple)
+        else if ((item == Material.BEACON || item == Material.GOLDEN_APPLE) && "healing_pulse_1" in unlocked) {
+            val cooldown = plugin.configManager.healingPulseCooldownTicks * 50L
+            castAbility(player, "healing_pulse_1", cooldown) {
+                castHealingPulse(player)
+            }
+        }
+        
+        // 4. Dash (Feather)
+        else if (item == Material.FEATHER && "dash_1" in unlocked) {
+            val cooldown = plugin.configManager.dashCooldownTicks * 50L
+            castAbility(player, "dash_1", cooldown) {
+                castDash(player)
+            }
+        }
+    }
+    
+    private fun castAbility(player: Player, abilityId: String, cooldownMs: Long, action: () -> Unit) {
+        val key = "${player.uniqueId}_$abilityId"
         val now = System.currentTimeMillis()
-        val lastUse = cooldowns[player.uniqueId] ?: 0L
-        val cooldownMs = getCooldown(className)
+        val lastUse = cooldowns[key] ?: 0L
         
         if (now - lastUse < cooldownMs) {
             val remaining = (cooldownMs - (now - lastUse)) / 1000
             player.sendMessage(Component.text("Ability on cooldown! ${remaining}s", NamedTextColor.RED))
+            // Play error sound?
+            player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.5f)
             return
         }
         
-        // Execute Ability
-        when (className) {
-            "Vanguard" -> castShieldWall(player)
-            "Scout" -> castDash(player)
-            "Medic" -> castHealingPulse(player)
-        }
-        
-        cooldowns[player.uniqueId] = now
-    }
-    
-    private fun isHoldingClassItem(player: Player, className: String): Boolean {
-        val type = player.inventory.itemInMainHand.type
-        return when (className) {
-            "Vanguard" -> type.name.contains("SWORD") || type == Material.SHIELD
-            "Scout" -> type == Material.FEATHER || type == Material.BOW
-            "Medic" -> type == Material.GOLDEN_APPLE || type == Material.PAPER || type.name.contains("POTION")
-            else -> false
-        }
-    }
-    
-    private fun getCooldown(className: String): Long {
-        return when (className) {
-            "Vanguard" -> 20_000L // 20s
-            "Scout" -> 10_000L // 10s
-            "Medic" -> 15_000L // 15s
-            else -> 1000L
-        }
+        action()
+        cooldowns[key] = now
     }
     
     // --- Abilities ---
+
+    private fun castFireball(player: Player) {
+        player.sendMessage(Component.text("🔥 FIREBALL!", NamedTextColor.RED))
+        player.playSound(player.location, Sound.ENTITY_BLAZE_SHOOT, 1.0f, 1.0f)
+        
+        val fireball = player.launchProjectile(org.bukkit.entity.LargeFireball::class.java)
+        fireball.yield = 0F // No block damage
+        fireball.isIncendiary = false
+        fireball.velocity = player.location.direction.multiply(1.5)
+    }
     
     private fun castShieldWall(player: Player) {
         player.sendMessage(Component.text("🛡️ SHIELD WALL ACTIVATED!", NamedTextColor.GOLD))
         player.playSound(player.location, Sound.ITEM_SHIELD_BLOCK, 1.0f, 0.5f)
         
-        val effect = PotionEffect(PotionEffectType.RESISTANCE, 100, 2, false, false) // Res III for 5s
+        val duration = plugin.configManager.shieldWallDurationTicks
+        val effect = PotionEffect(PotionEffectType.RESISTANCE, duration, 2, false, false) // Res III for configured duration
         player.addPotionEffect(effect)
         
         // Allies
         player.getNearbyEntities(5.0, 5.0, 5.0).forEach { entity ->
             if (entity is Player) {
-                // Check if ally (same city/party - simplistic check for now)
                 entity.addPotionEffect(effect)
-                entity.sendMessage(Component.text("Protected by Vanguard!", NamedTextColor.BLUE))
+                entity.sendMessage(Component.text("Protected by Shield Wall!", NamedTextColor.BLUE))
             }
         }
     }
@@ -101,7 +114,8 @@ class AbilityListener(private val plugin: AtlasPlugin) : Listener {
         player.playSound(player.location, Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.2f)
         
         player.addPotionEffect(PotionEffect(PotionEffectType.SPEED, 60, 3, false, false)) // Speed IV for 3s
-        player.velocity = player.location.direction.multiply(1.5).setY(0.5)
+        val velocity = plugin.configManager.dashVelocity
+        player.velocity = player.location.direction.multiply(velocity).setY(0.5)
     }
     
     private fun castHealingPulse(player: Player) {
@@ -109,7 +123,7 @@ class AbilityListener(private val plugin: AtlasPlugin) : Listener {
         player.playSound(player.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f)
         player.world.spawnParticle(org.bukkit.Particle.HEART, player.location.add(0.0, 1.0, 0.0), 10, 0.5, 0.5, 0.5)
         
-        val healAmount = 8.0 // 4 hearts
+        val healAmount = plugin.configManager.healingPulseAmount
         
         // Self
         val newHealth = (player.health + healAmount).coerceAtMost(player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0)
@@ -120,7 +134,7 @@ class AbilityListener(private val plugin: AtlasPlugin) : Listener {
             if (entity is Player) {
                 val max = entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
                 entity.health = (entity.health + healAmount).coerceAtMost(max)
-                entity.sendMessage(Component.text("Healed by Medic!", NamedTextColor.GREEN))
+                entity.sendMessage(Component.text("Healed by Pulse!", NamedTextColor.GREEN))
                 entity.world.spawnParticle(org.bukkit.Particle.HEART, entity.location.add(0.0, 1.0, 0.0), 5)
             }
         }

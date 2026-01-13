@@ -382,7 +382,7 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         plugin.achievementManager.awardAchievement(player, "quest_complete")
         
         // Grant XP
-        plugin.identityManager.grantXp(player, 100L) // Base XP for any quest
+        plugin.identityManager.grantXp(player, plugin.configManager.questBaseXpReward) // Base XP for any quest
     }
     private fun startQuestLoop() {
         questTask = plugin.server.scheduler.runTaskTimer(plugin, Runnable {

@@ -8,7 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin
 
 import com.projectatlas.config.ConfigManager
 
-import com.projectatlas.classes.ClassManager
+
 
 import com.projectatlas.gui.GuiManager
 import com.projectatlas.achievements.AchievementManager
@@ -31,6 +31,7 @@ import com.projectatlas.survival.SurvivalManager
 import com.projectatlas.quests.QuestBoardManager
 import com.projectatlas.economy.MarketManager
 import com.projectatlas.visuals.VisualManager
+import com.projectatlas.chat.ChatManager
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -39,7 +40,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var economyManager: EconomyManager
     lateinit var cityManager: CityManager
     lateinit var eventManager: EventManager
-    lateinit var classManager: ClassManager
+
     lateinit var guiManager: GuiManager
     lateinit var achievementManager: AchievementManager
     lateinit var npcManager: NPCManager
@@ -61,6 +62,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var questBoardManager: QuestBoardManager
     lateinit var marketManager: MarketManager
     lateinit var visualManager: VisualManager
+    lateinit var chatManager: ChatManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -74,7 +76,7 @@ class AtlasPlugin : JavaPlugin() {
         economyManager = EconomyManager(identityManager)
         cityManager = CityManager(this)
         eventManager = EventManager(this)
-        classManager = ClassManager(this)
+
         guiManager = GuiManager(this)
         achievementManager = AchievementManager(this)
         npcManager = NPCManager(this)
@@ -96,9 +98,10 @@ class AtlasPlugin : JavaPlugin() {
         questBoardManager = QuestBoardManager(this)
         marketManager = MarketManager(this)
         visualManager = VisualManager(this)
+        chatManager = ChatManager(this)
         
         // Register Events
-        server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, classManager, guiManager), this)
+        server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, guiManager), this)
         server.pluginManager.registerEvents(guiManager, this)
         server.pluginManager.registerEvents(npcManager, this)
         server.pluginManager.registerEvents(questManager, this)
@@ -117,12 +120,13 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(survivalManager, this)
         server.pluginManager.registerEvents(questBoardManager, this)
         server.pluginManager.registerEvents(marketManager, this) // Register Market Events
+        server.pluginManager.registerEvents(chatManager, this)
         
 
         
         // Register Commands
         // Register Commands
-        getCommand("atlas")?.setExecutor(AtlasCommand(identityManager, economyManager, cityManager, classManager, guiManager, schematicManager, politicsManager))
+        getCommand("atlas")?.setExecutor(AtlasCommand(identityManager, economyManager, cityManager, guiManager, schematicManager, politicsManager))
         
         // Start Scheduler
         eventManager.startScheduler()

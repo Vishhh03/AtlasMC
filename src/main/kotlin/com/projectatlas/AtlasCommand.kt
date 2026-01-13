@@ -13,7 +13,6 @@ import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
 
 import com.projectatlas.gui.GuiManager
-import com.projectatlas.classes.ClassManager
 import com.projectatlas.schematic.SchematicManager
 
 import com.projectatlas.politics.PoliticsManager
@@ -22,7 +21,6 @@ class AtlasCommand(
     private val identityManager: IdentityManager,
     private val economyManager: EconomyManager,
     private val cityManager: CityManager,
-    private val classManager: ClassManager,
     private val guiManager: GuiManager,
     private val schematicManager: SchematicManager,
     private val politicsManager: PoliticsManager
@@ -45,7 +43,6 @@ class AtlasCommand(
             "pay" -> handlePay(sender, args)
             "city" -> handleCity(sender, args)
             "event" -> handleEvent(sender, args)
-            "class" -> handleClass(sender, args)
             "help" -> handleHelp(sender)
             "spawn" -> handleSpawn(sender, args)
             "schem" -> handleSchematic(sender, args)
@@ -332,35 +329,12 @@ class AtlasCommand(
         player.sendMessage(Component.text("/atlas bal - View balance", NamedTextColor.YELLOW))
         player.sendMessage(Component.text("/atlas pay <player> <amount>", NamedTextColor.YELLOW))
         player.sendMessage(Component.text("/atlas city <create|claim|invite|join|kick|leave|info|tax|deposit>", NamedTextColor.YELLOW))
-        player.sendMessage(Component.text("/atlas class choose <name> - Pick a class", NamedTextColor.YELLOW))
         if (player.hasPermission("atlas.admin")) {
             player.sendMessage(Component.text("/atlas event start - Force event", NamedTextColor.RED))
         }
     }
 
-    private fun handleClass(player: Player, args: Array<out String>) {
-        if (args.size < 3 || !args[1].equals("choose", true)) {
-            player.sendMessage(Component.text("Usage: /atlas class choose <name>", NamedTextColor.RED))
-            val classes = classManager.getAvailableClasses().joinToString(", ")
-            player.sendMessage(Component.text("Available: $classes", NamedTextColor.GRAY))
-            return
-        }
-        
-        val className = args[2]
-        // Normalize name case (simple hack)
-        val properName = classManager.getAvailableClasses().find { it.equals(className, true) }
-        
-        if (properName == null) {
-            player.sendMessage(Component.text("Invalid class. Choices: ${classManager.getAvailableClasses()}", NamedTextColor.RED))
-            return
-        }
-        
-        if (classManager.setClass(player, properName)) {
-             player.sendMessage(Component.text("You are now a $properName!", NamedTextColor.GREEN))
-        } else {
-             player.sendMessage(Component.text("Failed to set class.", NamedTextColor.RED))
-        }
-    }
+    // --- Tab Completion ---
 
     // --- Tab Completion ---
 
@@ -739,12 +713,11 @@ class AtlasCommand(
         
         return when (args.size) {
             1 -> listOf(
-                "profile", "balance", "pay", "city", "class", "help", "menu",
+                "profile", "balance", "pay", "city", "help", "menu",
                 "dungeon", "party", "bounty", "boss", "relic", "blueprint", "bp", "schem", "spawn"
             ).filter { it.startsWith(args[0].lowercase()) }
             
             2 -> when (args[0].lowercase()) {
-                "class" -> listOf("select", "info").filter { it.startsWith(args[1].lowercase()) }
                 "city" -> listOf("create", "join", "leave", "claim", "deposit", "tax", "invite", "kick", "info", "election", "vote")
                     .filter { it.startsWith(args[1].lowercase()) }
                 "dungeon" -> listOf("enter", "leave", "modifiers")
@@ -767,10 +740,6 @@ class AtlasCommand(
             }
             
             3 -> when (args[0].lowercase()) {
-                "class" -> if (args[1].lowercase() == "select") {
-                    listOf("Vanguard", "Scout", "Medic").filter { it.lowercase().startsWith(args[2].lowercase()) }
-                } else emptyList()
-                
                 "dungeon" -> if (args[1].lowercase() in listOf("enter", "join")) {
                     com.projectatlas.dungeon.DungeonManager.DungeonType.entries
                         .map { it.displayName }

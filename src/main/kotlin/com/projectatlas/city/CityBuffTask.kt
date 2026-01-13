@@ -14,11 +14,8 @@ class CityBuffTask(private val plugin: AtlasPlugin) : Runnable {
                 // Player is in their own city - Apply Haste buff
                 player.addPotionEffect(PotionEffect(PotionEffectType.HASTE, 220, 0, false, false, true))
                 
-                // Only apply city Regen if player is NOT a Medic (Medics have infinite Regen from class)
-                val profile = plugin.identityManager.getPlayer(player.uniqueId)
-                if (profile?.playerClass != "Medic") {
-                    player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 220, 0, false, false, true))
-                }
+                // Apply City Regen
+                player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 220, 0, false, false, true))
             }
         }
     }

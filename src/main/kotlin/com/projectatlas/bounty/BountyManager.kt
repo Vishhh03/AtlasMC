@@ -43,8 +43,8 @@ class BountyManager(private val plugin: AtlasPlugin) : Listener {
             return false
         }
         
-        if (amount < 100) {
-            placer.sendMessage(Component.text("Minimum bounty is 100g!", NamedTextColor.RED))
+        if (amount < plugin.configManager.bountyMinimum) {
+            placer.sendMessage(Component.text("Minimum bounty is ${plugin.configManager.bountyMinimum}g!", NamedTextColor.RED))
             return false
         }
         

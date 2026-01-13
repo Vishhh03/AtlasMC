@@ -3,6 +3,7 @@ package com.projectatlas
 import com.projectatlas.city.CityManager
 import com.projectatlas.gui.GuiManager
 import com.projectatlas.identity.IdentityManager
+import com.projectatlas.skills.SkillTreeManager
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.event.EventHandler
@@ -15,7 +16,7 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.block.Action
 import org.bukkit.event.entity.EntityDeathEvent
 
-import com.projectatlas.classes.ClassManager
+import com.projectatlas.identity.IdentityManager
 import org.bukkit.event.player.PlayerRespawnEvent
 import org.bukkit.event.EventPriority
 import org.bukkit.block.Container
@@ -23,7 +24,6 @@ import org.bukkit.block.Container
 class AtlasListener(
     private val identityManager: IdentityManager,
     private val cityManager: CityManager,
-    private val classManager: ClassManager,
     private val guiManager: GuiManager
 ) : Listener {
     
@@ -34,12 +34,16 @@ class AtlasListener(
     @EventHandler
     fun onJoin(event: PlayerJoinEvent) {
         identityManager.createOrLoadProfile(event.player)
-        classManager.applyClassEffects(event.player)
+        // Apply Skill Tree bonuses
+        plugin.skillTreeManager.applyAllSkillEffects(event.player)
     }
 
     @EventHandler
     fun onRespawn(event: PlayerRespawnEvent) {
-        classManager.applyClassEffects(event.player)
+        // Re-apply Skill Tree bonuses
+        org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+            plugin.skillTreeManager.applyAllSkillEffects(event.player)
+        }, 5L)
     }
 
     @EventHandler

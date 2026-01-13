@@ -25,8 +25,8 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         val inv = Bukkit.createInventory(null, 54, Component.text("✦ Project Atlas Menu ✦", NamedTextColor.DARK_BLUE))
         
         // Row 1: Core Features
-        inv.setItem(10, createGuiItem(Material.PLAYER_HEAD, "Your Profile", "action:profile", "View your stats & class"))
-        inv.setItem(12, createGuiItem(Material.DIAMOND_SWORD, "Class Selector", "action:class_menu", "Choose your combat role"))
+        inv.setItem(10, createGuiItem(Material.PLAYER_HEAD, "Your Profile", "action:profile", "View your stats"))
+        // Item 12: Class Selector Removed
         inv.setItem(14, createGuiItem(Material.BEACON, "City Management", "action:city_menu", "Manage your city"))
         inv.setItem(16, createGuiItem(Material.GOLD_INGOT, "Economy", "action:economy_menu", "Manage your finances"))
         
@@ -57,56 +57,22 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         val inv = Bukkit.createInventory(null, 27, Component.text("Your Profile", NamedTextColor.DARK_PURPLE))
         
         val profile = plugin.identityManager.getPlayer(player.uniqueId)
-        val className = profile?.playerClass ?: "None"
+        val profile = plugin.identityManager.getPlayer(player.uniqueId)
         val cityName = profile?.cityId?.let { plugin.cityManager.getCity(it)?.name } ?: "Nomad"
         
         inv.setItem(10, createInfoItem(Material.NAME_TAG, "Name", player.name))
         inv.setItem(11, createInfoItem(Material.EMERALD, "Reputation", "${profile?.reputation ?: 0}"))
         inv.setItem(12, createInfoItem(Material.COMPASS, "Alignment", "${profile?.alignment ?: 0}"))
-        inv.setItem(14, createInfoItem(Material.IRON_SWORD, "Class", className))
         inv.setItem(15, createInfoItem(Material.BELL, "City", cityName))
         inv.setItem(16, createInfoItem(Material.GOLD_INGOT, "Balance", "${profile?.balance ?: 0.0}"))
         
-        // QoL: Quick action to change class
-        inv.setItem(23, createGuiItem(Material.ARMOR_STAND, "Change Class", "action:class_menu", "Pick a new role"))
+        // QoL: Quick action removed
         inv.setItem(22, createGuiItem(Material.BARRIER, "Back", "action:main_menu", "Return to Main Menu"))
         
         player.openInventory(inv)
     }
 
-    // ========== CLASS MENU ==========
-    fun openClassMenu(player: Player) {
-        val inv = Bukkit.createInventory(null, 36, Component.text("Select Class", NamedTextColor.DARK_GREEN))
-        
-        val profile = plugin.identityManager.getPlayer(player.uniqueId)
-        val currentClass = profile?.playerClass
-        
-        // Show current class indicator
-        inv.setItem(4, createInfoItem(Material.BOOK, "Current Class", currentClass ?: "None"))
-        
-        // Show cost/cooldown info
-        val canChange = plugin.classManager.canChangeClass(player)
-        val costInfo = when (canChange) {
-            is com.projectatlas.classes.ClassManager.ClassChangeResult.Success -> {
-                if (currentClass == null) "First class is FREE!" else "Cost: ${plugin.classManager.getClassChangeCost()}g"
-            }
-            is com.projectatlas.classes.ClassManager.ClassChangeResult.OnCooldown -> {
-                "§cCooldown: ${canChange.hours}h ${canChange.minutes}m"
-            }
-            is com.projectatlas.classes.ClassManager.ClassChangeResult.InsufficientFunds -> {
-                "§cNeed ${canChange.required}g (have ${canChange.current})"
-            }
-            else -> "Error"
-        }
-        inv.setItem(13, createInfoItem(Material.CLOCK, "Change Status", costInfo))
-        
-        inv.setItem(19, createClassItem(Material.IRON_CHESTPLATE, "Vanguard", "action:confirm_class_vanguard", currentClass == "Vanguard", "Health: 30", "Role: Tank"))
-        inv.setItem(21, createClassItem(Material.FEATHER, "Scout", "action:confirm_class_scout", currentClass == "Scout", "Speed: Fast", "Role: Explorer"))
-        inv.setItem(23, createClassItem(Material.SPLASH_POTION, "Medic", "action:confirm_class_medic", currentClass == "Medic", "Regen: Passive", "Role: Healer"))
-        inv.setItem(31, createGuiItem(Material.BARRIER, "Back", "action:main_menu", "Return to Main Menu"))
 
-        player.openInventory(inv)
-    }
 
     // ========== CITY MENU ==========
     fun openCityMenu(player: Player) {
@@ -172,26 +138,31 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         inv.setItem(4, createInfoItem(Material.GOLD_BLOCK, "Treasury", "${city.treasury}g"))
         
         // Walls (damage reduction)
-        val wallCost = infra.getWallUpgradeCost()
+        // Walls (damage reduction)
+        val wallCost = getUpgradeCost(plugin.configManager.wallCosts, infra.wallLevel)
+        val reduction = infra.wallLevel * plugin.configManager.wallDamageReductionPerLevel
         inv.setItem(19, createGuiItem(Material.STONE_BRICKS, "Walls Lv.${infra.wallLevel}", "action:upgrade_wall",
-            "Damage reduction: ${(infra.getWallDamageReduction() * 100).toInt()}%",
+            "Damage reduction: ${(reduction * 100).toInt()}%",
             if (wallCost != null) "Upgrade: ${wallCost}g" else "MAX LEVEL"))
         
         // Turrets (auto-attack during siege)
+        val turretCost = plugin.configManager.turretCost
         inv.setItem(21, createGuiItem(Material.DISPENSER, "Turrets: ${infra.turretCount}/4", "action:upgrade_turret",
             "Auto-attack invaders during siege",
-            if (infra.canAddTurret()) "Add: ${com.projectatlas.city.CityInfrastructure.TURRET_COST}g" else "MAX TURRETS"))
+            if (infra.canAddTurret()) "Add: ${turretCost}g" else "MAX TURRETS"))
         
         // Generator (passive income)
-        val genCost = infra.getGeneratorUpgradeCost()
+        val genCost = getUpgradeCost(plugin.configManager.generatorCosts, infra.generatorLevel)
+        val income = infra.generatorLevel * plugin.configManager.generatorIncomePerLevel
         inv.setItem(23, createGuiItem(Material.REDSTONE_BLOCK, "Generator Lv.${infra.generatorLevel}", "action:upgrade_generator",
-            "Passive income: ${infra.getPassiveIncome()}g/cycle",
+            "Passive income: ${income}g/cycle",
             if (genCost != null) "Upgrade: ${genCost}g" else "MAX LEVEL"))
         
         // Barracks (defender NPCs)
-        val barracksCost = infra.getBarracksUpgradeCost()
+        val barracksCost = getUpgradeCost(plugin.configManager.barracksCosts, infra.barracksLevel)
+        val defenders = infra.barracksLevel * plugin.configManager.barracksDefendersPerLevel
         inv.setItem(25, createGuiItem(Material.IRON_CHESTPLATE, "Barracks Lv.${infra.barracksLevel}", "action:upgrade_barracks",
-            "Defenders during siege: ${infra.getDefenderCount()}",
+            "Defenders during siege: ${defenders}",
             if (barracksCost != null) "Upgrade: ${barracksCost}g" else "MAX LEVEL"))
         
         // Core repair
@@ -269,17 +240,8 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
             // Navigation
             "action:main_menu" -> openMainMenu(player)
             "action:profile" -> openProfileMenu(player)
-            "action:class_menu" -> openClassMenu(player)
             "action:city_menu" -> openCityMenu(player)
             "action:economy_menu" -> openEconomyMenu(player)
-            
-            // Classes (with confirmation flow)
-            "action:confirm_class_vanguard" -> handleClassChange(player, "Vanguard")
-            "action:confirm_class_scout" -> handleClassChange(player, "Scout")
-            "action:confirm_class_medic" -> handleClassChange(player, "Medic")
-            "action:class_vanguard" -> { plugin.classManager.setClass(player, "Vanguard"); player.closeInventory(); playSuccessSound(player) }
-            "action:class_scout" -> { plugin.classManager.setClass(player, "Scout"); player.closeInventory(); playSuccessSound(player) }
-            "action:class_medic" -> { plugin.classManager.setClass(player, "Medic"); player.closeInventory(); playSuccessSound(player) }
             
             // City Actions
             "action:city_create" -> {
@@ -467,21 +429,7 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         return item
     }
     
-    // Class items with "selected" indicator
-    private fun createClassItem(material: Material, name: String, action: String, isSelected: Boolean, vararg lore: String): ItemStack {
-        val item = ItemStack(material)
-        val meta = item.itemMeta
-        val color = if (isSelected) NamedTextColor.GREEN else NamedTextColor.GOLD
-        val prefix = if (isSelected) "✓ " else ""
-        meta.displayName(Component.text("$prefix$name", color))
-        val fullLore = lore.map { Component.text(it, NamedTextColor.GRAY) }.toMutableList()
-        if (isSelected) fullLore.add(Component.text("(Currently Selected)", NamedTextColor.GREEN))
-        meta.lore(fullLore)
-        meta.persistentDataContainer.set(menuKey, PersistentDataType.BYTE, 1)
-        meta.persistentDataContainer.set(actionKey, PersistentDataType.STRING, action)
-        item.itemMeta = meta
-        return item
-    }
+
     
     private fun createInfoItem(material: Material, label: String, value: String): ItemStack {
         val item = ItemStack(material)
@@ -502,21 +450,7 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
     }
     
     // ========== CLASS CHANGE HELPER ==========
-    private fun handleClassChange(player: Player, className: String) {
-        val profile = plugin.identityManager.getPlayer(player.uniqueId)
-        val isFirstClass = profile?.playerClass == null
-        
-        if (isFirstClass) {
-            // First class is free - just apply it
-            plugin.classManager.setClass(player, className)
-            player.closeInventory()
-            playSuccessSound(player)
-        } else {
-            // Show confirmation with cost
-            val cost = plugin.classManager.getClassChangeCost()
-            openConfirmMenu(player, "Change to $className?", "action:class_$className".lowercase(), "action:class_menu", "This will cost ${cost}g")
-        }
-    }
+
     
     // ========== INFRASTRUCTURE UPGRADE HELPER ==========
     private fun handleUpgrade(player: Player, type: String) {
@@ -529,22 +463,22 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         
         when (type) {
             "wall" -> {
-                cost = infra.getWallUpgradeCost()
+                cost = getUpgradeCost(plugin.configManager.wallCosts, infra.wallLevel)
                 canUpgrade = cost != null && city.treasury >= cost
                 if (canUpgrade) { city.treasury -= cost!!; infra.wallLevel++ }
             }
             "turret" -> {
-                cost = com.projectatlas.city.CityInfrastructure.TURRET_COST
+                cost = plugin.configManager.turretCost
                 canUpgrade = infra.canAddTurret() && city.treasury >= cost
                 if (canUpgrade) { city.treasury -= cost; infra.turretCount++ }
             }
             "generator" -> {
-                cost = infra.getGeneratorUpgradeCost()
+                cost = getUpgradeCost(plugin.configManager.generatorCosts, infra.generatorLevel)
                 canUpgrade = cost != null && city.treasury >= cost
                 if (canUpgrade) { city.treasury -= cost!!; infra.generatorLevel++ }
             }
             "barracks" -> {
-                cost = infra.getBarracksUpgradeCost()
+                cost = getUpgradeCost(plugin.configManager.barracksCosts, infra.barracksLevel)
                 canUpgrade = cost != null && city.treasury >= cost
                 if (canUpgrade) { city.treasury -= cost!!; infra.barracksLevel++ }
             }
@@ -613,5 +547,8 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
             player.sendMessage(Component.text("Not enough gold!", NamedTextColor.RED))
             player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f)
         }
+    }
+    private fun getUpgradeCost(costs: List<Int>, currentLevel: Int): Int? {
+        return costs.getOrNull(currentLevel + 1)?.takeIf { it > 0 }
     }
 }

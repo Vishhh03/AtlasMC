@@ -108,6 +108,11 @@ sealed class SkillEffect {
     data class AuraSpeed(val radius: Double, val bonus: Float) : SkillEffect() // Speed nearby allies
     data class AuraStrength(val radius: Double, val bonus: Double) : SkillEffect() // Damage boost to allies
     
+    // ═══ ACTIVE ABILITIES (Class Replacement) ═══
+    data class ActiveFireball(val cooldownTicks: Int) : SkillEffect()
+    data class ActiveShieldWall(val durationTicks: Int, val cooldownTicks: Int) : SkillEffect()
+    data class ActiveHealingPulse(val amount: Double, val cooldownTicks: Int) : SkillEffect()
+    
     // Compound (for toString in GUI)
     override fun toString(): String = when (this) {
         is MaxHealth -> "+${bonus.toInt()} Max Health"
@@ -155,5 +160,8 @@ sealed class SkillEffect {
         is AuraRegeneration -> "Allies within ${radius.toInt()}m gain Regen"
         is AuraSpeed -> "Allies within ${radius.toInt()}m gain Speed"
         is AuraStrength -> "Allies within ${radius.toInt()}m deal +${((bonus - 1) * 100).toInt()}% damage"
+        is ActiveFireball -> "Unlock Fireball Ability (Blaze Rod)"
+        is ActiveShieldWall -> "Unlock Shield Wall Ability (Sword)"
+        is ActiveHealingPulse -> "Unlock Healing Pulse Ability (Golden Apple)"
     }
 }
