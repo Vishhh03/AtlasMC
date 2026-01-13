@@ -8,6 +8,8 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
+import org.bukkit.event.inventory.InventoryClickEvent
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.block.Biome
 import org.bukkit.Location
 import org.bukkit.Material
@@ -175,6 +177,80 @@ class NPCManager(private val plugin: AtlasPlugin) : Listener {
                 villager.persistentDataContainer.set(npcKey, PersistentDataType.STRING, npc.id)
             }
             spawnedEntities[npc.id] = entity
+        }
+    }
+    @EventHandler
+    fun onInventoryClick(event: InventoryClickEvent) {
+        val view = event.view
+        val title = PlainTextComponentSerializer.plainText().serialize(view.title())
+        
+        if (!title.contains("Shop")) return
+        
+        event.isCancelled = true // Prevent moving items
+        
+        val clickedItem = event.currentItem ?: return
+        if (clickedItem.type == Material.AIR) return
+        val player = event.whoClicked as? Player ?: return
+        
+        // Check which inventory was clicked
+        if (event.clickedInventory == event.view.topInventory) {
+            // BUY
+            val meta = clickedItem.itemMeta ?: return
+            val price = meta.persistentDataContainer.get(NamespacedKey(plugin, "shop_price"), PersistentDataType.INTEGER) ?: return
+            
+            if (plugin.economyManager.withdraw(player.uniqueId, price.toDouble())) {
+                // Give Item
+                val give = clickedItem.clone()
+                // Remove price tag lore
+                val lore = give.lore() ?: mutableListOf()
+                if (lore.size >= 2) {
+                   val newLore = lore.dropLast(2)
+                   give.lore(newLore)
+                }
+                
+                // Add to inventory
+                val left = player.inventory.addItem(give)
+                if (left.isNotEmpty()) {
+                    player.sendMessage(Component.text("Inventory full!", NamedTextColor.RED))
+                    plugin.economyManager.deposit(player.uniqueId, price.toDouble()) // Refund
+                    return
+                }
+                
+                player.sendMessage(Component.text("Purchased item for ${price}g.", NamedTextColor.GREEN))
+                player.playSound(player.location, org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f)
+            } else {
+                player.sendMessage(Component.text("Insufficient funds! You need ${price}g.", NamedTextColor.RED))
+                player.playSound(player.location, org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f)
+            }
+        } else {
+            // SELL
+            // Find price in Top Inventory
+            var buyPrice = 0
+             // iterate top inventory
+             for (shopItem in event.view.topInventory.contents) {
+                 if (shopItem != null && shopItem.type == clickedItem.type) {
+                     val p = shopItem.itemMeta?.persistentDataContainer?.get(NamespacedKey(plugin, "shop_price"), PersistentDataType.INTEGER)
+                     if (p != null) {
+                         buyPrice = p
+                         break
+                     }
+                 }
+             }
+             
+             if (buyPrice > 0) {
+                 // 80% Buy Back
+                 val sellPrice = (buyPrice * 0.8).toInt().coerceAtLeast(1)
+                 val amount = clickedItem.amount
+                 val total = sellPrice * amount
+                 
+                 plugin.economyManager.deposit(player.uniqueId, total.toDouble())
+                 event.clickedInventory?.setItem(event.slot, org.bukkit.inventory.ItemStack(Material.AIR))
+                 
+                 player.sendMessage(Component.text("Sold $amount items for ${total}g.", NamedTextColor.GREEN))
+                 player.playSound(player.location, org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1.5f)
+             } else {
+                 player.sendMessage(Component.text("This merchant doesn't want that.", NamedTextColor.RED))
+             }
         }
     }
 }
