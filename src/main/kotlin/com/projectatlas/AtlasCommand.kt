@@ -56,6 +56,7 @@ class AtlasCommand(
             "party" -> handleParty(sender, args)
             "blueprint", "bp" -> handleBlueprint(sender, args)
             "menu" -> handleMenu(sender)
+            "skills", "skill", "tree" -> handleSkills(sender)
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
         return true
@@ -70,6 +71,15 @@ class AtlasCommand(
         player.sendMessage(Component.text("Reputation: ${profile.reputation}"))
         player.sendMessage(Component.text("Alignment: ${profile.alignment}"))
         player.sendMessage(Component.text("City: ${if (profile.cityId != null) cityManager.getCity(profile.cityId!!)?.name else "None"}"))
+    }
+
+    private fun handleSkills(player: Player) {
+        val plugin = player.server.pluginManager.getPlugin("ProjectAtlas") as? AtlasPlugin
+        if (plugin != null) {
+            plugin.skillTreeManager.openSkillTree(player)
+        } else {
+            player.sendMessage(Component.text("Skill Tree is not available.", NamedTextColor.RED))
+        }
     }
 
     private fun handleBalance(player: Player) {

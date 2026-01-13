@@ -26,6 +26,7 @@ import com.projectatlas.worldboss.WorldBossManager
 import com.projectatlas.dungeon.DungeonManager
 import com.projectatlas.party.PartyManager
 import com.projectatlas.marketplace.BlueprintMarketplace
+import com.projectatlas.skills.SkillTreeManager
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -51,6 +52,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var dungeonManager: DungeonManager
     lateinit var partyManager: PartyManager
     lateinit var blueprintMarketplace: BlueprintMarketplace
+    lateinit var skillTreeManager: SkillTreeManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -81,6 +83,7 @@ class AtlasPlugin : JavaPlugin() {
         partyManager = PartyManager(this)
         dungeonManager = DungeonManager(this)
         blueprintMarketplace = BlueprintMarketplace(this)
+        skillTreeManager = SkillTreeManager(this)
         
         // Register Events
         server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, classManager, guiManager), this)
@@ -98,6 +101,7 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(worldBossManager, this)
         server.pluginManager.registerEvents(dungeonManager, this)
         server.pluginManager.registerEvents(blueprintMarketplace, this)
+        server.pluginManager.registerEvents(skillTreeManager, this)
         
         // Register Commands
         // Register Commands
