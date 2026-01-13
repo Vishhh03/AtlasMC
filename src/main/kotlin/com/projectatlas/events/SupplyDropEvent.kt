@@ -31,12 +31,12 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
         val centerZ = 0
         val range = plugin.configManager.supplyDropRadius
 
-        // 1. Find Location (avoid claimed city territory)
+        // 1. Find Location (avoid claimed city territory and water)
         var x: Int
         var z: Int
         var targetBlock: org.bukkit.block.Block
         var attempts = 0
-        val maxAttempts = 10
+        val maxAttempts = 20
         
         do {
             x = centerX + (random.nextInt(range * 2) - range)
@@ -46,12 +46,25 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
             attempts++
             
             val claimedCity = plugin.cityManager.getCityAt(targetBlock.chunk)
-            if (claimedCity == null) break
+            val groundBlock = highestBlock
+            val isWater = groundBlock.type == Material.WATER || 
+                          groundBlock.type == Material.LAVA ||
+                          groundBlock.type == Material.SEAGRASS ||
+                          groundBlock.type == Material.TALL_SEAGRASS ||
+                          groundBlock.type == Material.KELP ||
+                          groundBlock.type == Material.KELP_PLANT ||
+                          groundBlock.isLiquid
+            
+            if (claimedCity == null && !isWater) break
             
         } while (attempts < maxAttempts)
         
-        if (plugin.cityManager.getCityAt(targetBlock.chunk) != null) {
-            plugin.logger.info("Supply drop aborted: could not find wilderness location after $maxAttempts attempts")
+        // Final validation
+        val groundBlock = world.getHighestBlockAt(targetBlock.x, targetBlock.z)
+        val isInWater = groundBlock.type == Material.WATER || groundBlock.isLiquid
+        
+        if (plugin.cityManager.getCityAt(targetBlock.chunk) != null || isInWater) {
+            plugin.logger.info("Supply drop aborted: could not find valid land location after $maxAttempts attempts")
             return
         }
         
