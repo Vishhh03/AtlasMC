@@ -42,6 +42,9 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         inv.setItem(32, createGuiItem(Material.ENDER_EYE, "Relics", "action:relic_info", "Ancient artifacts info"))
         inv.setItem(34, createGuiItem(Material.NETHER_STAR, "Achievements", "action:achievement_menu", "Track your progress"))
         
+        // Row 4: Progression
+        inv.setItem(40, createGuiItem(Material.ENCHANTED_BOOK, "Skill Tree", "action:skill_tree", "Unlock passive abilities", "Spend Skill Points"))
+        
         // Bottom row: Help
         inv.setItem(49, createGuiItem(Material.BOOK, "Help", "action:help", "View all commands"))
 
@@ -232,12 +235,11 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
                 inv.setItem(22, createInfoItem(Material.CLOCK, "Time Left", "${activeQuest.getRemainingSeconds()}s"))
             }
             inv.setItem(31, createDangerItem(Material.BARRIER, "Abandon Quest", "action:quest_abandon", "Give up on current quest"))
+            inv.setItem(31, createDangerItem(Material.BARRIER, "Abandon Quest", "action:quest_abandon", "Give up on current quest"))
         } else {
-            // Difficulty selection
-            inv.setItem(10, createGuiItem(Material.LEATHER_CHESTPLATE, "Easy Quest", "action:quest_easy", "Reward: 100g", "Kill 5 mobs"))
-            inv.setItem(12, createGuiItem(Material.CHAINMAIL_CHESTPLATE, "Medium Quest", "action:quest_medium", "Reward: 300g", "Kill 15 mobs", "Time: 5 min"))
-            inv.setItem(14, createGuiItem(Material.IRON_CHESTPLATE, "Hard Quest", "action:quest_hard", "Reward: 600g", "Kill 20 mobs", "Time: 3 min", "Boss Bar tracking"))
-            inv.setItem(16, createDangerItem(Material.NETHERITE_CHESTPLATE, "NIGHTMARE", "action:quest_nightmare", "Reward: 1500g", "Kill 50 mobs", "Time: 5 min", "For the brave only!"))
+            // Informational only
+            inv.setItem(13, createInfoItem(Material.OAK_SIGN, "No Active Quest", "Find Quest Boards in the wilderness!"))
+            inv.setItem(22, createInfoItem(Material.COMPASS, "Hint", "Quest Boards spawn randomly near you."))
         }
         
         inv.setItem(27, createGuiItem(Material.ARROW, "Back", "action:main_menu", "Return to Main Menu"))
@@ -433,6 +435,10 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
             "action:help" -> {
                 player.closeInventory()
                 player.performCommand("atlas help")
+            }
+            "action:skill_tree" -> {
+                player.closeInventory()
+                plugin.skillTreeManager.openSkillTree(player)
             }
         }
     }
