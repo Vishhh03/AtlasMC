@@ -91,6 +91,7 @@ class RelicManager(private val plugin: AtlasPlugin) : Listener {
         if (!event.action.name.contains("RIGHT")) return
         val item = event.item ?: return
         val meta = item.itemMeta ?: return
+        if (!meta.hasCustomModelData()) return
         val modelData = meta.customModelData
         
         if (modelData < 9000 || modelData > 9000 + RelicType.entries.size) return
