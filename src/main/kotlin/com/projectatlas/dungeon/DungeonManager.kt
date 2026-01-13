@@ -9,6 +9,7 @@ import org.bukkit.*
 import org.bukkit.attribute.Attribute
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.*
+import org.bukkit.event.EventPriority
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDeathEvent
@@ -102,6 +103,7 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
     private val activeInstances = ConcurrentHashMap<UUID, DungeonInstance>() // Player UUID -> Instance
     private val instancesByUUID = ConcurrentHashMap<UUID, DungeonInstance>() // Instance UUID -> Instance
     private val dungeonCooldowns = ConcurrentHashMap<UUID, Long>()
+    private val pendingRespawns = ConcurrentHashMap<UUID, Location>()
 
     fun enterDungeon(player: Player, type: DungeonType, modifier: DungeonModifier = DungeonModifier.NONE): Boolean {
         if (activeInstances.containsKey(player.uniqueId)) {
@@ -636,6 +638,11 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
         
         if (instance.completed || instance.failed) return // Already processed
 
+        // Save return location for respawn (survives instance cleanup)
+        instance.returnLocations[player.uniqueId]?.let {
+            pendingRespawns[player.uniqueId] = it
+        }
+
         // Protect Inventory
         event.keepInventory = true
         event.drops.clear()
@@ -645,12 +652,20 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
         player.sendMessage(Component.text("You died in the dungeon! Items preserved.", NamedTextColor.YELLOW))
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     fun onPlayerRespawn(event: PlayerRespawnEvent) {
         val player = event.player
-        val instance = activeInstances[player.uniqueId] ?: return
         
-        // Respawn at specific return location
+        // 1. Check Pending Respawns (From Death)
+        if (pendingRespawns.containsKey(player.uniqueId)) {
+            pendingRespawns.remove(player.uniqueId)?.let {
+                event.respawnLocation = it
+            }
+            return
+        }
+        
+        // 2. Check Active Instance (Fallback)
+        val instance = activeInstances[player.uniqueId] ?: return
         instance.returnLocations[player.uniqueId]?.let { 
             event.respawnLocation = it 
         }
