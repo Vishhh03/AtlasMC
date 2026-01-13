@@ -1,6 +1,8 @@
 package com.projectatlas.quests
 
 import com.projectatlas.AtlasPlugin
+import org.bukkit.Location
+import org.bukkit.scheduler.BukkitTask
 import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -19,40 +21,45 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
     private val activeQuests = ConcurrentHashMap<UUID, ActiveQuest>()
     private val bossBars = ConcurrentHashMap<UUID, BossBar>()
     
-    // Predefined quest templates
+    private var questTask: BukkitTask? = null
+    
+    init {
+        startQuestLoop()
+    }
+    
     // Predefined quest templates
     private val questTemplates = listOf(
         // Difficulty: EASY
-        Quest("zombie_hunt_easy", "Zombie Cleanup", "Eliminate zombies threatening the area", 
+        Quest("zombie_hunt_easy", "Zombie Cleanup", "The dead rise from the soil... put them to rest.", 
             Difficulty.EASY, QuestObjective.KillMobs(EntityType.ZOMBIE, 5), null, 100.0,
-            "Zombies often appear at night or in dark caves."),
-        Quest("lost_supplies", "Lost Supplies", "Bring me 10 loaves of Bread", 
+            "Check dark places."),
+        Quest("lost_supplies", "Lost Supplies", "Our stocks are low... bread is life.", 
             Difficulty.EASY, QuestObjective.FetchItem(org.bukkit.Material.BREAD, 10), null, 150.0,
-            "Craft Bread from Wheat, or trade with a Farmer in the city."),
+            "Wheat grows in the fields."),
             
         // Difficulty: MEDIUM
-        Quest("zombie_hunt_medium", "Undead Purge", "Clear out a zombie infestation", 
+        Quest("zombie_hunt_medium", "Undead Purge", "A horde approaches... hold the line.", 
             Difficulty.MEDIUM, QuestObjective.KillMobs(EntityType.ZOMBIE, 15), 300, 300.0,
-            "Look for large groups of Zombies in the wilderness at night."),
-        Quest("skeleton_hunt", "Bone Collectors", "Destroy skeleton archers", 
+            "They gather in numbers where the light fails."),
+        Quest("skeleton_hunt", "Bone Collectors", "Rattling bones haunt the woods... silence them.", 
             Difficulty.MEDIUM, QuestObjective.KillMobs(EntityType.SKELETON, 10), 240, 250.0,
-            "Skeletons hide under trees during the day to avoid sunlight."),
-        Quest("find_scout", "Missing Scout", "Find the lost Scout wandering nearby", 
+            "They hide under the canopy."),
+        Quest("find_scout", "Missing Scout", "One of our own is missing... bring them home.", 
             Difficulty.MEDIUM, QuestObjective.FindNPC("Lost Scout"), 600, 400.0,
-            "The Scout is wandering in the wilderness. Listen for reports of their location!"),
+            "Last seen wandering the wilderness."),
             
         // Difficulty: HARD
-        Quest("spider_nest", "Spider Extermination", "Clear a spider nest", 
+        Quest("spider_nest", "Spider Extermination", "Eight legs, endless hunger... cleanse the nest.", 
             Difficulty.HARD, QuestObjective.KillMobs(EntityType.SPIDER, 20), 180, 600.0,
-            "Spiders are more aggressive at night. Listen for their hissing."),
-        Quest("rare_gems", "Gem Hunter", "Bring me 5 Diamonds", 
+            "They hiss in the dark."),
+        Quest("rare_gems", "Gem Hunter", "Shiny treasures from the deep... I desire them.", 
             Difficulty.HARD, QuestObjective.FetchItem(org.bukkit.Material.DIAMOND, 5), null, 1000.0,
-            "Diamonds are found deep underground (Y level -58) or in chests."),
+            "Deep below the surface."),
             
         // Difficulty: NIGHTMARE
-        Quest("nightmare_horde", "Nightmare Siege", "Survive an endless horde", 
+        Quest("nightmare_horde", "Nightmare Siege", "They are coming... survive.", 
             Difficulty.NIGHTMARE, QuestObjective.KillMobs(EntityType.ZOMBIE, 50), 300, 1500.0,
-            "Prepare for a long battle. Bring plenty of food and healing potions.")
+            "This will be a long night.")
     )
     
     // ... existing startQuest methods ...
@@ -253,5 +260,68 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         
         // Grant XP
         plugin.identityManager.grantXp(player, 100L) // Base XP for any quest
+    }
+    private fun startQuestLoop() {
+        questTask = plugin.server.scheduler.runTaskTimer(plugin, Runnable {
+            activeQuests.forEach { (uuid, activeQuest) ->
+                val player = plugin.server.getPlayer(uuid) ?: return@forEach
+                tickQuest(player, activeQuest)
+            }
+        }, 20L, 20L)
+    }
+
+    private fun tickQuest(player: Player, activeQuest: ActiveQuest) {
+        // Time Limit UI
+        if (activeQuest.quest.timeLimitSeconds != null) {
+            val remaining = activeQuest.getRemainingSeconds() ?: 0
+            if (activeQuest.isExpired()) {
+                checkQuestTimeout(player)
+            } else {
+                 bossBars[player.uniqueId]?.let { bar ->
+                      bar.name(Component.text("${activeQuest.quest.name}: ${activeQuest.progress}/${activeQuest.getTargetCount()} | ${remaining}s", NamedTextColor.RED))
+                 }
+            }
+        }
+        
+        // Provision Spawning
+        val objective = activeQuest.quest.objective
+        if (objective is QuestObjective.KillMobs && !activeQuest.isComplete()) {
+            val world = player.world
+            val isDay = world.time in 0..12000
+            
+            // Only spawn if few nearby
+            val nearby = player.location.getNearbyEntities(30.0, 20.0, 30.0).count { it.type == objective.mobType }
+            if (nearby < 3) {
+                 spawnQuestMob(player, objective.mobType, isDay)
+            }
+        }
+    }
+    
+    private fun spawnQuestMob(player: Player, type: EntityType, isDay: Boolean) {
+        val loc = player.location
+        // Simple random offset
+        val x = loc.x + (Math.random() * 20 - 10)
+        val z = loc.z + (Math.random() * 20 - 10)
+        val y = loc.world.getHighestBlockYAt(x.toInt(), z.toInt()).toDouble() + 1
+        
+        val spawnLoc = Location(loc.world, x, y, z)
+        if (spawnLoc.distance(loc) < 5) return // Too close
+        
+        try {
+            loc.world.spawnEntity(spawnLoc, type).apply {
+                if (this is LivingEntity) {
+                    this.isGlowing = true // Help finding
+                    this.customName(Component.text("Quest Target", NamedTextColor.RED))
+                    this.isCustomNameVisible = true
+                    
+                    // Helmet if day and burns
+                    if (isDay && (type == EntityType.ZOMBIE || type == EntityType.SKELETON)) {
+                        this.equipment?.helmet = org.bukkit.inventory.ItemStack(org.bukkit.Material.LEATHER_HELMET)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // Ignore spawn failures
+        }
     }
 }

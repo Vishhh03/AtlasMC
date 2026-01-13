@@ -8,6 +8,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
+import org.bukkit.block.Biome
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.Entity
@@ -47,6 +48,18 @@ class NPCManager(private val plugin: AtlasPlugin) : Listener {
             villager.profession = when (npc.type) {
                 NPCType.MERCHANT -> Villager.Profession.WEAPONSMITH
                 NPCType.QUEST_GIVER -> Villager.Profession.CLERIC
+            }
+            
+            // Biome Aware Skin
+            val biome = location.block.biome
+            villager.villagerType = when {
+                biome.name.contains("DESERT") -> Villager.Type.DESERT
+                biome.name.contains("JUNGLE") -> Villager.Type.JUNGLE
+                biome.name.contains("SWAMP") -> Villager.Type.SWAMP
+                biome.name.contains("SAVANNA") -> Villager.Type.SAVANNA
+                biome.name.contains("SNOW") || biome.name.contains("ICE") -> Villager.Type.SNOW
+                biome.name.contains("TAIGA") -> Villager.Type.TAIGA
+                else -> Villager.Type.PLAINS
             }
             villager.persistentDataContainer.set(npcKey, PersistentDataType.STRING, npc.id)
         }
@@ -146,6 +159,18 @@ class NPCManager(private val plugin: AtlasPlugin) : Listener {
                 villager.profession = when (npc.type) {
                     NPCType.MERCHANT -> Villager.Profession.WEAPONSMITH
                     NPCType.QUEST_GIVER -> Villager.Profession.CLERIC
+                }
+                
+                // Biome Aware Skin
+                val biome = loc.block.biome
+                villager.villagerType = when {
+                    biome.name.contains("DESERT") -> Villager.Type.DESERT
+                    biome.name.contains("JUNGLE") -> Villager.Type.JUNGLE
+                    biome.name.contains("SWAMP") -> Villager.Type.SWAMP
+                    biome.name.contains("SAVANNA") -> Villager.Type.SAVANNA
+                    biome.name.contains("SNOW") || biome.name.contains("ICE") -> Villager.Type.SNOW
+                    biome.name.contains("TAIGA") -> Villager.Type.TAIGA
+                    else -> Villager.Type.PLAINS
                 }
                 villager.persistentDataContainer.set(npcKey, PersistentDataType.STRING, npc.id)
             }
