@@ -28,6 +28,16 @@ sealed class QuestObjective {
     data class KillHorde(val waveCount: Int, val mobsPerWave: Int) : QuestObjective()
     data class FetchItem(val material: org.bukkit.Material, val count: Int) : QuestObjective()
     data class FindNPC(val npcName: String) : QuestObjective()
+    data class VisitBiome(val biomeName: String) : QuestObjective()
+    data class TravelDistance(val blocks: Int) : QuestObjective()
+    data class SurviveTime(val seconds: Int) : QuestObjective()
+    data class MineBlocks(val material: org.bukkit.Material, val count: Int) : QuestObjective()
+    data class CraftItems(val material: org.bukkit.Material, val count: Int) : QuestObjective()
+    data class ReachLocation(val x: Int, val z: Int, val radius: Int, val locationName: String) : QuestObjective()
+    data class KillAnyMobs(val count: Int) : QuestObjective() // Kill any hostile mob
+    data class FishItems(val count: Int) : QuestObjective()
+    data class TameAnimals(val count: Int) : QuestObjective()
+    data class TradeWithVillager(val count: Int) : QuestObjective()
 }
 
 /**
@@ -44,6 +54,16 @@ data class ActiveQuest(
             is QuestObjective.KillHorde -> progress >= (obj.waveCount * obj.mobsPerWave)
             is QuestObjective.FetchItem -> progress >= obj.count
             is QuestObjective.FindNPC -> progress >= 1
+            is QuestObjective.VisitBiome -> progress >= 1
+            is QuestObjective.TravelDistance -> progress >= obj.blocks
+            is QuestObjective.SurviveTime -> progress >= obj.seconds
+            is QuestObjective.MineBlocks -> progress >= obj.count
+            is QuestObjective.CraftItems -> progress >= obj.count
+            is QuestObjective.ReachLocation -> progress >= 1
+            is QuestObjective.KillAnyMobs -> progress >= obj.count
+            is QuestObjective.FishItems -> progress >= obj.count
+            is QuestObjective.TameAnimals -> progress >= obj.count
+            is QuestObjective.TradeWithVillager -> progress >= obj.count
         }
     }
     
@@ -65,6 +85,16 @@ data class ActiveQuest(
             is QuestObjective.KillHorde -> obj.waveCount * obj.mobsPerWave
             is QuestObjective.FetchItem -> obj.count
             is QuestObjective.FindNPC -> 1
+            is QuestObjective.VisitBiome -> 1
+            is QuestObjective.TravelDistance -> obj.blocks
+            is QuestObjective.SurviveTime -> obj.seconds
+            is QuestObjective.MineBlocks -> obj.count
+            is QuestObjective.CraftItems -> obj.count
+            is QuestObjective.ReachLocation -> 1
+            is QuestObjective.KillAnyMobs -> obj.count
+            is QuestObjective.FishItems -> obj.count
+            is QuestObjective.TameAnimals -> obj.count
+            is QuestObjective.TradeWithVillager -> obj.count
         }
     }
 }

@@ -27,17 +27,36 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         startQuestLoop()
     }
     
-    // Predefined quest templates
+    // Predefined quest templates - 40+ diverse quests!
     private val questTemplates = listOf(
-        // Difficulty: EASY
+        // ═══════════════════════════════════════════════════════════
+        // EASY QUESTS (Quick tasks, beginner-friendly)
+        // ═══════════════════════════════════════════════════════════
         Quest("zombie_hunt_easy", "Zombie Cleanup", "The dead rise from the soil... put them to rest.", 
             Difficulty.EASY, QuestObjective.KillMobs(EntityType.ZOMBIE, 5), null, 100.0,
-            "Check dark places."),
+            "Check caves and dark places."),
         Quest("lost_supplies", "Lost Supplies", "Our stocks are low... bread is life.", 
             Difficulty.EASY, QuestObjective.FetchItem(org.bukkit.Material.BREAD, 10), null, 150.0,
             "Wheat grows in the fields."),
+        Quest("wood_gatherer", "Lumberjack Training", "We need timber for repairs. Bring oak logs.", 
+            Difficulty.EASY, QuestObjective.FetchItem(org.bukkit.Material.OAK_LOG, 32), null, 120.0,
+            "Find a forest."),
+        Quest("wool_collector", "Shepherd's Request", "The winter is cold. Collect wool for blankets.", 
+            Difficulty.EASY, QuestObjective.FetchItem(org.bukkit.Material.WHITE_WOOL, 16), null, 100.0,
+            "Sheep roam the plains."),
+        Quest("fishing_hobby", "Gone Fishing", "The old man by the river teaches patience. Catch some fish.", 
+            Difficulty.EASY, QuestObjective.FishItems(5), null, 150.0,
+            "Find water and wait."),
+        Quest("chicken_hunt", "Poultry Problem", "Chickens have overrun the farm. Time for dinner.", 
+            Difficulty.EASY, QuestObjective.KillMobs(EntityType.CHICKEN, 10), null, 80.0,
+            "They cluck nearby."),
+        Quest("first_steps", "Wanderer", "Stretch your legs. Walk 500 blocks in any direction.", 
+            Difficulty.EASY, QuestObjective.TravelDistance(500), null, 100.0,
+            "Just keep walking."),
             
-        // Difficulty: MEDIUM
+        // ═══════════════════════════════════════════════════════════
+        // MEDIUM QUESTS (More challenge, varied objectives)
+        // ═══════════════════════════════════════════════════════════
         Quest("zombie_hunt_medium", "Undead Purge", "A horde approaches... hold the line.", 
             Difficulty.MEDIUM, QuestObjective.KillMobs(EntityType.ZOMBIE, 15), 300, 300.0,
             "They gather in numbers where the light fails."),
@@ -47,19 +66,113 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         Quest("find_scout", "Missing Scout", "One of our own is missing... bring them home.", 
             Difficulty.MEDIUM, QuestObjective.FindNPC("Lost Scout"), 600, 400.0,
             "Last seen wandering the wilderness."),
+        Quest("iron_age", "Iron Age", "The forge needs fuel. Mine iron ore.", 
+            Difficulty.MEDIUM, QuestObjective.MineBlocks(org.bukkit.Material.IRON_ORE, 20), null, 350.0,
+            "Dig deep, around Y=16."),
+        Quest("desert_expedition", "Desert Expedition", "Legends speak of golden sands... find the desert.", 
+            Difficulty.MEDIUM, QuestObjective.VisitBiome("desert"), null, 400.0,
+            "Travel far from the green."),
+        Quest("jungle_fever", "Jungle Fever", "A rare flower blooms only in the jungle. Explore.", 
+            Difficulty.MEDIUM, QuestObjective.VisitBiome("jungle"), null, 450.0,
+            "Dense trees and vines await."),
+        Quest("creeper_exterminator", "Explosive Situation", "Creepers threaten our walls. Remove them.", 
+            Difficulty.MEDIUM, QuestObjective.KillMobs(EntityType.CREEPER, 8), 300, 400.0,
+            "Listen for the hiss."),
+        Quest("tame_wolves", "Wolf Whisperer", "A pack could protect us. Tame some wolves.", 
+            Difficulty.MEDIUM, QuestObjective.TameAnimals(3), null, 350.0,
+            "Bring bones."),
+        Quest("coal_miner", "Fuel the Fires", "The furnaces are cold. Mine coal.", 
+            Difficulty.MEDIUM, QuestObjective.MineBlocks(org.bukkit.Material.COAL_ORE, 30), null, 200.0,
+            "Check the mountains."),
+        Quest("sugar_rush", "Sweet Tooth", "The baker needs sugar cane for cakes.", 
+            Difficulty.MEDIUM, QuestObjective.FetchItem(org.bukkit.Material.SUGAR_CANE, 32), null, 180.0,
+            "Near water."),
+        Quest("long_walk", "Long Road Home", "A journey of a thousand blocks begins with one step.", 
+            Difficulty.MEDIUM, QuestObjective.TravelDistance(2000), null, 300.0,
+            "Keep your compass handy."),
+        Quest("archer_training", "Archer Training", "Strays are deadly shots. Learn from defeating them.", 
+            Difficulty.MEDIUM, QuestObjective.KillMobs(EntityType.STRAY, 6), 360, 300.0,
+            "Cold biomes."),
+        Quest("trade_deal", "The Art of the Deal", "Make trades with villagers.", 
+            Difficulty.MEDIUM, QuestObjective.TradeWithVillager(5), null, 400.0,
+            "Find a village."),
             
-        // Difficulty: HARD
+        // ═══════════════════════════════════════════════════════════
+        // HARD QUESTS (Significant challenge, longer objectives)
+        // ═══════════════════════════════════════════════════════════
         Quest("spider_nest", "Spider Extermination", "Eight legs, endless hunger... cleanse the nest.", 
             Difficulty.HARD, QuestObjective.KillMobs(EntityType.SPIDER, 20), 180, 600.0,
             "They hiss in the dark."),
         Quest("rare_gems", "Gem Hunter", "Shiny treasures from the deep... I desire them.", 
             Difficulty.HARD, QuestObjective.FetchItem(org.bukkit.Material.DIAMOND, 5), null, 1000.0,
             "Deep below the surface."),
+        Quest("witch_hunt", "Witch Hunt", "Dark magic corrupts the swamp. End the coven.", 
+            Difficulty.HARD, QuestObjective.KillMobs(EntityType.WITCH, 5), 420, 800.0,
+            "Swamp huts..."),
+        Quest("blazing_trail", "Blazing Trail", "The Nether's guardians burn bright. Douse their flames.", 
+            Difficulty.HARD, QuestObjective.KillMobs(EntityType.BLAZE, 10), 600, 1200.0,
+            "In the fortress."),
+        Quest("enderman_menace", "Void Stalkers", "They watch from the shadows. Strike first.", 
+            Difficulty.HARD, QuestObjective.KillMobs(EntityType.ENDERMAN, 8), 480, 900.0,
+            "Don't blink."),
+        Quest("gold_rush", "Gold Rush", "A merchant pays handsomely for gold.", 
+            Difficulty.HARD, QuestObjective.FetchItem(org.bukkit.Material.GOLD_INGOT, 32), null, 750.0,
+            "Badlands or deep caves."),
+        Quest("ancient_debris", "Ancient Metal", "Netherite calls to those brave enough to seek it.", 
+            Difficulty.HARD, QuestObjective.FetchItem(org.bukkit.Material.ANCIENT_DEBRIS, 3), null, 2000.0,
+            "Y=15 in the Nether."),
+        Quest("slayer_any", "Monster Slayer", "Prove your worth. Slay 50 hostile creatures.", 
+            Difficulty.HARD, QuestObjective.KillAnyMobs(50), 600, 800.0,
+            "They come at night."),
+        Quest("grand_expedition", "Grand Expedition", "Travel 5000 blocks from here.", 
+            Difficulty.HARD, QuestObjective.TravelDistance(5000), null, 600.0,
+            "Pack supplies."),
+        Quest("master_fisherman", "Master Angler", "The elder wants proof of your patience.", 
+            Difficulty.HARD, QuestObjective.FishItems(20), null, 500.0,
+            "Rain improves luck."),
+        Quest("cave_spider_infestation", "Mineshaft Menace", "The abandoned mines are infested. Clear them.", 
+            Difficulty.HARD, QuestObjective.KillMobs(EntityType.CAVE_SPIDER, 15), 360, 700.0,
+            "Mineshafts..."),
+        Quest("obsidian_harvester", "Portal Builder", "Collect obsidian for the portal.", 
+            Difficulty.HARD, QuestObjective.MineBlocks(org.bukkit.Material.OBSIDIAN, 14), null, 600.0,
+            "Diamond pickaxe required."),
+        Quest("snow_journey", "Frozen Expedition", "Somewhere north lies a snowy tundra.", 
+            Difficulty.HARD, QuestObjective.VisitBiome("snowy_taiga"), null, 500.0,
+            "Bundle up."),
+        Quest("mushroom_mystery", "Land of Shrooms", "Legends tell of a land where giant mushrooms grow...", 
+            Difficulty.HARD, QuestObjective.VisitBiome("mushroom_fields"), null, 1500.0,
+            "Very rare. Ocean shores."),
             
-        // Difficulty: NIGHTMARE
-        Quest("nightmare_horde", "Nightmare Siege", "They are coming... survive.", 
-            Difficulty.NIGHTMARE, QuestObjective.KillMobs(EntityType.ZOMBIE, 50), 300, 1500.0,
-            "This will be a long night.")
+        // ═══════════════════════════════════════════════════════════
+        // NIGHTMARE QUESTS (Extreme challenge, epic rewards)
+        // ═══════════════════════════════════════════════════════════
+        Quest("nightmare_horde", "Nightmare Siege", "They are coming in waves... survive.", 
+            Difficulty.NIGHTMARE, QuestObjective.KillMobs(EntityType.ZOMBIE, 100), 600, 2500.0,
+            "This will be a long night."),
+        Quest("dragon_slayer_prep", "Dragon Prep", "Before facing the dragon, gather eyes.", 
+            Difficulty.NIGHTMARE, QuestObjective.FetchItem(org.bukkit.Material.ENDER_EYE, 12), null, 3000.0,
+            "Endermen and blaze powder."),
+        Quest("wither_skeleton_hunt", "Skull Collector", "Three skulls needed for a dark ritual.", 
+            Difficulty.NIGHTMARE, QuestObjective.KillMobs(EntityType.WITHER_SKELETON, 30), 900, 2000.0,
+            "Fortress, sword of looting."),
+        Quest("the_end_awaits", "End Explorer", "Visit the dimension of The End.", 
+            Difficulty.NIGHTMARE, QuestObjective.VisitBiome("the_end"), null, 5000.0,
+            "12 eyes, a portal awaits."),
+        Quest("nether_veteran", "Nether Veteran", "Survive 10 minutes in the Nether.", 
+            Difficulty.NIGHTMARE, QuestObjective.SurviveTime(600), 660, 1500.0,
+            "Fire resistance recommended."),
+        Quest("ultimate_journey", "Around the World", "Travel 10,000 blocks.", 
+            Difficulty.NIGHTMARE, QuestObjective.TravelDistance(10000), null, 2000.0,
+            "Horses, boats, and determination."),
+        Quest("guardian_gauntlet", "Ocean Monument Raid", "The guardians protect ancient treasure.", 
+            Difficulty.NIGHTMARE, QuestObjective.KillMobs(EntityType.ELDER_GUARDIAN, 1), 1200, 3500.0,
+            "Underwater. Bring potions."),
+        Quest("piglin_brute_hunt", "Brute Force", "The strongest piglins guard bastions.", 
+            Difficulty.NIGHTMARE, QuestObjective.KillMobs(EntityType.PIGLIN_BRUTE, 10), 900, 2500.0,
+            "Bastion remnants."),
+        Quest("emerald_tycoon", "Emerald Tycoon", "Become the richest trader in the land.", 
+            Difficulty.NIGHTMARE, QuestObjective.FetchItem(org.bukkit.Material.EMERALD, 64), null, 3000.0,
+            "Trade or mine in mountains.")
     )
     
     // ... existing startQuest methods ...
