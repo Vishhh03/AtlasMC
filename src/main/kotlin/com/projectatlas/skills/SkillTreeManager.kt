@@ -59,18 +59,18 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         nodes["origin"] = SkillNode(
             "origin", "Awakening", "Your journey begins here.",
             Material.NETHER_STAR, SkillCategory.MASTERY, NodeTier.NOTABLE,
-            listOf("combat_start", "defense_start", "mobility_start", "mining_start", "archery_start"),
+            listOf("combat_start", "defense_start", "mobility_start", "mining_start", "archery_start", "dark_start", "utility_start"),
             SkillEffect.MaxHealth(2.0), cost = 0 // Free starting node
         )
         
         // ═══════════════════════════════════════════════════════════
-        // COMBAT BRANCH (Red) - Top
+        // COMBAT BRANCH (Red) - Damage & Lifesteal
         // ═══════════════════════════════════════════════════════════
         nodes["combat_start"] = SkillNode(
             "combat_start", "Warrior's Path", "Begin the path of combat.",
             Material.IRON_SWORD, SkillCategory.COMBAT, NodeTier.MINOR,
-            listOf("origin", "sword_1", "axe_1", "strength_1"),
-            SkillEffect.AttackDamage(1.05)
+            listOf("origin", "sword_1", "axe_1", "leech_1", "execute_1"),
+            SkillEffect.MeleeDamage(1.05)
         )
         
         // Sword Branch
@@ -103,7 +103,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         nodes["axe_2"] = SkillNode(
             "axe_2", "Cleaver", "+15% Axe Damage",
             Material.IRON_AXE, SkillCategory.COMBAT, NodeTier.NOTABLE,
-            listOf("axe_1", "axe_3", "knockback_1"),
+            listOf("axe_1", "axe_3"),
             SkillEffect.AxeDamage(1.15)
         )
         nodes["axe_3"] = SkillNode(
@@ -113,18 +113,32 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             SkillEffect.AxeDamage(1.30), cost = 3
         )
         
-        // Strength Branch
-        nodes["strength_1"] = SkillNode(
-            "strength_1", "Brute Force", "+5% Attack Damage",
-            Material.BLAZE_POWDER, SkillCategory.COMBAT, NodeTier.MINOR,
-            listOf("combat_start", "strength_2"),
-            SkillEffect.AttackDamage(1.05)
+        // Life Leech Branch (Diablo/PoE)
+        nodes["leech_1"] = SkillNode(
+            "leech_1", "Vampiric Strikes", "Leech 5% damage as health",
+            Material.REDSTONE, SkillCategory.COMBAT, NodeTier.NOTABLE,
+            listOf("combat_start", "leech_2"),
+            SkillEffect.LifeLeech(0.05)
         )
-        nodes["strength_2"] = SkillNode(
-            "strength_2", "Overwhelming Power", "+10% Attack Damage",
-            Material.MAGMA_CREAM, SkillCategory.COMBAT, NodeTier.NOTABLE,
-            listOf("strength_1"),
-            SkillEffect.AttackDamage(1.10)
+        nodes["leech_2"] = SkillNode(
+            "leech_2", "Blood Drinker", "Leech 10% damage as health",
+            Material.CRIMSON_FUNGUS, SkillCategory.COMBAT, NodeTier.KEYSTONE,
+            listOf("leech_1"),
+            SkillEffect.LifeLeech(0.10), cost = 3
+        )
+        
+        // Execute Branch (Diablo)
+        nodes["execute_1"] = SkillNode(
+            "execute_1", "Finishing Blow", "+25% damage to enemies <30% HP",
+            Material.WITHER_SKELETON_SKULL, SkillCategory.COMBAT, NodeTier.NOTABLE,
+            listOf("combat_start", "execute_2"),
+            SkillEffect.ExecuteDamage(0.30, 1.25)
+        )
+        nodes["execute_2"] = SkillNode(
+            "execute_2", "Coup de Grace", "+50% damage to enemies <20% HP",
+            Material.DRAGON_HEAD, SkillCategory.COMBAT, NodeTier.KEYSTONE,
+            listOf("execute_1"),
+            SkillEffect.ExecuteDamage(0.20, 1.50), cost = 3
         )
         
         // Crit Branch
@@ -137,25 +151,23 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         nodes["crit_2"] = SkillNode(
             "crit_2", "Deadly Aim", "+10% Critical Chance",
             Material.END_CRYSTAL, SkillCategory.COMBAT, NodeTier.NOTABLE,
-            listOf("crit_1"),
+            listOf("crit_1", "crit_mult_1"),
             SkillEffect.CritChance(0.10)
         )
-        
-        // Knockback
-        nodes["knockback_1"] = SkillNode(
-            "knockback_1", "Heavy Blows", "Knockback I on hits",
-            Material.PISTON, SkillCategory.COMBAT, NodeTier.NOTABLE,
-            listOf("axe_2"),
-            SkillEffect.Knockback(1)
+        nodes["crit_mult_1"] = SkillNode(
+            "crit_mult_1", "Devastating Crits", "+50% Critical Damage",
+            Material.TNT, SkillCategory.COMBAT, NodeTier.KEYSTONE,
+            listOf("crit_2"),
+            SkillEffect.CritMultiplier(1.50), cost = 3
         )
         
         // ═══════════════════════════════════════════════════════════
-        // DEFENSE BRANCH (Blue) - Left
+        // DEFENSE BRANCH (Blue) - Tank & Survival
         // ═══════════════════════════════════════════════════════════
         nodes["defense_start"] = SkillNode(
             "defense_start", "Guardian's Path", "Begin the path of protection.",
             Material.IRON_CHESTPLATE, SkillCategory.DEFENSE, NodeTier.MINOR,
-            listOf("origin", "health_1", "armor_1", "regen_1"),
+            listOf("origin", "health_1", "armor_1", "regen_1", "thorns_1", "dodge_1"),
             SkillEffect.MaxHealth(2.0)
         )
         
@@ -189,11 +201,55 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         nodes["armor_2"] = SkillNode(
             "armor_2", "Steel Wall", "+4 Armor",
             Material.IRON_BLOCK, SkillCategory.DEFENSE, NodeTier.NOTABLE,
-            listOf("armor_1", "fire_res_1"),
+            listOf("armor_1", "fire_res_1", "poise_1"),
             SkillEffect.Armor(4.0)
         )
         
-        // Regen Branch
+        // Thorns Branch (Diablo)
+        nodes["thorns_1"] = SkillNode(
+            "thorns_1", "Spiked Armor", "Reflect 15% damage to attackers",
+            Material.CACTUS, SkillCategory.DEFENSE, NodeTier.NOTABLE,
+            listOf("defense_start", "thorns_2"),
+            SkillEffect.Thorns(0.15)
+        )
+        nodes["thorns_2"] = SkillNode(
+            "thorns_2", "Iron Maiden", "Reflect 30% damage to attackers",
+            Material.SWEET_BERRIES, SkillCategory.DEFENSE, NodeTier.KEYSTONE,
+            listOf("thorns_1"),
+            SkillEffect.Thorns(0.30), cost = 3
+        )
+        
+        // Dodge Branch (Monster Hunter)
+        nodes["dodge_1"] = SkillNode(
+            "dodge_1", "Evasion", "10% chance to dodge attacks",
+            Material.FEATHER, SkillCategory.DEFENSE, NodeTier.NOTABLE,
+            listOf("defense_start", "dodge_2"),
+            SkillEffect.DodgeChance(0.10)
+        )
+        nodes["dodge_2"] = SkillNode(
+            "dodge_2", "Phantom", "20% chance to dodge attacks",
+            Material.PHANTOM_MEMBRANE, SkillCategory.DEFENSE, NodeTier.KEYSTONE,
+            listOf("dodge_1"),
+            SkillEffect.DodgeChance(0.20), cost = 3
+        )
+        
+        // Divine Blessing (Monster Hunter)
+        nodes["divine_1"] = SkillNode(
+            "divine_1", "Divine Blessing", "25% chance to halve damage",
+            Material.TOTEM_OF_UNDYING, SkillCategory.DEFENSE, NodeTier.KEYSTONE,
+            listOf("health_3"),
+            SkillEffect.DivineBlessingChance(0.25), cost = 3
+        )
+        
+        // Poise (Dark Souls)
+        nodes["poise_1"] = SkillNode(
+            "poise_1", "Unbreakable", "Immune to knockback",
+            Material.ANVIL, SkillCategory.DEFENSE, NodeTier.NOTABLE,
+            listOf("armor_2"),
+            SkillEffect.Poise(true)
+        )
+        
+        // Regen & Fire Res
         nodes["regen_1"] = SkillNode(
             "regen_1", "Natural Recovery", "Regeneration I",
             Material.GLISTERING_MELON_SLICE, SkillCategory.DEFENSE, NodeTier.NOTABLE,
@@ -206,8 +262,6 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             listOf("regen_1"),
             SkillEffect.Regeneration(1), cost = 3
         )
-        
-        // Fire Resistance
         nodes["fire_res_1"] = SkillNode(
             "fire_res_1", "Flame Ward", "Fire Resistance",
             Material.MAGMA_BLOCK, SkillCategory.DEFENSE, NodeTier.NOTABLE,
@@ -216,12 +270,12 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         )
         
         // ═══════════════════════════════════════════════════════════
-        // MOBILITY BRANCH (Cyan) - Right
+        // MOBILITY BRANCH (Cyan) - Speed, Jumps, Dashes
         // ═══════════════════════════════════════════════════════════
         nodes["mobility_start"] = SkillNode(
             "mobility_start", "Runner's Path", "Begin the path of speed.",
             Material.FEATHER, SkillCategory.MOBILITY, NodeTier.MINOR,
-            listOf("origin", "speed_1", "jump_1"),
+            listOf("origin", "speed_1", "jump_1", "dash_1", "nofall_1"),
             SkillEffect.MovementSpeed(0.02f)
         )
         
@@ -245,7 +299,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             SkillEffect.MovementSpeed(0.04f), cost = 3
         )
         
-        // Jump Branch
+        // Jump Branch (Warframe)
         nodes["jump_1"] = SkillNode(
             "jump_1", "Spring Step", "Jump Boost I",
             Material.SLIME_BALL, SkillCategory.MOBILITY, NodeTier.NOTABLE,
@@ -253,19 +307,35 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             SkillEffect.JumpBoost(0)
         )
         nodes["jump_2"] = SkillNode(
-            "jump_2", "Skybound", "Jump Boost II",
+            "jump_2", "Double Jump", "Jump again in mid-air!",
             Material.SLIME_BLOCK, SkillCategory.MOBILITY, NodeTier.KEYSTONE,
             listOf("jump_1"),
-            SkillEffect.JumpBoost(1), cost = 2
+            SkillEffect.DoubleJump(true), cost = 3
+        )
+        
+        // Dash (Warframe/Hollow Knight)
+        nodes["dash_1"] = SkillNode(
+            "dash_1", "Shadow Step", "Dash forward (5s cooldown)",
+            Material.ENDER_PEARL, SkillCategory.MOBILITY, NodeTier.KEYSTONE,
+            listOf("mobility_start"),
+            SkillEffect.Dash(100, 5.0), cost = 3
+        )
+        
+        // No Fall Damage (Feather Falling Max)
+        nodes["nofall_1"] = SkillNode(
+            "nofall_1", "Featherfall", "Immune to fall damage",
+            Material.ELYTRA, SkillCategory.MOBILITY, NodeTier.NOTABLE,
+            listOf("mobility_start"),
+            SkillEffect.NoFallDamage(true)
         )
         
         // ═══════════════════════════════════════════════════════════
-        // MINING BRANCH (Orange) - Bottom-Left
+        // MINING BRANCH (Orange) - Vein Mining, Auto-Smelt, Magnetism
         // ═══════════════════════════════════════════════════════════
         nodes["mining_start"] = SkillNode(
             "mining_start", "Miner's Path", "Begin the path of excavation.",
             Material.IRON_PICKAXE, SkillCategory.MINING, NodeTier.MINOR,
-            listOf("origin", "haste_1", "fortune_1", "night_vision_1"),
+            listOf("origin", "haste_1", "fortune_1", "veinminer_1", "autosmelt_1", "magnet_1"),
             SkillEffect.MiningSpeed(0)
         )
         
@@ -289,30 +359,52 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             SkillEffect.MiningSpeed(2), cost = 3
         )
         
-        // Luck Branch
+        // Vein Miner (Terraria/Modded MC)
+        nodes["veinminer_1"] = SkillNode(
+            "veinminer_1", "Vein Miner", "Mine entire ore veins at once!",
+            Material.DIAMOND_ORE, SkillCategory.MINING, NodeTier.KEYSTONE,
+            listOf("mining_start"),
+            SkillEffect.VeinMiner(true), cost = 3
+        )
+        
+        // Auto-Smelt (Terraria)
+        nodes["autosmelt_1"] = SkillNode(
+            "autosmelt_1", "Smelting Touch", "Ores drop smelted ingots",
+            Material.BLAST_FURNACE, SkillCategory.MINING, NodeTier.KEYSTONE,
+            listOf("mining_start"),
+            SkillEffect.AutoSmelt(true), cost = 3
+        )
+        
+        // Magnetism (Terraria)
+        nodes["magnet_1"] = SkillNode(
+            "magnet_1", "Item Magnet", "Auto-pickup items within 5 blocks",
+            Material.LODESTONE, SkillCategory.MINING, NodeTier.NOTABLE,
+            listOf("mining_start", "magnet_2"),
+            SkillEffect.Magnetism(5.0)
+        )
+        nodes["magnet_2"] = SkillNode(
+            "magnet_2", "Gravity Well", "Auto-pickup items within 10 blocks",
+            Material.END_PORTAL_FRAME, SkillCategory.MINING, NodeTier.KEYSTONE,
+            listOf("magnet_1"),
+            SkillEffect.Magnetism(10.0), cost = 3
+        )
+        
+        // Luck & Double Drops
         nodes["fortune_1"] = SkillNode(
             "fortune_1", "Lucky Strikes", "Luck I",
             Material.LAPIS_LAZULI, SkillCategory.MINING, NodeTier.NOTABLE,
-            listOf("mining_start", "fortune_2"),
+            listOf("mining_start", "double_drop_1"),
             SkillEffect.LuckBonus(0)
         )
-        nodes["fortune_2"] = SkillNode(
-            "fortune_2", "Fortune's Favor", "Luck II",
-            Material.DIAMOND, SkillCategory.MINING, NodeTier.KEYSTONE,
+        nodes["double_drop_1"] = SkillNode(
+            "double_drop_1", "Prospector", "25% chance for double drops",
+            Material.GOLD_NUGGET, SkillCategory.MINING, NodeTier.KEYSTONE,
             listOf("fortune_1"),
-            SkillEffect.LuckBonus(1), cost = 3
-        )
-        
-        // Night Vision
-        nodes["night_vision_1"] = SkillNode(
-            "night_vision_1", "Dark Sight", "Permanent Night Vision",
-            Material.ENDER_EYE, SkillCategory.MINING, NodeTier.NOTABLE,
-            listOf("mining_start"),
-            SkillEffect.NightVision(true)
+            SkillEffect.DoubleDrop(0.25), cost = 3
         )
         
         // ═══════════════════════════════════════════════════════════
-        // ARCHERY BRANCH (Green) - Bottom-Right
+        // ARCHERY BRANCH (Green)
         // ═══════════════════════════════════════════════════════════
         nodes["archery_start"] = SkillNode(
             "archery_start", "Archer's Path", "Begin the path of the bow.",
@@ -320,8 +412,6 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             listOf("origin", "bow_1", "arrow_1"),
             SkillEffect.BowDamage(1.05)
         )
-        
-        // Bow Damage Branch
         nodes["bow_1"] = SkillNode(
             "bow_1", "Steady Aim", "+10% Bow Damage",
             Material.ARROW, SkillCategory.ARCHERY, NodeTier.MINOR,
@@ -340,8 +430,6 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             listOf("bow_2"),
             SkillEffect.BowDamage(1.35), cost = 3
         )
-        
-        // Special Arrows
         nodes["arrow_1"] = SkillNode(
             "arrow_1", "Piercing Shots", "+5% Crit Chance with Bows",
             Material.TIPPED_ARROW, SkillCategory.ARCHERY, NodeTier.NOTABLE,
@@ -350,24 +438,89 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         )
         
         // ═══════════════════════════════════════════════════════════
-        // SURVIVAL BRANCH (Dark Green) - Scattered utilities
+        // DARK ARTS BRANCH (Purple) - Risk/Reward Mechanics
         // ═══════════════════════════════════════════════════════════
-        nodes["survival_1"] = SkillNode(
-            "survival_1", "Hunger Resistance", "Saturation I",
-            Material.COOKED_BEEF, SkillCategory.SURVIVAL, NodeTier.MINOR,
-            listOf("defense_start"),
-            SkillEffect.Saturation(0)
+        nodes["dark_start"] = SkillNode(
+            "dark_start", "Dark Pact", "Power at a price...",
+            Material.WITHER_ROSE, SkillCategory.DARK_ARTS, NodeTier.MINOR,
+            listOf("origin", "berserker_1", "sneak_1", "rampage_1"),
+            SkillEffect.MeleeDamage(1.05)
         )
-        nodes["survival_2"] = SkillNode(
-            "survival_2", "Water Affinity", "Water Breathing",
-            Material.HEART_OF_THE_SEA, SkillCategory.SURVIVAL, NodeTier.NOTABLE,
-            listOf("survival_1"),
+        
+        // Berserker (Diablo)
+        nodes["berserker_1"] = SkillNode(
+            "berserker_1", "Berserker", "+30% damage when below 50% HP",
+            Material.NETHERITE_SWORD, SkillCategory.DARK_ARTS, NodeTier.NOTABLE,
+            listOf("dark_start", "berserker_2"),
+            SkillEffect.BerserkerMode(0.50, 1.30)
+        )
+        nodes["berserker_2"] = SkillNode(
+            "berserker_2", "Blood Rage", "+60% damage when below 30% HP",
+            Material.DRAGON_BREATH, SkillCategory.DARK_ARTS, NodeTier.KEYSTONE,
+            listOf("berserker_1"),
+            SkillEffect.BerserkerMode(0.30, 1.60), cost = 3
+        )
+        
+        // Sneak Attack (Skyrim)
+        nodes["sneak_1"] = SkillNode(
+            "sneak_1", "Assassin", "2x damage from behind",
+            Material.NAME_TAG, SkillCategory.DARK_ARTS, NodeTier.NOTABLE,
+            listOf("dark_start", "sneak_2"),
+            SkillEffect.SneakDamage(2.0)
+        )
+        nodes["sneak_2"] = SkillNode(
+            "sneak_2", "Shadow Strike", "3x damage from behind",
+            Material.ENDER_EYE, SkillCategory.DARK_ARTS, NodeTier.KEYSTONE,
+            listOf("sneak_1"),
+            SkillEffect.SneakDamage(3.0), cost = 3
+        )
+        
+        // Rampage (Diablo)
+        nodes["rampage_1"] = SkillNode(
+            "rampage_1", "Bloodlust", "Gain speed/damage stacks on kill",
+            Material.BLAZE_POWDER, SkillCategory.DARK_ARTS, NodeTier.KEYSTONE,
+            listOf("dark_start"),
+            SkillEffect.Rampage(1, 5), cost = 3
+        )
+        
+        // ═══════════════════════════════════════════════════════════
+        // UTILITY BRANCH (Yellow) - Quality of Life
+        // ═══════════════════════════════════════════════════════════
+        nodes["utility_start"] = SkillNode(
+            "utility_start", "Adventurer's Kit", "Quality of life improvements.",
+            Material.BUNDLE, SkillCategory.UTILITY, NodeTier.MINOR,
+            listOf("origin", "night_vision_1", "water_breathing_1", "soulbind_1", "lumberjack_1", "xp_bonus_1"),
+            SkillEffect.XpBonus(1.05)
+        )
+        
+        nodes["night_vision_1"] = SkillNode(
+            "night_vision_1", "Dark Sight", "Permanent Night Vision",
+            Material.ENDER_EYE, SkillCategory.UTILITY, NodeTier.NOTABLE,
+            listOf("utility_start"),
+            SkillEffect.NightVision(true)
+        )
+        nodes["water_breathing_1"] = SkillNode(
+            "water_breathing_1", "Aquatic", "Permanent Water Breathing",
+            Material.HEART_OF_THE_SEA, SkillCategory.UTILITY, NodeTier.NOTABLE,
+            listOf("utility_start"),
             SkillEffect.WaterBreathing(true)
+        )
+        nodes["soulbind_1"] = SkillNode(
+            "soulbind_1", "Soul Binding", "Keep 3 items on death",
+            Material.SOUL_LANTERN, SkillCategory.UTILITY, NodeTier.KEYSTONE,
+            listOf("utility_start"),
+            SkillEffect.SoulBinding(3), cost = 3
+        )
+        nodes["lumberjack_1"] = SkillNode(
+            "lumberjack_1", "Lumberjack", "Chop entire trees at once",
+            Material.STONE_AXE, SkillCategory.UTILITY, NodeTier.NOTABLE,
+            listOf("utility_start"),
+            SkillEffect.Lumberjack(true)
         )
         nodes["xp_bonus_1"] = SkillNode(
             "xp_bonus_1", "Fast Learner", "+25% XP Gain",
-            Material.EXPERIENCE_BOTTLE, SkillCategory.SURVIVAL, NodeTier.NOTABLE,
-            listOf("mining_start"),
+            Material.EXPERIENCE_BOTTLE, SkillCategory.UTILITY, NodeTier.NOTABLE,
+            listOf("utility_start"),
             SkillEffect.XpBonus(1.25)
         )
         
