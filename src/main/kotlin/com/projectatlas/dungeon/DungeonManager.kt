@@ -12,6 +12,8 @@ import org.bukkit.entity.*
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDeathEvent
+import org.bukkit.event.entity.PlayerDeathEvent
+import org.bukkit.event.player.PlayerRespawnEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
@@ -99,10 +101,19 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
 
     private val activeInstances = ConcurrentHashMap<UUID, DungeonInstance>() // Player UUID -> Instance
     private val instancesByUUID = ConcurrentHashMap<UUID, DungeonInstance>() // Instance UUID -> Instance
+    private val dungeonCooldowns = ConcurrentHashMap<UUID, Long>()
 
     fun enterDungeon(player: Player, type: DungeonType, modifier: DungeonModifier = DungeonModifier.NONE): Boolean {
         if (activeInstances.containsKey(player.uniqueId)) {
             player.sendMessage(Component.text("You're already in a dungeon!", NamedTextColor.RED))
+            return false
+        }
+        
+        // Cooldown Check
+        val cooldown = dungeonCooldowns[player.uniqueId] ?: 0L
+        if (System.currentTimeMillis() < cooldown) {
+            val left = (cooldown - System.currentTimeMillis()) / 1000
+            player.sendMessage(Component.text("Dungeon Cooldown: ${left}s remaining", NamedTextColor.RED))
             return false
         }
 
@@ -543,7 +554,13 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
     fun failDungeon(instance: DungeonInstance, reason: String) {
         if (instance.completed || instance.failed) return
         instance.failed = true
+        instance.failed = true
         instance.taskId?.cancel()
+
+        // Set Cooldown
+        instance.players.forEach { uuid ->
+             dungeonCooldowns[uuid] = System.currentTimeMillis() + 300000 // 5 minutes
+        }
 
         instance.players.mapNotNull { plugin.server.getPlayer(it) }.forEach { player ->
             player.sendMessage(Component.empty())
@@ -611,4 +628,36 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
     fun getAvailableDungeons(): List<DungeonType> = DungeonType.entries
 
     fun isInDungeon(player: Player): Boolean = activeInstances.containsKey(player.uniqueId)
+
+    @EventHandler
+    fun onPlayerDeath(event: PlayerDeathEvent) {
+        val player = event.entity
+        val instance = activeInstances[player.uniqueId] ?: return
+        
+        if (instance.completed || instance.failed) return // Already processed
+
+        // Protect Inventory
+        event.keepInventory = true
+        event.drops.clear()
+        event.keepLevel = true
+        
+        failDungeon(instance, "Player ${player.name} fell in battle!")
+        player.sendMessage(Component.text("You died in the dungeon! Items preserved.", NamedTextColor.YELLOW))
+    }
+
+    @EventHandler
+    fun onPlayerRespawn(event: PlayerRespawnEvent) {
+        val player = event.player
+        val instance = activeInstances[player.uniqueId] ?: return
+        
+        // Respawn at specific return location
+        instance.returnLocations[player.uniqueId]?.let { 
+            event.respawnLocation = it 
+        }
+        
+        // Ensure cleanup if not already triggered
+        plugin.server.scheduler.runTaskLater(plugin, Runnable {
+            leaveDungeon(player)
+        }, 2L)
+    }
 }
