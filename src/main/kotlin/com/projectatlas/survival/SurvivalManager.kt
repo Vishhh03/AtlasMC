@@ -44,6 +44,54 @@ class SurvivalManager(private val plugin: AtlasPlugin) : Listener {
         MEDICAL_KIT(14.0, "Medical Kit", Material.SHULKER_BOX),
         HERBAL_REMEDY(6.0, "Herbal Remedy", Material.FERN)
     }
+
+    init {
+        registerRecipes()
+    }
+
+    private fun registerRecipes() {
+        // Bandage: 2 Paper, 1 Wool
+        val bandageKey = NamespacedKey(plugin, "recipe_bandage")
+        if (plugin.server.getRecipe(bandageKey) == null) {
+            val recipe = org.bukkit.inventory.ShapelessRecipe(bandageKey, createHealingItem(HealingItem.BANDAGE))
+            recipe.addIngredient(2, Material.PAPER)
+            recipe.addIngredient(1, Material.WHITE_WOOL)
+            plugin.server.addRecipe(recipe)
+        }
+
+        // Healing Salve: Honeycomb, Bowl, Sugar
+        val salveKey = NamespacedKey(plugin, "recipe_salve")
+        if (plugin.server.getRecipe(salveKey) == null) {
+            val recipe = org.bukkit.inventory.ShapelessRecipe(salveKey, createHealingItem(HealingItem.HEALING_SALVE))
+            recipe.addIngredient(1, Material.HONEYCOMB)
+            recipe.addIngredient(1, Material.BOWL)
+            recipe.addIngredient(1, Material.SUGAR)
+            plugin.server.addRecipe(recipe)
+        }
+
+        // Herbal Remedy: Fern, Red Tulip, Dandelion
+        val remedyKey = NamespacedKey(plugin, "recipe_remedy")
+        if (plugin.server.getRecipe(remedyKey) == null) {
+             val recipe = org.bukkit.inventory.ShapelessRecipe(remedyKey, createHealingItem(HealingItem.HERBAL_REMEDY))
+             recipe.addIngredient(1, Material.FERN)
+             recipe.addIngredient(1, Material.RED_TULIP)
+             recipe.addIngredient(1, Material.DANDELION)
+             plugin.server.addRecipe(recipe)
+        }
+
+        // Medical Kit: Complex
+        val medkitKey = NamespacedKey(plugin, "recipe_medkit")
+        if (plugin.server.getRecipe(medkitKey) == null) {
+            val recipe = org.bukkit.inventory.ShapedRecipe(medkitKey, createHealingItem(HealingItem.MEDICAL_KIT))
+            recipe.shape("PGP", "ICI", "PRP")
+            recipe.setIngredient('P', Material.PAPER)
+            recipe.setIngredient('G', Material.GOLDEN_APPLE)
+            recipe.setIngredient('I', Material.IRON_INGOT)
+            recipe.setIngredient('C', Material.CHEST)
+            recipe.setIngredient('R', Material.RED_DYE)
+            plugin.server.addRecipe(recipe)
+        }
+    }
     
     // ══════════════════════════════════════════════════════════════
     // NERF NATURAL HEALING
