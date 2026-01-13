@@ -605,9 +605,9 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
     
     fun getUnlockedNodes(player: Player): Set<String> {
         val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return setOf("origin")
-        // Stored as comma-separated in a field we'll add
+        // Stored as comma-separated in a field - handle null for existing players
         val nodeStr = profile.unlockedSkillNodes
-        return if (nodeStr.isBlank()) setOf("origin") else nodeStr.split(",").toSet()
+        return if (nodeStr.isNullOrBlank()) setOf("origin") else nodeStr.split(",").toSet()
     }
     
     fun unlockNode(player: Player, nodeId: String): Boolean {

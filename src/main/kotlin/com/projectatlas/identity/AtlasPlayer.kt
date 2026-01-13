@@ -14,5 +14,5 @@ data class AtlasPlayer(
     var currentXp: Long = 0,
     var level: Int = 1,
     val titles: MutableList<String> = mutableListOf(),
-    var unlockedSkillNodes: String = "origin" // Comma-separated node IDs
+    var unlockedSkillNodes: String? = "origin" // Comma-separated node IDs, nullable for migration
 )
