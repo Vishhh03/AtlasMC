@@ -143,20 +143,53 @@ class WanderingNPCListener(private val plugin: AtlasPlugin) : Listener {
         player.playSound(player.location, Sound.ENTITY_VILLAGER_AMBIENT, 1.0f, 1.0f)
     }
     
-    // --- 2. Bandit Ambush ---
+    // --- 2. Bandit Ambush (Level-Scaled Difficulty) ---
     private fun spawnBanditAmbush(player: Player) {
         val spawnLoc = getSafeSpawnLocation(player) ?: return
+        
+        val playerLevel = plugin.identityManager.getPlayer(player.uniqueId)?.level ?: 1
         
         player.sendMessage(Component.text("You hear rustling in the bushes...", NamedTextColor.RED).decorate(TextDecoration.ITALIC))
         player.playSound(player.location, Sound.ENTITY_ILLUSIONER_PREPARE_BLINDNESS, 1.0f, 0.5f)
         
-        // Spawn 3 Bandits
-        repeat(3) {
-            player.world.spawn(spawnLoc, Vindicator::class.java) { bandit ->
-                bandit.customName(Component.text("Bandit", NamedTextColor.RED))
-                bandit.isCustomNameVisible = true
-                bandit.equipment.setItemInMainHand(ItemStack(Material.IRON_AXE))
-                scheduleDespawn(bandit, 2400L) // Despawn after 2m
+        // Scale enemy type based on player level
+        val (mobCount, mobName, mobColor) = when {
+            playerLevel <= 5 -> Triple(2, "Thug", NamedTextColor.GRAY)
+            playerLevel <= 10 -> Triple(3, "Bandit", NamedTextColor.RED)
+            else -> Triple(3, "Elite Bandit", NamedTextColor.DARK_RED)
+        }
+        
+        repeat(mobCount) {
+            when {
+                playerLevel <= 5 -> {
+                    // Easy: Zombies with wooden weapons
+                    player.world.spawn(spawnLoc, org.bukkit.entity.Zombie::class.java) { mob ->
+                        mob.customName(Component.text(mobName, mobColor))
+                        mob.isCustomNameVisible = true
+                        mob.equipment.setItemInMainHand(ItemStack(Material.WOODEN_SWORD))
+                        mob.isBaby = false
+                        scheduleDespawn(mob, 2400L)
+                    }
+                }
+                playerLevel <= 10 -> {
+                    // Medium: Husks with stone weapons
+                    player.world.spawn(spawnLoc, org.bukkit.entity.Husk::class.java) { mob ->
+                        mob.customName(Component.text(mobName, mobColor))
+                        mob.isCustomNameVisible = true
+                        mob.equipment.setItemInMainHand(ItemStack(Material.STONE_AXE))
+                        mob.equipment.helmet = ItemStack(Material.LEATHER_HELMET)
+                        scheduleDespawn(mob, 2400L)
+                    }
+                }
+                else -> {
+                    // Hard: Vindicators with iron axes
+                    player.world.spawn(spawnLoc, Vindicator::class.java) { mob ->
+                        mob.customName(Component.text(mobName, mobColor))
+                        mob.isCustomNameVisible = true
+                        mob.equipment.setItemInMainHand(ItemStack(Material.IRON_AXE))
+                        scheduleDespawn(mob, 2400L)
+                    }
+                }
             }
         }
     }
