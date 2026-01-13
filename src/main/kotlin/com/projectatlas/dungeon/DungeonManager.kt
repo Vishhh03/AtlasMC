@@ -204,94 +204,502 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
 
     private fun buildDungeonArena(instance: DungeonInstance, center: Location) {
         val world = center.world ?: return
-        val radius = 25
-        val height = 15
+        val radius = 30 // Larger arena
+        val height = 20
 
         plugin.server.scheduler.runTask(plugin, Runnable {
-            // Build based on dungeon type
-            val floorMaterial = when (instance.type) {
-                DungeonType.SHADOW_CAVERN -> Material.DEEPSLATE
-                DungeonType.INFERNAL_PIT, DungeonType.BLOOD_MOON -> Material.NETHER_BRICKS
-                DungeonType.FROZEN_DEPTHS -> Material.PACKED_ICE
-                DungeonType.VOID_ARENA, DungeonType.DRAGONS_LAIR -> Material.END_STONE_BRICKS
-                DungeonType.ANCIENT_TEMPLE -> Material.STONE_BRICKS
-                DungeonType.PIRATE_COVE -> Material.OAK_PLANKS
-            }
-
-            val wallMaterial = when (instance.type) {
-                DungeonType.SHADOW_CAVERN -> Material.BLACKSTONE
-                DungeonType.INFERNAL_PIT, DungeonType.BLOOD_MOON -> Material.MAGMA_BLOCK
-                DungeonType.FROZEN_DEPTHS -> Material.BLUE_ICE
-                DungeonType.VOID_ARENA, DungeonType.DRAGONS_LAIR -> Material.OBSIDIAN
-                DungeonType.ANCIENT_TEMPLE -> Material.MOSSY_STONE_BRICKS
-                DungeonType.PIRATE_COVE -> Material.DARK_OAK_PLANKS
-            }
-
-            // Clear and build arena
-            for (x in -radius..radius) {
-                for (z in -radius..radius) {
-                    val loc = center.clone().add(x.toDouble(), 0.0, z.toDouble())
-                    
-                    // Floor
-                    loc.block.type = floorMaterial
-                    
-                    // Clear above
-                    for (y in 1..height) {
-                        loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.AIR
-                    }
-                    
-                    // Walls
-                    if (x == -radius || x == radius || z == -radius || z == radius) {
-                        for (y in 1..height) {
-                            loc.clone().add(0.0, y.toDouble(), 0.0).block.type = wallMaterial
-                        }
-                    }
-                    
-                    // Ceiling
-                    loc.clone().add(0.0, (height + 1).toDouble(), 0.0).block.type = wallMaterial
-                    
-                    // Below floor 
-                    loc.clone().add(0.0, -1.0, 0.0).block.type = Material.BEDROCK
-                }
-            }
-
-            // Add some light
-            for (i in 0 until 8) {
-                val angle = Math.PI * 2 * i / 8
-                val lx = (Math.cos(angle) * (radius - 5)).toInt()
-                val lz = (Math.sin(angle) * (radius - 5)).toInt()
-                center.clone().add(lx.toDouble(), 3.0, lz.toDouble()).block.type = when (instance.type) {
-                    DungeonType.INFERNAL_PIT -> Material.SHROOMLIGHT
-                    DungeonType.FROZEN_DEPTHS -> Material.SEA_LANTERN
-                    else -> Material.LANTERN
-                }
-            }
-
-            // Spawn objectives based on type
             when (instance.type) {
-                DungeonType.FROZEN_DEPTHS -> {
-                    // Spawn 3 ice crystals (beacons representing crystals)
-                    instance.objectiveTarget = 3
-                    for (i in 0 until 3) {
-                        val angle = Math.PI * 2 * i / 3
-                        val cx = (Math.cos(angle) * 15).toInt()
-                        val cz = (Math.sin(angle) * 15).toInt()
-                        val crystalLoc = center.clone().add(cx.toDouble(), 1.0, cz.toDouble())
-                        crystalLoc.block.type = Material.DIAMOND_BLOCK
-                        crystalLoc.clone().add(0.0, 1.0, 0.0).block.type = Material.BEACON
-                    }
-                }
-                DungeonType.INFERNAL_PIT -> {
-                    instance.objectiveTarget = 5 // 5 waves
-                }
-                DungeonType.VOID_ARENA -> {
-                    instance.objectiveTarget = 1 // 1 boss
-                }
-                else -> {
-                    instance.objectiveTarget = 1
-                }
+                DungeonType.SHADOW_CAVERN -> buildShadowCavern(center, radius, height, instance)
+                DungeonType.INFERNAL_PIT -> buildInfernalPit(center, radius, height, instance)
+                DungeonType.FROZEN_DEPTHS -> buildFrozenDepths(center, radius, height, instance)
+                DungeonType.VOID_ARENA -> buildVoidArena(center, radius, height, instance)
+                DungeonType.ANCIENT_TEMPLE -> buildAncientTemple(center, radius, height, instance)
+                DungeonType.PIRATE_COVE -> buildPirateCove(center, radius, height, instance)
+                DungeonType.BLOOD_MOON -> buildBloodMoonArena(center, radius, height, instance)
+                DungeonType.DRAGONS_LAIR -> buildDragonsLair(center, radius, height, instance)
             }
         })
+    }
+    
+    // ══════════════════════════════════════════════════════════════
+    // UNIQUE DUNGEON BUILDERS
+    // ══════════════════════════════════════════════════════════════
+    
+    private fun buildShadowCavern(center: Location, radius: Int, height: Int, instance: DungeonInstance) {
+        val random = Random()
+        
+        // Irregular cave shape
+        for (x in -radius..radius) {
+            for (z in -radius..radius) {
+                val dist = Math.sqrt((x * x + z * z).toDouble())
+                if (dist > radius) continue
+                
+                val loc = center.clone().add(x.toDouble(), 0.0, z.toDouble())
+                
+                // Floor - varied deepslate
+                loc.block.type = if (random.nextDouble() < 0.3) Material.DEEPSLATE_TILES else Material.DEEPSLATE
+                loc.clone().add(0.0, -1.0, 0.0).block.type = Material.BEDROCK
+                
+                // Clear interior with varying ceiling height (cave-like)
+                val ceilingHeight = height - random.nextInt(5)
+                for (y in 1..ceilingHeight) {
+                    loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.AIR
+                }
+                
+                // Walls with stalactites
+                if (dist > radius - 3) {
+                    for (y in 1..height) {
+                        val wallBlock = loc.clone().add(0.0, y.toDouble(), 0.0).block
+                        wallBlock.type = if (random.nextDouble() < 0.2) Material.POLISHED_DEEPSLATE else Material.DEEPSLATE_BRICKS
+                    }
+                }
+                
+                // Ceiling
+                loc.clone().add(0.0, (ceilingHeight + 1).toDouble(), 0.0).block.type = Material.DEEPSLATE
+                
+                // Random stalagmites
+                if (random.nextDouble() < 0.05 && dist < radius - 5) {
+                    val stalagHeight = random.nextInt(3) + 1
+                    for (y in 1..stalagHeight) {
+                        loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.POINTED_DRIPSTONE
+                    }
+                }
+            }
+        }
+        
+        // Scattered soul lanterns for eerie lighting
+        for (i in 0 until 12) {
+            val angle = Math.PI * 2 * i / 12
+            val lx = (Math.cos(angle) * (radius - 8)).toInt()
+            val lz = (Math.sin(angle) * (radius - 8)).toInt()
+            center.clone().add(lx.toDouble(), 4.0, lz.toDouble()).block.type = Material.SOUL_LANTERN
+        }
+        
+        // Cobwebs
+        for (i in 0 until 20) {
+            val wx = random.nextInt(radius * 2) - radius
+            val wz = random.nextInt(radius * 2) - radius
+            if (Math.sqrt((wx * wx + wz * wz).toDouble()) < radius - 5) {
+                center.clone().add(wx.toDouble(), (random.nextInt(5) + 2).toDouble(), wz.toDouble()).block.type = Material.COBWEB
+            }
+        }
+        
+        instance.objectiveTarget = 1 // Kill the boss
+    }
+    
+    private fun buildInfernalPit(center: Location, radius: Int, height: Int, instance: DungeonInstance) {
+        val random = Random()
+        
+        for (x in -radius..radius) {
+            for (z in -radius..radius) {
+                val dist = Math.sqrt((x * x + z * z).toDouble())
+                if (dist > radius) continue
+                
+                val loc = center.clone().add(x.toDouble(), 0.0, z.toDouble())
+                
+                // Floor - mix of nether bricks and magma
+                loc.block.type = when {
+                    random.nextDouble() < 0.15 -> Material.MAGMA_BLOCK
+                    random.nextDouble() < 0.3 -> Material.CRACKED_NETHER_BRICKS
+                    else -> Material.NETHER_BRICKS
+                }
+                loc.clone().add(0.0, -1.0, 0.0).block.type = Material.BEDROCK
+                
+                // Clear interior
+                for (y in 1..height) {
+                    loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.AIR
+                }
+                
+                // Walls with fire
+                if (dist > radius - 2) {
+                    for (y in 1..height) {
+                        val wallBlock = loc.clone().add(0.0, y.toDouble(), 0.0).block
+                        wallBlock.type = if (y % 4 == 0) Material.SHROOMLIGHT else Material.RED_NETHER_BRICKS
+                    }
+                }
+                
+                // Ceiling
+                loc.clone().add(0.0, (height + 1).toDouble(), 0.0).block.type = Material.NETHER_BRICKS
+                
+                // Lava pools
+                if (random.nextDouble() < 0.02 && dist < radius - 8 && dist > 5) {
+                    loc.clone().add(0.0, 0.0, 0.0).block.type = Material.LAVA
+                }
+            }
+        }
+        
+        // Netherrack pillars with fire
+        for (i in 0 until 6) {
+            val angle = Math.PI * 2 * i / 6
+            val px = (Math.cos(angle) * (radius - 10)).toInt()
+            val pz = (Math.sin(angle) * (radius - 10)).toInt()
+            for (y in 1..8) {
+                center.clone().add(px.toDouble(), y.toDouble(), pz.toDouble()).block.type = Material.NETHERRACK
+            }
+            center.clone().add(px.toDouble(), 9.0, pz.toDouble()).block.type = Material.FIRE
+        }
+        
+        // Central lava pit (cosmetic)
+        for (x in -3..3) {
+            for (z in -3..3) {
+                if (Math.sqrt((x * x + z * z).toDouble()) < 3) {
+                    center.clone().add(x.toDouble(), 0.0, z.toDouble()).block.type = Material.LAVA
+                }
+            }
+        }
+        
+        instance.objectiveTarget = 5 // 5 waves
+    }
+    
+    private fun buildFrozenDepths(center: Location, radius: Int, height: Int, instance: DungeonInstance) {
+        val random = Random()
+        
+        for (x in -radius..radius) {
+            for (z in -radius..radius) {
+                val dist = Math.sqrt((x * x + z * z).toDouble())
+                if (dist > radius) continue
+                
+                val loc = center.clone().add(x.toDouble(), 0.0, z.toDouble())
+                
+                // Floor - ice variants
+                loc.block.type = when {
+                    random.nextDouble() < 0.2 -> Material.BLUE_ICE
+                    random.nextDouble() < 0.5 -> Material.PACKED_ICE
+                    else -> Material.ICE
+                }
+                loc.clone().add(0.0, -1.0, 0.0).block.type = Material.BEDROCK
+                
+                // Clear interior
+                for (y in 1..height) {
+                    loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.AIR
+                }
+                
+                // Walls
+                if (dist > radius - 2) {
+                    for (y in 1..height) {
+                        loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.BLUE_ICE
+                    }
+                }
+                
+                // Snow layer on top
+                if (random.nextDouble() < 0.3 && dist < radius - 3) {
+                    loc.clone().add(0.0, 1.0, 0.0).block.type = Material.SNOW
+                }
+                
+                loc.clone().add(0.0, (height + 1).toDouble(), 0.0).block.type = Material.PACKED_ICE
+            }
+        }
+        
+        // Ice spires
+        for (i in 0 until 5) {
+            val angle = Math.PI * 2 * i / 5
+            val sx = (Math.cos(angle) * (radius - 12)).toInt()
+            val sz = (Math.sin(angle) * (radius - 12)).toInt()
+            for (y in 1..random.nextInt(6) + 4) {
+                center.clone().add(sx.toDouble(), y.toDouble(), sz.toDouble()).block.type = Material.BLUE_ICE
+            }
+        }
+        
+        // 3 Ice Crystals (objectives)
+        instance.objectiveTarget = 3
+        for (i in 0 until 3) {
+            val angle = Math.PI * 2 * i / 3
+            val cx = (Math.cos(angle) * 15).toInt()
+            val cz = (Math.sin(angle) * 15).toInt()
+            val crystalLoc = center.clone().add(cx.toDouble(), 1.0, cz.toDouble())
+            
+            // Crystal base
+            crystalLoc.block.type = Material.DIAMOND_BLOCK
+            crystalLoc.clone().add(0.0, 1.0, 0.0).block.type = Material.BEACON
+            crystalLoc.clone().add(0.0, 2.0, 0.0).block.type = Material.SEA_LANTERN
+            
+            // Surrounding ice
+            for (dx in -1..1) {
+                for (dz in -1..1) {
+                    if (dx != 0 || dz != 0) {
+                        crystalLoc.clone().add(dx.toDouble(), 0.0, dz.toDouble()).block.type = Material.BLUE_ICE
+                    }
+                }
+            }
+        }
+        
+        // Sea lanterns for lighting
+        for (i in 0 until 10) {
+            val angle = Math.PI * 2 * i / 10
+            val lx = (Math.cos(angle) * (radius - 6)).toInt()
+            val lz = (Math.sin(angle) * (radius - 6)).toInt()
+            center.clone().add(lx.toDouble(), 5.0, lz.toDouble()).block.type = Material.SEA_LANTERN
+        }
+    }
+    
+    private fun buildVoidArena(center: Location, radius: Int, height: Int, instance: DungeonInstance) {
+        val random = Random()
+        
+        for (x in -radius..radius) {
+            for (z in -radius..radius) {
+                val dist = Math.sqrt((x * x + z * z).toDouble())
+                if (dist > radius) continue
+                
+                val loc = center.clone().add(x.toDouble(), 0.0, z.toDouble())
+                
+                // Floor - end stone pattern
+                loc.block.type = when {
+                    (x + z) % 5 == 0 -> Material.PURPUR_BLOCK
+                    random.nextDouble() < 0.1 -> Material.END_STONE_BRICKS
+                    else -> Material.END_STONE
+                }
+                loc.clone().add(0.0, -1.0, 0.0).block.type = Material.BEDROCK
+                
+                // Clear interior
+                for (y in 1..height) {
+                    loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.AIR
+                }
+                
+                // Obsidian pillars at edges
+                if (dist > radius - 2) {
+                    for (y in 1..height) {
+                        loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.OBSIDIAN
+                    }
+                }
+                
+                loc.clone().add(0.0, (height + 1).toDouble(), 0.0).block.type = Material.OBSIDIAN
+            }
+        }
+        
+        // End rod pillars
+        for (i in 0 until 8) {
+            val angle = Math.PI * 2 * i / 8
+            val px = (Math.cos(angle) * (radius - 8)).toInt()
+            val pz = (Math.sin(angle) * (radius - 8)).toInt()
+            for (y in 1..12) {
+                val block = center.clone().add(px.toDouble(), y.toDouble(), pz.toDouble()).block
+                block.type = if (y == 12) Material.END_ROD else Material.PURPUR_PILLAR
+            }
+        }
+        
+        // Central platform for boss
+        for (x in -4..4) {
+            for (z in -4..4) {
+                if (Math.sqrt((x * x + z * z).toDouble()) < 4) {
+                    center.clone().add(x.toDouble(), 1.0, z.toDouble()).block.type = Material.PURPUR_BLOCK
+                }
+            }
+        }
+        
+        instance.objectiveTarget = 1 // Kill the boss
+    }
+    
+    private fun buildAncientTemple(center: Location, radius: Int, height: Int, instance: DungeonInstance) {
+        val random = Random()
+        
+        for (x in -radius..radius) {
+            for (z in -radius..radius) {
+                val dist = Math.sqrt((x * x + z * z).toDouble())
+                if (dist > radius) continue
+                
+                val loc = center.clone().add(x.toDouble(), 0.0, z.toDouble())
+                
+                // Floor - temple pattern
+                loc.block.type = when {
+                    (x + z) % 4 == 0 -> Material.CHISELED_STONE_BRICKS
+                    random.nextDouble() < 0.15 -> Material.MOSSY_STONE_BRICKS
+                    random.nextDouble() < 0.1 -> Material.CRACKED_STONE_BRICKS
+                    else -> Material.STONE_BRICKS
+                }
+                loc.clone().add(0.0, -1.0, 0.0).block.type = Material.BEDROCK
+                
+                for (y in 1..height) {
+                    loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.AIR
+                }
+                
+                if (dist > radius - 2) {
+                    for (y in 1..height) {
+                        loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.STONE_BRICKS
+                    }
+                }
+                
+                loc.clone().add(0.0, (height + 1).toDouble(), 0.0).block.type = Material.STONE_BRICKS
+            }
+        }
+        
+        // Temple pillars
+        for (i in 0 until 8) {
+            val angle = Math.PI * 2 * i / 8
+            val px = (Math.cos(angle) * (radius - 10)).toInt()
+            val pz = (Math.sin(angle) * (radius - 10)).toInt()
+            for (y in 1..10) {
+                center.clone().add(px.toDouble(), y.toDouble(), pz.toDouble()).block.type = Material.QUARTZ_PILLAR
+            }
+            center.clone().add(px.toDouble(), 11.0, pz.toDouble()).block.type = Material.LANTERN
+        }
+        
+        // Vines
+        for (i in 0 until 15) {
+            val vx = random.nextInt(radius * 2) - radius
+            val vz = random.nextInt(radius * 2) - radius
+            if (Math.sqrt((vx * vx + vz * vz).toDouble()) < radius - 3) {
+                for (y in height downTo height - 3) {
+                    center.clone().add(vx.toDouble(), y.toDouble(), vz.toDouble()).block.type = Material.VINE
+                }
+            }
+        }
+        
+        // Central altar
+        center.clone().add(0.0, 1.0, 0.0).block.type = Material.LODESTONE
+        center.clone().add(0.0, 2.0, 0.0).block.type = Material.ENCHANTING_TABLE
+        
+        instance.objectiveTarget = 1
+    }
+    
+    private fun buildPirateCove(center: Location, radius: Int, height: Int, instance: DungeonInstance) {
+        val random = Random()
+        
+        for (x in -radius..radius) {
+            for (z in -radius..radius) {
+                val dist = Math.sqrt((x * x + z * z).toDouble())
+                if (dist > radius) continue
+                
+                val loc = center.clone().add(x.toDouble(), 0.0, z.toDouble())
+                
+                // Floor - sandy/wooden
+                loc.block.type = when {
+                    dist < 10 -> Material.OAK_PLANKS
+                    random.nextDouble() < 0.1 -> Material.GRAVEL
+                    else -> Material.SAND
+                }
+                loc.clone().add(0.0, -1.0, 0.0).block.type = Material.BEDROCK
+                
+                for (y in 1..height) {
+                    loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.AIR
+                }
+                
+                if (dist > radius - 2) {
+                    for (y in 1..height) {
+                        loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.DARK_OAK_PLANKS
+                    }
+                }
+                
+                loc.clone().add(0.0, (height + 1).toDouble(), 0.0).block.type = Material.OAK_PLANKS
+            }
+        }
+        
+        // Treasure chests
+        for (i in 0 until 5) {
+            val cx = random.nextInt(20) - 10
+            val cz = random.nextInt(20) - 10
+            center.clone().add(cx.toDouble(), 1.0, cz.toDouble()).block.type = Material.CHEST
+        }
+        
+        // Lanterns
+        for (i in 0 until 8) {
+            val angle = Math.PI * 2 * i / 8
+            val lx = (Math.cos(angle) * (radius - 5)).toInt()
+            val lz = (Math.sin(angle) * (radius - 5)).toInt()
+            center.clone().add(lx.toDouble(), 4.0, lz.toDouble()).block.type = Material.LANTERN
+        }
+        
+        instance.objectiveTarget = 4 // Waves of pirates
+    }
+    
+    private fun buildBloodMoonArena(center: Location, radius: Int, height: Int, instance: DungeonInstance) {
+        val random = Random()
+        
+        for (x in -radius..radius) {
+            for (z in -radius..radius) {
+                val dist = Math.sqrt((x * x + z * z).toDouble())
+                if (dist > radius) continue
+                
+                val loc = center.clone().add(x.toDouble(), 0.0, z.toDouble())
+                
+                // Floor - crimson/dark
+                loc.block.type = when {
+                    random.nextDouble() < 0.2 -> Material.REDSTONE_BLOCK
+                    random.nextDouble() < 0.3 -> Material.CRIMSON_PLANKS
+                    else -> Material.CRIMSON_NYLIUM
+                }
+                loc.clone().add(0.0, -1.0, 0.0).block.type = Material.BEDROCK
+                
+                for (y in 1..height) {
+                    loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.AIR
+                }
+                
+                if (dist > radius - 2) {
+                    for (y in 1..height) {
+                        loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.CRYING_OBSIDIAN
+                    }
+                }
+                
+                loc.clone().add(0.0, (height + 1).toDouble(), 0.0).block.type = Material.CRIMSON_HYPHAE
+            }
+        }
+        
+        // Redstone lamps
+        for (i in 0 until 10) {
+            val angle = Math.PI * 2 * i / 10
+            val lx = (Math.cos(angle) * (radius - 8)).toInt()
+            val lz = (Math.sin(angle) * (radius - 8)).toInt()
+            center.clone().add(lx.toDouble(), 3.0, lz.toDouble()).block.type = Material.REDSTONE_LAMP
+            center.clone().add(lx.toDouble(), 2.0, lz.toDouble()).block.type = Material.REDSTONE_BLOCK // Power it
+        }
+        
+        instance.objectiveTarget = 10 // Endless waves (survive 10 for completion)
+    }
+    
+    private fun buildDragonsLair(center: Location, radius: Int, height: Int, instance: DungeonInstance) {
+        val random = Random()
+        val largeHeight = height + 10 // Taller ceiling for dragon
+        
+        for (x in -radius..radius) {
+            for (z in -radius..radius) {
+                val dist = Math.sqrt((x * x + z * z).toDouble())
+                if (dist > radius) continue
+                
+                val loc = center.clone().add(x.toDouble(), 0.0, z.toDouble())
+                
+                // Floor - volcanic
+                loc.block.type = when {
+                    random.nextDouble() < 0.1 -> Material.MAGMA_BLOCK
+                    random.nextDouble() < 0.3 -> Material.BLACKSTONE
+                    else -> Material.BASALT
+                }
+                loc.clone().add(0.0, -1.0, 0.0).block.type = Material.BEDROCK
+                
+                for (y in 1..largeHeight) {
+                    loc.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.AIR
+                }
+                
+                if (dist > radius - 3) {
+                    for (y in 1..largeHeight) {
+                        loc.clone().add(0.0, y.toDouble(), 0.0).block.type = 
+                            if (y % 5 == 0) Material.SHROOMLIGHT else Material.BLACKSTONE
+                    }
+                }
+                
+                loc.clone().add(0.0, (largeHeight + 1).toDouble(), 0.0).block.type = Material.BLACKSTONE
+            }
+        }
+        
+        // Gold hoard in center
+        for (x in -5..5) {
+            for (z in -5..5) {
+                if (random.nextDouble() < 0.5) {
+                    center.clone().add(x.toDouble(), 1.0, z.toDouble()).block.type = Material.GOLD_BLOCK
+                }
+            }
+        }
+        
+        // Obsidian pillars
+        for (i in 0 until 6) {
+            val angle = Math.PI * 2 * i / 6
+            val px = (Math.cos(angle) * (radius - 8)).toInt()
+            val pz = (Math.sin(angle) * (radius - 8)).toInt()
+            for (y in 1..15) {
+                center.clone().add(px.toDouble(), y.toDouble(), pz.toDouble()).block.type = Material.OBSIDIAN
+            }
+            center.clone().add(px.toDouble(), 16.0, pz.toDouble()).block.type = Material.END_ROD
+        }
+        
+        instance.objectiveTarget = 1 // Kill the dragon
     }
 
     private fun startDungeonLogic(instance: DungeonInstance) {
