@@ -154,14 +154,16 @@ class MarketManager(private val plugin: AtlasPlugin) : Listener {
         // Transfer Money
         buyerProfile.balance -= price
         
-        // Tax Logic (If in a city, tax goes to city)
-        val city = plugin.cityManager.getCityAt(block.chunk)
+        // Tax Logic: 5% Global Tax (Sink) + City Tax
         var postTaxIncome = price
+        val marketTax = price * 0.05
+        postTaxIncome -= marketTax
         
+        val city = plugin.cityManager.getCityAt(block.chunk)
         if (city != null) {
-            val taxAmount = price * (city.taxRate / 100.0)
-            city.treasury += taxAmount
-            postTaxIncome -= taxAmount
+            val cityTax = price * (city.taxRate / 100.0)
+            city.treasury += cityTax
+            postTaxIncome -= cityTax
             plugin.cityManager.saveCity(city)
         }
 
@@ -171,7 +173,7 @@ class MarketManager(private val plugin: AtlasPlugin) : Listener {
             sellerProfile.balance += postTaxIncome
             // Optionally notify if online
             val seller = plugin.server.getPlayer(ownerUuid)
-            seller?.sendMessage(Component.text("Shop: Sold ${sampleItem.type.name} to ${player.name} for $price g (${postTaxIncome} net)", NamedTextColor.GREEN))
+            seller?.sendMessage(Component.text("Shop: Sold ${sampleItem.type.name} to ${player.name} for $price g (${String.format("%.1f", postTaxIncome)} net)", NamedTextColor.GREEN))
             plugin.identityManager.saveProfile(ownerUuid) // Save seller immediately
         } else {
             // Offline seller handling

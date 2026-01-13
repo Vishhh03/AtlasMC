@@ -12,6 +12,8 @@ import org.bukkit.scheduler.BukkitRunnable
  */
 class VisualManager(private val plugin: AtlasPlugin) {
 
+    private val enabledPlayers = mutableSetOf<java.util.UUID>()
+
     init {
         // Start the particle task
         object : BukkitRunnable() {
@@ -23,10 +25,22 @@ class VisualManager(private val plugin: AtlasPlugin) {
         }.runTaskTimer(plugin, 20L, 10L) // Every 0.5 seconds
     }
 
+    fun toggleVisuals(player: Player) {
+        if (enabledPlayers.contains(player.uniqueId)) {
+            enabledPlayers.remove(player.uniqueId)
+            player.sendMessage(net.kyori.adventure.text.Component.text("Visuals Disabled", net.kyori.adventure.text.format.NamedTextColor.RED))
+        } else {
+            enabledPlayers.add(player.uniqueId)
+            player.sendMessage(net.kyori.adventure.text.Component.text("Visuals Enabled (Borders)", net.kyori.adventure.text.format.NamedTextColor.GREEN))
+        }
+    }
+
     private fun showChunkBorders(player: Player) {
-        // Require holding Compass or Map
+        // Require holding Compass/Map OR enabled via hotkey
         val item = player.inventory.itemInMainHand
-        if (item.type != Material.COMPASS && item.type != Material.FILLED_MAP) return
+        val isHoldingItem = item.type == Material.COMPASS || item.type == Material.FILLED_MAP
+        
+        if (!isHoldingItem && !enabledPlayers.contains(player.uniqueId)) return
 
         val chunk = player.location.chunk
         

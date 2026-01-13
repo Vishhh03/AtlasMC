@@ -28,6 +28,8 @@ class AtlasListener(
 ) : Listener {
     
     private val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+    private val shiftTimes = java.util.concurrent.ConcurrentHashMap<java.util.UUID, Long>()
+
 
     @EventHandler
     fun onJoin(event: PlayerJoinEvent) {
@@ -46,16 +48,32 @@ class AtlasListener(
     }
     
     // HOTKEY: Swap Hands (Default 'F') opens Atlas Menu
+    // HOTKEY: Shift + F = Atlas Menu
     @EventHandler(priority = EventPriority.HIGH)
     fun onMenuHotkey(event: org.bukkit.event.player.PlayerSwapHandItemsEvent) {
         val player = event.player
         
-        // Ensure sneaking to avoid accidental triggers/navigation conflict? 
-        // User requested "hotkey", usually F. Let's make it Shift+F to be safe, or just F.
-        // Let's go with just F, but cancel the swap so they don't actually swap.
+        if (player.isSneaking) {
+            event.isCancelled = true
+            guiManager.openMainMenu(player)
+        }
+    }
+
+    // HOTKEY: Double Shift = Toggle Visuals
+    @EventHandler
+    fun onToggleSneak(event: org.bukkit.event.player.PlayerToggleSneakEvent) {
+        if (!event.isSneaking) return // Only on down press
         
-        event.isCancelled = true
-        guiManager.openMainMenu(player)
+        val player = event.player
+        val now = System.currentTimeMillis()
+        val last = shiftTimes.getOrDefault(player.uniqueId, 0L)
+        
+        if (now - last < 500) {
+            plugin.visualManager.toggleVisuals(player)
+            shiftTimes.remove(player.uniqueId)
+        } else {
+            shiftTimes[player.uniqueId] = now
+        }
     }
 
     // Protection Logic
