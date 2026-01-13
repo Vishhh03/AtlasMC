@@ -112,20 +112,25 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
         firework.fireworkMeta = fireworkMeta
 
         // 8. Broadcast
+        // 8. Broadcast (Nearby players only)
         val biomeName = targetBlock.biome.key.key.replace("_", " ")
-        plugin.server.broadcast(Component.empty())
-        plugin.server.broadcast(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
-        plugin.server.broadcast(Component.text("  ⚠ SUPPLY DROP DETECTED ⚠", NamedTextColor.RED))
-        plugin.server.broadcast(Component.text("  Type: ${tier.displayName}", tier.textColor))
-        plugin.server.broadcast(Component.text("  Location: Somewhere in a $biomeName...", NamedTextColor.YELLOW))
-        plugin.server.broadcast(Component.text("  Hint: ${x - (x % 100)}, ${z - (z % 100)} (Approx)", NamedTextColor.GRAY))
-        plugin.server.broadcast(Component.text("  Guarded by hostiles!", NamedTextColor.RED))
-        plugin.server.broadcast(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
-        plugin.server.broadcast(Component.empty())
+        val broadcastRadius = 1000.0
         
-        // Play global sound
         plugin.server.onlinePlayers.forEach { player ->
-            player.playSound(player.location, Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.5f)
+            if (player.world == world && player.location.distance(dropLocation) <= broadcastRadius) {
+                player.sendMessage(Component.empty())
+                player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
+                player.sendMessage(Component.text("  ⚠ SUPPLY DROP DETECTED NEARBY ⚠", NamedTextColor.RED))
+                player.sendMessage(Component.text("  Type: ${tier.displayName}", tier.textColor))
+                player.sendMessage(Component.text("  Location: Somewhere in a $biomeName...", NamedTextColor.YELLOW))
+                player.sendMessage(Component.text("  Hint: ${x - (x % 100)}, ${z - (z % 100)} (Approx)", NamedTextColor.GRAY))
+                player.sendMessage(Component.text("  Guarded by hostiles!", NamedTextColor.RED))
+                player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
+                player.sendMessage(Component.empty())
+                
+                // Play sound
+                player.playSound(player.location, Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.5f)
+            }
         }
         
         plugin.logger.info("Supply drop ($tier) spawned at $x, ${targetBlock.y}, $z")
