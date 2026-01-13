@@ -57,6 +57,7 @@ class AtlasCommand(
             "blueprint", "bp" -> handleBlueprint(sender, args)
             "menu" -> handleMenu(sender)
             "skills", "skill", "tree" -> handleSkills(sender)
+            "heal", "medkit" -> handleHeal(sender, args)
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
         return true
@@ -80,6 +81,35 @@ class AtlasCommand(
         } else {
             player.sendMessage(Component.text("Skill Tree is not available.", NamedTextColor.RED))
         }
+    }
+
+    private fun handleHeal(player: Player, args: Array<out String>) {
+        val plugin = player.server.pluginManager.getPlugin("ProjectAtlas") as? AtlasPlugin
+        if (plugin == null) {
+            player.sendMessage(Component.text("Survival system not available.", NamedTextColor.RED))
+            return
+        }
+        
+        if (args.size < 2) {
+            player.sendMessage(Component.text("Usage: /atlas heal <bandage|salve|medkit|remedy> [amount]", NamedTextColor.RED))
+            player.sendMessage(Component.text("Available items:", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("  bandage - Heals 4 HP", NamedTextColor.WHITE))
+            player.sendMessage(Component.text("  salve (healing_salve) - Heals 8 HP, clears debuffs", NamedTextColor.WHITE))
+            player.sendMessage(Component.text("  medkit (medical_kit) - Heals 14 HP, clears debuffs", NamedTextColor.WHITE))
+            player.sendMessage(Component.text("  remedy (herbal_remedy) - Heals 6 HP", NamedTextColor.WHITE))
+            return
+        }
+        
+        val itemName = when (args[1].lowercase()) {
+            "bandage" -> "BANDAGE"
+            "salve", "healing_salve" -> "HEALING_SALVE"
+            "medkit", "medical_kit", "kit" -> "MEDICAL_KIT"
+            "remedy", "herbal_remedy", "herb" -> "HERBAL_REMEDY"
+            else -> args[1].uppercase()
+        }
+        
+        val amount = args.getOrNull(2)?.toIntOrNull() ?: 1
+        plugin.survivalManager.giveHealingItem(player, itemName, amount)
     }
 
     private fun handleBalance(player: Player) {
