@@ -6,6 +6,7 @@ import org.bukkit.scheduler.BukkitTask
 import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.LivingEntity
@@ -381,9 +382,37 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         // Award achievement
         plugin.achievementManager.awardAchievement(player, "quest_complete")
         
-        // Grant XP
-        plugin.identityManager.grantXp(player, plugin.configManager.questBaseXpReward) // Base XP for any quest
+        // Grant Scaled XP
+        val xpBonus = when(activeQuest.quest.difficulty) {
+            Difficulty.EASY -> 0L
+            Difficulty.MEDIUM -> 50L
+            Difficulty.HARD -> 250L
+            Difficulty.NIGHTMARE -> 1000L
+        }
+        plugin.identityManager.grantXp(player, plugin.configManager.questBaseXpReward + xpBonus)
+        player.sendMessage(Component.text("+${plugin.configManager.questBaseXpReward + xpBonus} XP", NamedTextColor.AQUA))
+        
+        // Bonus Item Reward for Hard/Nightmare
+        if (activeQuest.quest.difficulty == Difficulty.HARD || activeQuest.quest.difficulty == Difficulty.NIGHTMARE) {
+            val random = java.util.Random()
+            val bonusItems = if (activeQuest.quest.difficulty == Difficulty.HARD) {
+                listOf(Material.DIAMOND, Material.EMERALD, Material.GOLDEN_APPLE)
+            } else {
+                listOf(Material.NETHERITE_SCRAP, Material.TOTEM_OF_UNDYING, Material.ENCHANTED_GOLDEN_APPLE)
+            }
+            
+            if (random.nextDouble() < 0.5) { // 50% chance
+                 val mat = bonusItems.random()
+                 val item = org.bukkit.inventory.ItemStack(mat, 1)
+                 val left = player.inventory.addItem(item)
+                 if (left.isNotEmpty()) {
+                     player.world.dropItemNaturally(player.location, item)
+                 }
+                 player.sendMessage(Component.text("Bonus Reward: 1x ${mat.name.replace("_", " ")}", NamedTextColor.LIGHT_PURPLE))
+            }
+        }
     }
+    
     private fun startQuestLoop() {
         questTask = plugin.server.scheduler.runTaskTimer(plugin, Runnable {
             activeQuests.forEach { (uuid, activeQuest) ->

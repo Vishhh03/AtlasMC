@@ -539,38 +539,23 @@ class AtlasCommand(
         if (args.size < 2) {
             // List dungeons
             player.sendMessage(Component.text("═══ AVAILABLE DUNGEONS ═══", NamedTextColor.DARK_PURPLE, TextDecoration.BOLD))
-            plugin.dungeonManager.getAvailableDungeons().forEach { dungeon ->
+            com.projectatlas.dungeon.DungeonManager.DungeonType.entries.forEach { dungeon ->
                 val stars = "★".repeat(dungeon.difficulty) + "☆".repeat(5 - dungeon.difficulty)
                 player.sendMessage(Component.text("  ${dungeon.displayName}", NamedTextColor.LIGHT_PURPLE))
-                player.sendMessage(Component.text("    $stars | ${dungeon.goldReward}g | ${dungeon.xpReward} XP", NamedTextColor.GRAY))
+                player.sendMessage(Component.text("    $stars | Theme: ${dungeon.theme}", NamedTextColor.GRAY))
             }
-            player.sendMessage(Component.text("Use: /atlas dungeon enter <name> [modifier]", NamedTextColor.YELLOW))
-            player.sendMessage(Component.text("Modifiers: Normal, Hardcore, SpeedRun, Nightmare, Elite", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("Use: /atlas dungeon enter <name>", NamedTextColor.YELLOW))
             return
         }
         
         when (args[1].lowercase()) {
             "enter", "join" -> {
                 if (args.size < 3) {
-                    player.sendMessage(Component.text("Usage: /atlas dungeon enter <dungeon_name> [modifier]", NamedTextColor.RED))
+                    player.sendMessage(Component.text("Usage: /atlas dungeon enter <dungeon_name>", NamedTextColor.RED))
                     return
                 }
                 
-                // Parse modifier if present
-                var modifier = com.projectatlas.dungeon.DungeonManager.DungeonModifier.NONE
-                val lastArg = args.last().lowercase()
-                val modifierMatch = com.projectatlas.dungeon.DungeonManager.DungeonModifier.entries.find {
-                    it.name.lowercase() == lastArg || it.displayName.lowercase() == lastArg
-                }
-                
-                val dungeonArgs = if (modifierMatch != null) {
-                    modifier = modifierMatch
-                    args.slice(2 until args.size - 1)
-                } else {
-                    args.slice(2 until args.size)
-                }
-                
-                val dungeonName = dungeonArgs.joinToString(" ")
+                val dungeonName = args.slice(2 until args.size).joinToString(" ")
                 val type = com.projectatlas.dungeon.DungeonManager.DungeonType.entries.find { 
                     it.displayName.equals(dungeonName, true) || it.name.equals(dungeonName.replace(" ", "_"), true)
                 }
@@ -580,23 +565,12 @@ class AtlasCommand(
                     return
                 }
                 
-                plugin.dungeonManager.enterDungeon(player, type, modifier)
+                plugin.dungeonManager.enterDungeon(player, type)
             }
             "leave", "exit" -> {
-                if (plugin.dungeonManager.isInDungeon(player)) {
-                    plugin.dungeonManager.leaveDungeon(player)
-                    player.sendMessage(Component.text("Left the dungeon.", NamedTextColor.YELLOW))
-                } else {
-                    player.sendMessage(Component.text("You're not in a dungeon!", NamedTextColor.RED))
-                }
+                plugin.dungeonManager.leaveDungeon(player)
             }
-            "modifiers" -> {
-                player.sendMessage(Component.text("═══ DUNGEON MODIFIERS ═══", NamedTextColor.AQUA, TextDecoration.BOLD))
-                com.projectatlas.dungeon.DungeonManager.DungeonModifier.entries.forEach { mod ->
-                    player.sendMessage(Component.text("  ${mod.displayName}", NamedTextColor.YELLOW))
-                    player.sendMessage(Component.text("    ${mod.description} (${mod.rewardMultiplier}x rewards)", NamedTextColor.GRAY))
-                }
-            }
+            else -> player.sendMessage(Component.text("Unknown dungeon command.", NamedTextColor.RED))
         }
     }
     
@@ -886,11 +860,8 @@ class AtlasCommand(
             }
             
             // For dungeon enter, suggest modifiers after dungeon name
-            else -> if (args[0].lowercase() in listOf("dungeon") && args[1].lowercase() in listOf("enter", "join") && args.size >= 4) {
-                com.projectatlas.dungeon.DungeonManager.DungeonModifier.entries
-                    .map { it.name }
-                    .filter { it.lowercase().startsWith(args.last().lowercase()) }
-            } else emptyList()
+            else -> emptyList()
         }
     }
 }
+

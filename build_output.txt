@@ -1,10 +1,7 @@
 ﻿> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :processResources UP-TO-DATE
 > Task :processTestResources NO-SOURCE
-
 > Task :compileKotlin
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/visuals/AtmosphereManager.kt:225:20 'val isOnGround: Boolean' is deprecated. Deprecated in Java.
-
 > Task :compileJava NO-SOURCE
 > Task :classes UP-TO-DATE
 > Task :jar

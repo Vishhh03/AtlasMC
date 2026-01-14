@@ -101,14 +101,59 @@ class NPCManager(private val plugin: AtlasPlugin) : Listener {
     }
 
     fun openMerchantMenu(player: Player, npc: NPC) {
-        val inv = Bukkit.createInventory(null, 27, Component.text("${npc.name} - Shop", NamedTextColor.GOLD))
+        val inv = Bukkit.createInventory(null, 45, Component.text("${npc.name} - Daily Shop", NamedTextColor.GOLD))
         
-        // Sample merchant items
-        inv.setItem(10, createShopItem(Material.DIAMOND, "Diamond", 500))
-        inv.setItem(11, createShopItem(Material.GOLDEN_APPLE, "Golden Apple", 100))
-        inv.setItem(12, createShopItem(Material.ENDER_PEARL, "Ender Pearl", 75))
-        inv.setItem(13, createShopItem(Material.EXPERIENCE_BOTTLE, "XP Bottle", 25))
-        inv.setItem(14, createShopItem(Material.IRON_INGOT, "Iron Ingot", 10))
+        // Seed random based on Day + NPC ID so it rotates daily but stays same for everyone that day
+        val seed = (player.world.fullTime / 24000) + npc.id.hashCode()
+        val random = kotlin.random.Random(seed)
+        
+        // Loot Table (Material, Price, Slot Chance)
+        val commonTiers = listOf(
+            Material.BREAD to 5, Material.COOKED_BEEF to 8, Material.ARROW to 2, 
+            Material.OAK_LOG to 4, Material.COAL to 5, Material.TORCH to 1,
+            Material.IRON_INGOT to 25, Material.GOLD_INGOT to 50, Material.LAPIS_LAZULI to 10
+        )
+        val rareTiers = listOf(
+            Material.DIAMOND to 400, Material.EMERALD to 150, Material.ENDER_PEARL to 100,
+            Material.BLAZE_ROD to 120, Material.GHAST_TEAR to 200, Material.SLIME_BALL to 80,
+            Material.EXPERIENCE_BOTTLE to 60, Material.GOLDEN_APPLE to 250
+        )
+        val epicTiers = listOf(
+            Material.NETHERITE_SCRAP to 1200, Material.TOTEM_OF_UNDYING to 4500,
+            Material.ENCHANTED_GOLDEN_APPLE to 3000, Material.NETHER_STAR to 10000,
+            Material.SHULKER_SHELL to 1500, Material.ELYTRA to 15000
+        )
+        
+        // Populate 10-15 random items
+        val slots = (0 until 45).toMutableList()
+        var itemsAdded = 0
+        
+        // 1. Always some Common
+        repeat(random.nextInt(5) + 5) {
+            val (mat, price) = commonTiers.random(random)
+            val slot = slots.removeAt(random.nextInt(slots.size))
+            inv.setItem(slot, createShopItem(mat, mat.name.replace("_", " "), price))
+        }
+        
+        // 2. Chance for Rare (50% chance for each slot attempt)
+        repeat(random.nextInt(3) + 2) {
+            if (random.nextBoolean()) {
+                val (mat, price) = rareTiers.random(random)
+                if (slots.isNotEmpty()) {
+                    val slot = slots.removeAt(random.nextInt(slots.size))
+                    inv.setItem(slot, createShopItem(mat, mat.name.replace("_", " "), price))
+                }
+            }
+        }
+        
+        // 3. Rare Chance for Epic (1 item per day max, 20% chance)
+        if (random.nextDouble() < 0.20) {
+            val (mat, price) = epicTiers.random(random)
+            if (slots.isNotEmpty()) {
+                val slot = slots.removeAt(random.nextInt(slots.size))
+                inv.setItem(slot, createShopItem(mat, "§5§l" + mat.name.replace("_", " "), price))
+            }
+        }
         
         player.openInventory(inv)
     }
@@ -123,7 +168,8 @@ class NPCManager(private val plugin: AtlasPlugin) : Listener {
         meta.displayName(Component.text(name, NamedTextColor.YELLOW))
         meta.lore(listOf(
             Component.text("Price: ${price}g", NamedTextColor.GOLD),
-            Component.text("Click to buy", NamedTextColor.GRAY)
+            Component.text("----------------", NamedTextColor.DARK_GRAY),
+            Component.text("Stock refreshes daily", NamedTextColor.GRAY)
         ))
         meta.persistentDataContainer.set(NamespacedKey(plugin, "shop_price"), PersistentDataType.INTEGER, price)
         item.itemMeta = meta
