@@ -30,7 +30,7 @@ import kotlin.random.Random
  */
 class AtmosphereManager(private val plugin: AtlasPlugin) : Listener {
 
-    private val playerSettings = ConcurrentHashMap<UUID, Boolean>() // Is atmosphere enabled?
+    // playerSettings map removed in favor of IdentityManager settings
     private val random = Random.Default
 
     init {
@@ -49,16 +49,20 @@ class AtmosphereManager(private val plugin: AtlasPlugin) : Listener {
 
     fun isatmosphereEnabled(player: Player): Boolean {
         // Default to true
-        return playerSettings.getOrDefault(player.uniqueId, true)
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return true
+        return profile.getSetting("atmosphere", true)
     }
 
     fun toggleAtmosphere(player: Player) {
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
         val newState = !isatmosphereEnabled(player)
-        playerSettings[player.uniqueId] = newState
+        profile.setSetting("atmosphere", newState)
+        plugin.identityManager.saveProfile(player.uniqueId)
+        
         if (newState) {
-            player.sendMessage(Component.text("Testing: Atmosphere shading enabled.", NamedTextColor.GREEN))
+            player.sendMessage(Component.text("Atmosphere shading enabled.", NamedTextColor.GREEN))
         } else {
-            player.sendMessage(Component.text("Testing: Atmosphere shading disabled.", NamedTextColor.RED))
+            player.sendMessage(Component.text("Atmosphere shading disabled.", NamedTextColor.RED))
         }
     }
 

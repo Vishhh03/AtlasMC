@@ -12,5 +12,14 @@ data class AtlasPlayer(
     var currentXp: Long = 0,
     var level: Int = 1,
     val titles: MutableList<String> = mutableListOf(),
-    var unlockedSkillNodes: String? = "origin" // Comma-separated node IDs, nullable for migration
-)
+    var unlockedSkillNodes: String? = "origin",
+    var settings: MutableMap<String, Boolean> = mutableMapOf()
+) {
+    fun getSetting(key: String, default: Boolean = false): Boolean {
+        return settings.getOrDefault(key, default)
+    }
+
+    fun setSetting(key: String, value: Boolean) {
+        settings[key] = value
+    }
+}

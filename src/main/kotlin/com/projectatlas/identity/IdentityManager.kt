@@ -31,7 +31,8 @@ class IdentityManager(private val plugin: AtlasPlugin) {
         val profile = if (file.exists()) {
             try {
                 gson.fromJson(file.readText(), AtlasPlayer::class.java).apply {
-                    this.name = player.name // Update name if changed
+                    this.name = player.name
+                    if (this.settings == null) this.settings = mutableMapOf()
                 }
             } catch (e: Exception) {
                 plugin.logger.severe("Failed to load data for ${player.name}: ${e.message}")

@@ -25,8 +25,9 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         val inv = Bukkit.createInventory(null, 54, Component.text("✦ Project Atlas Menu ✦", NamedTextColor.DARK_BLUE))
         
         // Row 1: Core Features
+        // Row 1: Core Features
         inv.setItem(10, createGuiItem(Material.PLAYER_HEAD, "Your Profile", "action:profile", "View your stats"))
-        // Item 12: Class Selector Removed
+        inv.setItem(12, createGuiItem(Material.COMPARATOR, "Settings", "action:settings_menu", "Adjust client preferences", "Visuals, Scoreboard, etc."))
         inv.setItem(14, createGuiItem(Material.BEACON, "City Management", "action:city_menu", "Manage your city"))
         inv.setItem(16, createGuiItem(Material.GOLD_INGOT, "Economy", "action:economy_menu", "Manage your finances"))
         
@@ -216,6 +217,33 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         player.openInventory(inv)
     }
 
+    // ========== SETTINGS MENU ==========
+    fun openSettingsMenu(player: Player) {
+        val inv = Bukkit.createInventory(null, 27, Component.text("Settings", NamedTextColor.DARK_GRAY))
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
+        
+        // Atmosphere
+        val atmosphere = profile.getSetting("atmosphere", true)
+        val atmColor = if (atmosphere) NamedTextColor.GREEN else NamedTextColor.RED
+        inv.setItem(10, createGuiItem(Material.CAMPFIRE, "Atmosphere Effects", "settings:toggle_atmosphere", 
+            "Current: ${if(atmosphere) "ON" else "OFF"}", "Status: $atmColor${if(atmosphere) "ENABLED" else "DISABLED"}", "Toggle visual particles"))
+
+        // Scoreboard
+        val sb = profile.getSetting("scoreboard", true)
+        val sbColor = if (sb) NamedTextColor.GREEN else NamedTextColor.RED
+        inv.setItem(12, createGuiItem(Material.OAK_SIGN, "Scoreboard", "settings:toggle_scoreboard", 
+            "Current: ${if(sb) "ON" else "OFF"}", "Status: $sbColor${if(sb) "ENABLED" else "DISABLED"}", "Toggle sidebar"))
+
+        // Damage Indicators
+        val dmg = profile.getSetting("damage_indicators", true)
+        val dmgColor = if (dmg) NamedTextColor.GREEN else NamedTextColor.RED
+        inv.setItem(14, createGuiItem(Material.REDSTONE, "Damage Numbers", "settings:toggle_dmg", 
+            "Current: ${if(dmg) "ON" else "OFF"}", "Status: $dmgColor${if(dmg) "ENABLED" else "DISABLED"}", "Toggle floating damage"))
+
+        inv.setItem(22, createGuiItem(Material.ARROW, "Back", "action:main_menu", "Return"))
+        player.openInventory(inv)
+    }
+
 
     // ========== EVENT HANDLER ==========
     @EventHandler
@@ -238,6 +266,7 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         when (action) {
             // Navigation
             "action:main_menu" -> openMainMenu(player)
+            "action:settings_menu" -> openSettingsMenu(player)
             "action:profile" -> openProfileMenu(player)
             "action:city_menu" -> openCityMenu(player)
             "action:economy_menu" -> openEconomyMenu(player)
@@ -401,7 +430,21 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
                 player.closeInventory()
                 plugin.skillTreeManager.openSkillTree(player)
             }
+            
+            // Settings Toggles
+            "settings:toggle_atmosphere" -> handleSettingToggle(player, "atmosphere")
+            "settings:toggle_scoreboard" -> handleSettingToggle(player, "scoreboard")
+            "settings:toggle_dmg" -> handleSettingToggle(player, "damage_indicators")
         }
+    }
+    
+    private fun handleSettingToggle(player: Player, key: String) {
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
+        val current = profile.getSetting(key, true)
+        profile.setSetting(key, !current)
+        plugin.identityManager.saveProfile(player.uniqueId) // Persist immediately
+        openSettingsMenu(player) // Refresh UI
+        playClickSound(player)
     }
 
     // ========== ITEM BUILDERS ==========

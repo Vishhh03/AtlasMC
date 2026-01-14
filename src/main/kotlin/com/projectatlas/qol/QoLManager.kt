@@ -27,9 +27,8 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class QoLManager(private val plugin: AtlasPlugin) : Listener {
 
-    // Player preferences
-    private val damageNumbersEnabled = ConcurrentHashMap<UUID, Boolean>()
-    private val scoreboardEnabled = ConcurrentHashMap<UUID, Boolean>()
+    // Player preferences are now managed by IdentityManager (Settings)
+    // Removed legacy maps: damageNumbersEnabled, scoreboardEnabled
     
     // Death location tracking
     private val deathLocations = ConcurrentHashMap<UUID, Location>()
@@ -151,16 +150,21 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
     // ═══════════════════════════════════════════════════════════════
     
     fun toggleDamageNumbers(player: Player) {
-        val current = damageNumbersEnabled.getOrDefault(player.uniqueId, true)
-        damageNumbersEnabled[player.uniqueId] = !current
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
+        val current = profile.getSetting("damage_indicators", true)
+        val newState = !current
+        profile.setSetting("damage_indicators", newState)
+        plugin.identityManager.saveProfile(player.uniqueId)
+        
         player.sendMessage(Component.text(
-            if (!current) "✓ Damage numbers enabled" else "✗ Damage numbers disabled",
-            if (!current) NamedTextColor.GREEN else NamedTextColor.RED
+            if (newState) "✓ Damage numbers enabled" else "✗ Damage numbers disabled",
+            if (newState) NamedTextColor.GREEN else NamedTextColor.RED
         ))
     }
     
     fun isDamageNumbersEnabled(player: Player): Boolean {
-        return damageNumbersEnabled.getOrDefault(player.uniqueId, true)
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return true
+        return profile.getSetting("damage_indicators", true)
     }
     
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -380,10 +384,13 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
     // ═══════════════════════════════════════════════════════════════
     
     fun toggleScoreboard(player: Player) {
-        val current = scoreboardEnabled.getOrDefault(player.uniqueId, false)
-        scoreboardEnabled[player.uniqueId] = !current
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
+        val current = profile.getSetting("scoreboard", true)
+        val newState = !current
+        profile.setSetting("scoreboard", newState)
+        plugin.identityManager.saveProfile(player.uniqueId)
         
-        if (!current) {
+        if (newState) {
             player.sendMessage(Component.text("✓ Scoreboard enabled", NamedTextColor.GREEN))
         } else {
             player.scoreboard = Bukkit.getScoreboardManager().newScoreboard
@@ -393,9 +400,8 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
     
     private fun updateScoreboards() {
         plugin.server.onlinePlayers.forEach { player ->
-            if (!scoreboardEnabled.getOrDefault(player.uniqueId, false)) return@forEach
-            
             val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return@forEach
+            if (!profile.getSetting("scoreboard", true)) return@forEach
             val scoreboard = Bukkit.getScoreboardManager().newScoreboard
             val objective = scoreboard.registerNewObjective("atlas", "dummy", 
                 Component.text("⚔ Atlas ⚔", NamedTextColor.GOLD, TextDecoration.BOLD))
