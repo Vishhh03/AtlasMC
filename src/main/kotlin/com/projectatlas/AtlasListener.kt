@@ -16,7 +16,6 @@ import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.block.Action
 import org.bukkit.event.entity.EntityDeathEvent
 
-import com.projectatlas.identity.IdentityManager
 import org.bukkit.event.player.PlayerRespawnEvent
 import org.bukkit.event.EventPriority
 import org.bukkit.block.Container

@@ -32,6 +32,7 @@ import com.projectatlas.quests.QuestBoardManager
 import com.projectatlas.economy.MarketManager
 import com.projectatlas.visuals.VisualManager
 import com.projectatlas.chat.ChatManager
+import com.projectatlas.events.SupplyDropListener
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -63,6 +64,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var marketManager: MarketManager
     lateinit var visualManager: VisualManager
     lateinit var chatManager: ChatManager
+    lateinit var supplyDropListener: SupplyDropListener
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -99,6 +101,7 @@ class AtlasPlugin : JavaPlugin() {
         marketManager = MarketManager(this)
         visualManager = VisualManager(this)
         chatManager = ChatManager(this)
+        supplyDropListener = SupplyDropListener(this)
         
         // Register Events
         server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, guiManager), this)
@@ -121,6 +124,7 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(questBoardManager, this)
         server.pluginManager.registerEvents(marketManager, this) // Register Market Events
         server.pluginManager.registerEvents(chatManager, this)
+        server.pluginManager.registerEvents(supplyDropListener, this)
         
 
         

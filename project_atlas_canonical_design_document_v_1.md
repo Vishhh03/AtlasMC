@@ -333,5 +333,33 @@ It does not belong in Project Atlas.
 
 ---
 
-**End of Canonical Design Document v1.0**
+**End of Canonical Design Document v1.3**
+
+
+## 15. RECENT IMPLEMENTATIONS (v1.3)
+- **Skill Tree**: A massive passive progression system with PoE-style nodes (Life Leech, Double Jump, Vein Mining).
+- **Dungeon System**: Instanced PvE arenas with unique themes (Shadow Cavern, Infernal Pit) and wave-based combat.
+- **Relic System**: Rare artifacts spawning in the world with active abilities.
+- **World-Based Quests**: Quest boards spawning in the wilderness for organic discovery.
+
+## 16. FUTURE CONCEPTS (BRAINSTORMING)
+### 16.1 Active Class Abilities
+- **Concept**: Move beyond passive stats. Give classes active skills bound to items.
+- **Examples**: 
+  - *Vanguard*: Shield Bash (Right-click Shield) -> Stuns enemies.
+  - *Scout*: Shadow Step (Right-click Feather) -> Teleport behind target.
+  - *Medic*: Healing Circle (Right-click Dye) -> AoE regeneration.
+
+### 16.2 Player Economy (Markets)
+- **Concept**: Physical chests that function as shops.
+- **Mechanics**:
+  - Players rent stalls in Cities or spawn.
+  - Set prices for items.
+  - Taxes go to the City Treasury.
+
+### 16.3 Visual Territory Control
+- **Concept**: See exactly where City influence ends.
+- **Mechanics**:
+  - Particle borders when holding a specific item (Map/Compass).
+  - "Contested Zones" between rival cities.
 

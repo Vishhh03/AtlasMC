@@ -96,6 +96,9 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
         spawnTieredLoot(chest, tier)
         spawnTieredGuards(world, dropLocation, tier)
         
+        // Track guardians for chest locking
+        plugin.supplyDropListener.trackGuardiansNearChest(targetBlock.location)
+        
         // 7. Firework Launch (Color coded by tier)
         val firework = world.spawn(dropLocation.clone().add(0.0, 1.0, 0.0), Firework::class.java)
         val fireworkMeta = firework.fireworkMeta

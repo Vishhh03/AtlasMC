@@ -1,0 +1,24 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :processResources UP-TO-DATE
+
+> Task :compileKotlin FAILED
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/economy/MarketManager.kt:199:15 Unresolved reference 'line'.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/visuals/VisualManager.kt:41:49 Unresolved reference 'VILLAGER_HAPPY'.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 22s
+2 actionable tasks: 1 executed, 1 up-to-date

@@ -28,6 +28,18 @@ class AbilityListener(private val plugin: AtlasPlugin) : Listener {
         
         val player = event.player
         val item = player.inventory.itemInMainHand.type
+        
+        // Skip items that should use vanilla behavior (maps, food, etc.)
+        if (item == Material.FILLED_MAP || item == Material.MAP || 
+            item == Material.COMPASS || item == Material.CLOCK ||
+            item.isEdible || item == Material.ENDER_PEARL ||
+            item == Material.SNOWBALL || item == Material.EGG ||
+            item == Material.BOW || item == Material.CROSSBOW ||
+            item == Material.FISHING_ROD || item == Material.TRIDENT ||
+            item == Material.SPLASH_POTION || item == Material.LINGERING_POTION) {
+            return
+        }
+        
         val unlocked = plugin.skillTreeManager.getUnlockedNodes(player)
         
         // 1. Fireball (Blaze Rod)
@@ -86,9 +98,9 @@ class AbilityListener(private val plugin: AtlasPlugin) : Listener {
         player.sendMessage(Component.text("🔥 FIREBALL!", NamedTextColor.RED))
         player.playSound(player.location, Sound.ENTITY_BLAZE_SHOOT, 1.0f, 1.0f)
         
-        val fireball = player.launchProjectile(org.bukkit.entity.LargeFireball::class.java)
+        val fireball = player.launchProjectile(org.bukkit.entity.Fireball::class.java)
         fireball.yield = 0F // No block damage
-        fireball.isIncendiary = false
+        fireball.setIsIncendiary(false)
         fireball.velocity = player.location.direction.multiply(1.5)
     }
     

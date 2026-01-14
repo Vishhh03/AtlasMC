@@ -57,7 +57,6 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         val inv = Bukkit.createInventory(null, 27, Component.text("Your Profile", NamedTextColor.DARK_PURPLE))
         
         val profile = plugin.identityManager.getPlayer(player.uniqueId)
-        val profile = plugin.identityManager.getPlayer(player.uniqueId)
         val cityName = profile?.cityId?.let { plugin.cityManager.getCity(it)?.name } ?: "Nomad"
         
         inv.setItem(10, createInfoItem(Material.NAME_TAG, "Name", player.name))

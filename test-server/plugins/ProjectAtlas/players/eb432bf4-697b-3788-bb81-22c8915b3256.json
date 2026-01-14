@@ -3,9 +3,14 @@
   "name": "VishShaji",
   "reputation": 0,
   "alignment": 0,
-  "balance": 100.0,
-  "cityId": "0a85c324-00c0-4cd2-a851-8c0bd61d6526",
+  "balance": 21000.0,
   "playerClass": "Scout",
-  "lastClassChange": 0,
-  "titles": []
+  "lastClassChange": 1768324176232,
+  "currentXp": 600,
+  "level": 7,
+  "titles": [
+    "achievement:dungeon_speed",
+    "achievement:dungeon_conqueror",
+    "achievement:quest_complete"
+  ]
 }

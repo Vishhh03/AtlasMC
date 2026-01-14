@@ -16,6 +16,7 @@ import org.bukkit.event.entity.EntityDeathEvent
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerRespawnEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
@@ -1082,5 +1083,26 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
         plugin.server.scheduler.runTaskLater(plugin, Runnable {
             leaveDungeon(player)
         }, 2L)
+    }
+    
+    /**
+     * Prevent natural Enderman spawns in the dungeon world (world_the_end)
+     * This stops them from teleporting around and disrupting dungeon arenas
+     */
+    @EventHandler(priority = EventPriority.HIGH)
+    fun onCreatureSpawn(event: CreatureSpawnEvent) {
+        // Only affect the dungeon world
+        if (event.location.world?.name != "world_the_end") return
+        
+        // Only block natural/chunk spawns, not plugin-spawned mobs
+        if (event.spawnReason == CreatureSpawnEvent.SpawnReason.NATURAL ||
+            event.spawnReason == CreatureSpawnEvent.SpawnReason.CHUNK_GEN ||
+            event.spawnReason == CreatureSpawnEvent.SpawnReason.DEFAULT) {
+            
+            // Block Endermen specifically
+            if (event.entityType == EntityType.ENDERMAN) {
+                event.isCancelled = true
+            }
+        }
     }
 }

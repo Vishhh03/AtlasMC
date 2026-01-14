@@ -1,8 +1,103 @@
-# Project Atlas Configuration
+# ╔═══════════════════════════════════════════════════════════════╗
+# ║              PROJECT ATLAS CONFIGURATION                       ║
+# ║         Customize every aspect of your server!                 ║
+# ╚═══════════════════════════════════════════════════════════════╝
+
+# ============ ECONOMY ============
 economy:
   starting-balance: 100.0
+  # Marketplace fee percentage (10 = 10% fee, creator gets 90%)
+  marketplace-fee-percent: 10
 
+# ============ EVENTS ============
 events:
   supply-drop:
+    enabled: true
     interval-minutes: 30
     radius: 500
+  
+  world-boss:
+    enabled: true
+    cooldown-minutes: 30
+    # Chance to drop a relic on death (0.25 = 25%)
+    relic-drop-chance: 0.25
+  
+  relic-spawn:
+    enabled: true
+    check-interval-minutes: 10
+    spawn-chance: 0.05
+
+# ============ CITY ============
+city:
+  creation-cost: 1000.0
+  chunk-claim-base-cost: 100.0
+  chunk-claim-scaling: 1.5
+  max-chunks: 50
+  max-members: 20
+
+# ============ CLASSES ============
+classes:
+  change-cooldown-hours: 24
+  ability-cooldown-seconds: 30
+
+# ============ DUNGEONS ============
+dungeons:
+  max-size-blocks: 64
+  time-bonus-threshold: 0.5  # Complete in under 50% time for speed bonus
+  speed-bonus-multiplier: 1.5
+  relic-drop-chance: 0.20
+
+# ============ PARTY ============
+party:
+  max-size: 4
+  invite-timeout-seconds: 60
+
+# ============ BOUNTY ============
+bounty:
+  minimum-amount: 50.0
+  maximum-amount: 100000.0
+
+# ============ BLUEPRINTS ============
+blueprints:
+  max-dimension: 64
+  max-blocks: 50000
+  minimum-blocks: 5
+  minimum-price: 10.0
+  creator-revenue-percent: 90
+
+# ============ RELICS ============
+relics:
+  cooldowns:
+    phoenix-feather: 300  # seconds
+    void-shard: 30
+    frost-heart: 120
+    titan-stone: 180
+    storm-orb: 60
+    shadow-cloak: 120
+    blood-ruby: 90
+    gravity-core: 45
+    natures-blessing: 240
+
+# ============ MENU ============
+menu:
+  # Item to right-click to open menu (e.g., COMPASS, CLOCK, BOOK)
+  trigger-item: COMPASS
+  # If true, player must be sneaking to trigger
+  require-sneaking: false
+
+# ============ DAILY REWARDS ============
+daily-rewards:
+  enabled: true
+  rewards:
+    day-1: 50
+    day-2: 75
+    day-3: 100
+    day-4: 150
+    day-5: 200
+    day-6: 300
+    day-7: 500  # Weekly bonus!
+
+# ============ DEBUG ============
+debug:
+  enabled: false
+  verbose-logging: false
