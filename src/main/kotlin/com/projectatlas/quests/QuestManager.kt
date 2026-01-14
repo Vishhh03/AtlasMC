@@ -14,6 +14,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDeathEvent
+import org.bukkit.event.entity.PlayerDeathEvent
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -97,6 +98,9 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         Quest("trade_deal", "The Art of the Deal", "Make trades with villagers.", 
             Difficulty.MEDIUM, QuestObjective.TradeWithVillager(5), null, 400.0,
             "Find a village."),
+        Quest("dungeon_delver", "Dungeon Delver", "Brave the mysterious dungeons.", 
+            Difficulty.MEDIUM, QuestObjective.CompleteDungeon(0, 1), null, 500.0,
+            "Use /atlas dungeon to enter."),
             
         // ═══════════════════════════════════════════════════════════
         // HARD QUESTS (Significant challenge, longer objectives)
@@ -286,6 +290,22 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         }
     }
     
+    /**
+     * Fail quest on player death
+     */
+    @EventHandler
+    fun onPlayerDeath(event: PlayerDeathEvent) {
+        val player = event.entity
+        val quest = activeQuests.remove(player.uniqueId) ?: return
+        bossBars.remove(player.uniqueId)?.let { player.hideBossBar(it) }
+        
+        player.sendMessage(Component.empty())
+        player.sendMessage(Component.text("═══ QUEST FAILED ═══", NamedTextColor.DARK_RED))
+        player.sendMessage(Component.text("You died! The quest '${quest.quest.name}' has been lost.", NamedTextColor.RED))
+        player.sendMessage(Component.text("Find another quest board to try again.", NamedTextColor.GRAY))
+        player.sendMessage(Component.empty())
+    }
+    
     fun getActiveQuest(player: Player): ActiveQuest? = activeQuests[player.uniqueId]
     
     fun hasActiveQuest(player: Player): Boolean = activeQuests.containsKey(player.uniqueId)
@@ -452,11 +472,11 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
     private fun spawnQuestMob(player: Player, type: EntityType, isDay: Boolean) {
         val loc = player.location
         // Simple random offset
-        val x = loc.x + (Math.random() * 20 - 10)
-        val z = loc.z + (Math.random() * 20 - 10)
-        val y = loc.world.getHighestBlockYAt(x.toInt(), z.toInt()).toDouble() + 1
+        val x = (Math.random() * 20 - 10).toInt()
+        val z = (Math.random() * 20 - 10).toInt()
         
-        val spawnLoc = Location(loc.world, x, y, z)
+        val spawnLoc = com.projectatlas.util.LocationUtils.getSafeSpawnLocationWithOffset(loc, x, z) ?: return
+        
         if (spawnLoc.distance(loc) < 5) return // Too close
         
         try {
@@ -474,6 +494,31 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
             }
         } catch (e: Exception) {
             // Ignore spawn failures
+        }
+    }
+    
+    @EventHandler
+    fun onDungeonComplete(event: com.projectatlas.events.DungeonCompleteEvent) {
+        if (!event.success) return
+        val player = event.player
+        val activeQuest = activeQuests[player.uniqueId] ?: return
+        
+        val objective = activeQuest.quest.objective
+        if (objective is QuestObjective.CompleteDungeon) {
+            if (event.difficulty >= objective.minDifficulty) {
+                activeQuest.progress++
+                
+                // Update boss bar
+                bossBars[player.uniqueId]?.let { bar ->
+                    val progress = activeQuest.progress.toFloat() / activeQuest.getTargetCount()
+                    bar.progress(progress.coerceIn(0f, 1f))
+                    bar.name(Component.text("${activeQuest.quest.name}: ${activeQuest.progress}/${activeQuest.getTargetCount()}", NamedTextColor.RED))
+                }
+                
+                if (activeQuest.isComplete()) {
+                    completeQuest(player, activeQuest)
+                }
+            }
         }
     }
 }

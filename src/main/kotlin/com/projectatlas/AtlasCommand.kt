@@ -61,10 +61,12 @@ class AtlasCommand(
             "scoreboard", "sb" -> handleScoreboard(sender)
             "damage", "dmg" -> handleDamageToggle(sender)
             "quickstack", "qs" -> handleQuickStack(sender)
-            "atmosphere", "ambient", "shaders" -> handleAtmosphere(sender)
+            "atmosphere", "ambient", "shaders" -> handleAtmosphere(sender, args)
             "wonder" -> handleWonder(sender, args)
             "outpost" -> handleOutpost(sender, args)
             "dialogue" -> handleDialogue(sender, args)
+            "quest" -> handleQuest(sender, args)
+            "map" -> handleMap(sender)
             
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
@@ -99,20 +101,49 @@ class AtlasCommand(
         }
         
         if (args.size < 2) {
-            player.sendMessage(Component.text("Usage: /atlas heal <bandage|salve|medkit|remedy> [amount]", NamedTextColor.RED))
+            player.sendMessage(Component.text("Usage: /atlas heal <items|bandage|salve|medkit|remedy> [amount]", NamedTextColor.RED))
             player.sendMessage(Component.text("Available items:", NamedTextColor.GRAY))
-            player.sendMessage(Component.text("  bandage - Heals 4 HP", NamedTextColor.WHITE))
-            player.sendMessage(Component.text("  salve (healing_salve) - Heals 8 HP, clears debuffs", NamedTextColor.WHITE))
-            player.sendMessage(Component.text("  medkit (medical_kit) - Heals 14 HP, clears debuffs", NamedTextColor.WHITE))
-            player.sendMessage(Component.text("  remedy (herbal_remedy) - Heals 6 HP", NamedTextColor.WHITE))
+            player.sendMessage(Component.text("  items - Get a bundle of healing supplies", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("Tier 1:", NamedTextColor.WHITE))
+            player.sendMessage(Component.text("  bandage (3 HP), poultice (4 HP)", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("Tier 2:", NamedTextColor.GREEN))
+            player.sendMessage(Component.text("  salve (6 HP), remedy (5 HP + clears debuffs)", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("Tier 3:", NamedTextColor.AQUA))
+            player.sendMessage(Component.text("  medkit (10 HP), draught (8 HP + regen)", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("Tier 4:", NamedTextColor.GOLD))
+            player.sendMessage(Component.text("  surgeon (16 HP), phoenix (12 HP + fire resist)", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("Tier 5:", NamedTextColor.LIGHT_PURPLE))
+            player.sendMessage(Component.text("  divine (20 HP + absorption)", NamedTextColor.GRAY))
             return
+        }
+
+        if (args[1].lowercase() == "items") {
+             val sm = plugin.survivalManager
+             // Give a mix of tiered items
+             player.inventory.addItem(sm.createHealingItem(com.projectatlas.survival.SurvivalManager.HealingItem.BANDAGE, 5))
+             player.inventory.addItem(sm.createHealingItem(com.projectatlas.survival.SurvivalManager.HealingItem.HERBAL_POULTICE, 5))
+             player.inventory.addItem(sm.createHealingItem(com.projectatlas.survival.SurvivalManager.HealingItem.HEALING_SALVE, 3))
+             player.inventory.addItem(sm.createHealingItem(com.projectatlas.survival.SurvivalManager.HealingItem.HERBAL_REMEDY, 3))
+             player.inventory.addItem(sm.createHealingItem(com.projectatlas.survival.SurvivalManager.HealingItem.MEDICAL_KIT, 2))
+             player.inventory.addItem(sm.createHealingItem(com.projectatlas.survival.SurvivalManager.HealingItem.REGENERATION_DRAUGHT, 2))
+             player.inventory.addItem(sm.createHealingItem(com.projectatlas.survival.SurvivalManager.HealingItem.SURGEON_KIT, 1))
+             player.inventory.addItem(sm.createHealingItem(com.projectatlas.survival.SurvivalManager.HealingItem.PHOENIX_ELIXIR, 1))
+             player.inventory.addItem(sm.createHealingItem(com.projectatlas.survival.SurvivalManager.HealingItem.DIVINE_RESTORATION, 1))
+             
+             player.sendMessage(Component.text("💊 Received full medical supply kit (all tiers)!", NamedTextColor.GREEN))
+             return
         }
         
         val itemName = when (args[1].lowercase()) {
             "bandage" -> "BANDAGE"
+            "poultice", "herbal_poultice" -> "HERBAL_POULTICE"
             "salve", "healing_salve" -> "HEALING_SALVE"
+            "remedy", "herbal_remedy" -> "HERBAL_REMEDY"
             "medkit", "medical_kit", "kit" -> "MEDICAL_KIT"
-            "remedy", "herbal_remedy", "herb" -> "HERBAL_REMEDY"
+            "draught", "regen", "regeneration_draught" -> "REGENERATION_DRAUGHT"
+            "surgeon", "surgeon_kit" -> "SURGEON_KIT"
+            "phoenix", "phoenix_elixir" -> "PHOENIX_ELIXIR"
+            "divine", "divine_restoration" -> "DIVINE_RESTORATION"
             else -> args[1].uppercase()
         }
         
@@ -771,11 +802,35 @@ class AtlasCommand(
         plugin.qolManager.quickStack(player)
     }
 
-    private fun handleAtmosphere(player: Player) {
+    private fun handleAtmosphere(player: Player, args: Array<out String>) {
         val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        // If args has "toggle" or just no args
         plugin.atmosphereManager.toggleAtmosphere(player)
     }
 
+    private fun handleQuest(player: Player, args: Array<out String>) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        if (args.size < 2) {
+            val active = plugin.questManager.getActiveQuest(player)
+            if (active != null) {
+                player.sendMessage(Component.text("Active Quest: ", NamedTextColor.YELLOW).append(Component.text(active.quest.name, NamedTextColor.WHITE)))
+                player.sendMessage(Component.text("Progress: ${active.progress}/${active.getTargetCount()}", NamedTextColor.GRAY))
+                player.sendMessage(Component.text("Use '/atlas quest abandon' to cancel.", NamedTextColor.GRAY))
+            } else {
+                player.sendMessage(Component.text("You have no active quest.", NamedTextColor.GRAY))
+            }
+            return
+        }
+        
+        if (args[1].equals("abandon", ignoreCase = true)) {
+            plugin.questManager.abandonQuest(player)
+        }
+    }
+
+    private fun handleMap(player: Player) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        plugin.mapManager.openMap(player)
+    }
 
     // ============ TAB COMPLETION ============
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
@@ -784,10 +839,10 @@ class AtlasCommand(
         
         return when (args.size) {
             1 -> listOf(
-                "profile", "balance", "pay", "city", "help", "menu",
+                "profile", "balance", "pay", "city", "help", "menu", "map",
                 "dungeon", "party", "bounty", "boss", "relic", "blueprint", "bp", "schem", "spawn",
                 "sort", "stats", "scoreboard", "sb", "damage", "dmg", "quickstack", "qs",
-                "atmosphere", "ambient", "shaders"
+                "atmosphere", "ambient", "shaders", "quest", "heal", "medkit"
             ).filter { it.startsWith(args[0].lowercase()) }
             
             2 -> when (args[0].lowercase()) {

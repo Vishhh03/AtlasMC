@@ -18,6 +18,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.attribute.Attribute
+import com.projectatlas.util.LocationUtils
 import java.util.Random
 
 
@@ -197,15 +198,12 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
         }
         
         for (i in 0 until guardCount) {
-            val offsetX = (random.nextInt(8) - 4).toDouble()
-            val offsetZ = (random.nextInt(8) - 4).toDouble()
+            val offsetX = (random.nextInt(8) - 4)
+            val offsetZ = (random.nextInt(8) - 4)
             
-            // Safe spawn logic: Get highest block at offset
-            val spawnX = center.blockX + offsetX.toInt()
-            val spawnZ = center.blockZ + offsetZ.toInt()
-            val spawnY = world.getHighestBlockYAt(spawnX, spawnZ) + 1.0
-            
-            val spawnLoc = org.bukkit.Location(world, spawnX.toDouble() + 0.5, spawnY, spawnZ.toDouble() + 0.5)
+            // Safe spawn logic: Get highest block at offset, avoiding trees
+            val spawnLoc = LocationUtils.getSafeSpawnLocationWithOffset(center, offsetX, offsetZ)
+                ?: continue // Skip this guard if no valid spawn found
             
             val entityType = when (tier) {
                 DropTier.COMMON -> if (random.nextBoolean()) Zombie::class.java else Skeleton::class.java

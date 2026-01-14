@@ -2,6 +2,7 @@ package com.projectatlas.events
 
 import com.projectatlas.structures.StructureManager
 import com.projectatlas.AtlasPlugin
+import com.projectatlas.util.LocationUtils
 import org.bukkit.Material
 import org.bukkit.block.Biome
 import org.bukkit.event.EventHandler
@@ -30,10 +31,12 @@ class WorldGenListener(private val plugin: AtlasPlugin) : Listener {
         // Pick random spot
         val x = chunk.x * 16 + random.nextInt(16)
         val z = chunk.z * 16 + random.nextInt(16)
-        val y = world.getHighestBlockYAt(x, z)
+        
+        // Find safe ground level (not on trees)
+        val y = LocationUtils.findSafeGroundY(world, x, z) ?: return
         
         val location = world.getBlockAt(x, y, z).location
-        val groundBlock = location.clone().add(0.0, -1.0, 0.0).block
+        val groundBlock = world.getBlockAt(x, y - 1, z)
         val biome = world.getBiome(x, y, z)
         
         // 1. Avoid Oceans/Rivers
@@ -42,7 +45,11 @@ class WorldGenListener(private val plugin: AtlasPlugin) : Listener {
         // 2. Avoid Liquid/Air ground
         if (groundBlock.isLiquid || groundBlock.type == Material.AIR) return
         
-        // 3. Choose Structure Type
+        // 3. Ensure spawn location is clear
+        val spawnBlock = world.getBlockAt(x, y, z)
+        if (!spawnBlock.type.isAir) return
+        
+        // 4. Choose Structure Type
         val type = if (random.nextBoolean()) 
             com.projectatlas.structures.StructureType.MERCHANT_HUT 
         else 

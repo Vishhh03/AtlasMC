@@ -51,3 +51,5 @@ Thumbs.db
 build.log
 build.err
 build.ps1
+
+test-server/
