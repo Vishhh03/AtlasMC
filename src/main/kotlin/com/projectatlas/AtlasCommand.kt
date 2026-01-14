@@ -62,6 +62,8 @@ class AtlasCommand(
             "damage", "dmg" -> handleDamageToggle(sender)
             "quickstack", "qs" -> handleQuickStack(sender)
             "atmosphere", "ambient", "shaders" -> handleAtmosphere(sender)
+            "wonder" -> handleWonder(sender, args)
+            "outpost" -> handleOutpost(sender, args)
             
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
@@ -861,6 +863,82 @@ class AtlasCommand(
             
             // For dungeon enter, suggest modifiers after dungeon name
             else -> emptyList()
+        }
+    }
+    
+    private fun handleWonder(player: Player, args: Array<out String>) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        val profile = identityManager.getPlayer(player.uniqueId)
+        val cityId = profile?.cityId
+        
+        if (cityId == null) {
+            player.sendMessage(Component.text("You must belong to a city to build wonders!", NamedTextColor.RED))
+            return
+        }
+        
+        val city = cityManager.getCity(cityId) ?: return
+        
+        if (args.size < 2 || args[1].lowercase() == "list") {
+             player.sendMessage(Component.text("═══ CITY WONDERS ═══", NamedTextColor.GOLD))
+             com.projectatlas.city.CityWonder.values().forEach { wonder ->
+                 val status = if (city.completedWonders.contains(wonder)) " [BUILT]" else ""
+                 val color = if (status.isNotEmpty()) NamedTextColor.GREEN else NamedTextColor.YELLOW
+                 player.sendMessage(Component.text("- ${wonder.displayName}$status", color))
+                 player.sendMessage(Component.text("  Buff: ${wonder.buffDescription}", NamedTextColor.GRAY))
+             }
+             player.sendMessage(Component.text("Use /atlas wonder view <name> to see requirements.", NamedTextColor.GRAY))
+             return
+        }
+        
+        val wonderName = args[2].uppercase().replace(" ", "_")
+        val wonder = try {
+            com.projectatlas.city.CityWonder.valueOf(wonderName)
+        } catch (e: Exception) { 
+            // Try fuzzy match
+             com.projectatlas.city.CityWonder.values().find { it.displayName.replace(" ", "_").equals(wonderName, true) }
+        }
+        
+        if (wonder == null) {
+            player.sendMessage(Component.text("Wonder not found.", NamedTextColor.RED))
+            return
+        }
+        
+        when (args[1].lowercase()) {
+            "view" -> {
+                plugin.wonderManager.viewProgress(player, city, wonder)
+            }
+            "contribute" -> {
+                // Auto-contribute logic handled in manager, it checks inventory
+                plugin.wonderManager.contribute(player, city, wonder)
+            }
+        }
+    }
+    
+    private fun handleOutpost(player: Player, args: Array<out String>) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        if (args.size < 2) {
+             // List outposts could go here
+             return
+        }
+        
+        if (args[1].lowercase() == "create") {
+            if (!player.hasPermission("atlas.admin")) return
+            if (args.size < 4) {
+                player.sendMessage(Component.text("Usage: /atlas outpost create <name> <type>", NamedTextColor.RED))
+                return
+            }
+            val name = args[2]
+            val typeStr = args[3].uppercase()
+            val type = try { com.projectatlas.territory.OutpostType.valueOf(typeStr) } catch(e: Exception) { null }
+            
+            if (type == null) {
+                player.sendMessage(Component.text("Invalid type. Types: IRON_MINE, COAL_PIT, GOLD_PAN, DIAMOND_DRILL", NamedTextColor.RED))
+                return
+            }
+            
+            plugin.outpostManager.createOutpost(name, type, player.location)
+            player.sendMessage(Component.text("Outpost created!", NamedTextColor.GREEN))
         }
     }
 }

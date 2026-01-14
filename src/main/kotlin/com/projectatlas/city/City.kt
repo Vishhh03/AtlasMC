@@ -1,6 +1,7 @@
 package com.projectatlas.city
 
 import java.util.UUID
+import org.bukkit.Material
 
 data class City(
     val id: String = UUID.randomUUID().toString(),
@@ -11,7 +12,10 @@ data class City(
     var treasury: Double = 0.0,
     var taxRate: Double = 0.0, // Percentage (0.0 to 100.0)
     var infrastructure: CityInfrastructure = CityInfrastructure(),
-    var lastSiegeTime: Long = 0L // Cooldown for sieges
+    var lastSiegeTime: Long = 0L,
+    val completedWonders: MutableSet<CityWonder> = mutableSetOf(),
+    // Wonder -> Material -> Amount contributed
+    val wonderProgress: MutableMap<CityWonder, MutableMap<Material, Int>> = mutableMapOf()
 ) {
     fun addMember(uuid: UUID) {
         if (!members.contains(uuid)) members.add(uuid)

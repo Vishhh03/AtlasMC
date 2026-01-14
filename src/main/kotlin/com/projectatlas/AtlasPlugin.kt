@@ -69,6 +69,8 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var supplyDropListener: SupplyDropListener
     lateinit var qolManager: QoLManager
     lateinit var atmosphereManager: AtmosphereManager
+    lateinit var wonderManager: com.projectatlas.city.WonderManager
+    lateinit var outpostManager: com.projectatlas.territory.OutpostManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -148,6 +150,12 @@ class AtlasPlugin : JavaPlugin() {
         
         // Start Relic spawn scheduler
         relicManager.scheduleRandomRelicSpawn()
+        // Initialize New Managers
+        wonderManager = com.projectatlas.city.WonderManager(this)
+        outpostManager = com.projectatlas.territory.OutpostManager(this)
+
+        server.pluginManager.registerEvents(wonderManager, this)
+        server.pluginManager.registerEvents(outpostManager, this)
         
         logger.info("Project Atlas has fully loaded v1.3 - Dungeon Update!")
     }
