@@ -1,20 +1,7 @@
 ﻿> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :processResources UP-TO-DATE
 > Task :processTestResources NO-SOURCE
-
 > Task :compileKotlin
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/identity/IdentityManager.kt:35:25 Condition is always 'false'.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:258:23 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:343:29 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:406:40 'fun registerNewObjective(p0: @NotNull() String, p1: @NotNull() String, p2: @Nullable() Component?): @NotNull() Objective' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:495:33 'var bedSpawnLocation: @Nullable() Location?' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/visuals/AtmosphereManager.kt:229:20 'val isOnGround: Boolean' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/chat/ChatManager.kt:8:8 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/chat/ChatManager.kt:14:23 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/city/CityManager.kt:184:21 Condition is always 'false'.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/economy/MarketManager.kt:200:14 'fun line(p0: Int, p1: @NotNull() Component): Unit' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/events/WanderingNPCListener.kt:171:29 'var isBaby: Boolean' is deprecated. Deprecated in Java.
-
 > Task :compileJava NO-SOURCE
 > Task :classes UP-TO-DATE
 > Task :jar
@@ -27,6 +14,6 @@ w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/eve
 > Task :check UP-TO-DATE
 > Task :build
 
-BUILD SUCCESSFUL in 7s
+BUILD SUCCESSFUL in 2s
 4 actionable tasks: 3 executed, 1 up-to-date
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.2.1/userguide/configuration_cache_enabling.html

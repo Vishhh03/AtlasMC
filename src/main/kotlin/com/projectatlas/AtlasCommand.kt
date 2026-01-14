@@ -64,6 +64,7 @@ class AtlasCommand(
             "atmosphere", "ambient", "shaders" -> handleAtmosphere(sender)
             "wonder" -> handleWonder(sender, args)
             "outpost" -> handleOutpost(sender, args)
+            "dialogue" -> handleDialogue(sender, args)
             
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
@@ -940,6 +941,11 @@ class AtlasCommand(
             plugin.outpostManager.createOutpost(name, type, player.location)
             player.sendMessage(Component.text("Outpost created!", NamedTextColor.GREEN))
         }
+    }
+
+    private fun handleDialogue(player: Player, args: Array<out String>) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        plugin.dialogueManager.handleDialogueCommand(player, args)
     }
 }
 

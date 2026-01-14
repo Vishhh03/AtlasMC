@@ -54,8 +54,8 @@ class DialogueManager(private val plugin: AtlasPlugin) : Listener {
                 npc.name,
                 "Greetings, traveler! Looking for fine wares?",
                 listOf(
-                    DialogueOption("Trade", "/atlas_dialogue trade ${npc.id}", NamedTextColor.GREEN, "Click to view shop"),
-                    DialogueOption("Goodbye", "/atlas_dialogue close ${npc.id}", NamedTextColor.RED, "Click to leave")
+                    DialogueOption("Trade", "/atlas dialogue trade ${npc.id}", NamedTextColor.GREEN, "Click to view shop"),
+                    DialogueOption("Goodbye", "/atlas dialogue close ${npc.id}", NamedTextColor.RED, "Click to leave")
                 )
             )
             NPCType.QUEST_GIVER -> {
@@ -64,8 +64,8 @@ class DialogueManager(private val plugin: AtlasPlugin) : Listener {
                         npc.name,
                         "I have a task that requires a brave soul. Are you interested?",
                         listOf(
-                            DialogueOption("I'll help!", "/atlas_dialogue quest_accept ${npc.id}", NamedTextColor.GREEN, "Accept quest"),
-                            DialogueOption("Not now", "/atlas_dialogue close ${npc.id}", NamedTextColor.RED, "Decline")
+                            DialogueOption("I'll help!", "/atlas dialogue quest_accept ${npc.id}", NamedTextColor.GREEN, "Accept quest"),
+                            DialogueOption("Not now", "/atlas dialogue close ${npc.id}", NamedTextColor.RED, "Decline")
                         )
                     )
                 } else {
@@ -73,7 +73,7 @@ class DialogueManager(private val plugin: AtlasPlugin) : Listener {
                         npc.name,
                         "You already have a quest. Focus on that first!",
                         listOf(
-                            DialogueOption("Understood", "/atlas_dialogue close ${npc.id}", NamedTextColor.GRAY, "Close")
+                            DialogueOption("Understood", "/atlas dialogue close ${npc.id}", NamedTextColor.GRAY, "Close")
                         )
                     )
                 }
@@ -89,18 +89,12 @@ class DialogueManager(private val plugin: AtlasPlugin) : Listener {
             .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand(command))
     }
 
-    @EventHandler
-    fun onCommandPreprocess(event: org.bukkit.event.player.PlayerCommandPreprocessEvent) {
-        val message = event.message
-        if (!message.startsWith("/atlas_dialogue ")) return
+    // Handled via AtlasCommand now
+    fun handleDialogueCommand(player: Player, args: Array<out String>) {
+        if (args.size < 3) return
         
-        event.isCancelled = true
-        val parts = message.substring(16).split(" ") // remove "/atlas_dialogue "
-        if (parts.size < 2) return
-        
-        val action = parts[0]
-        val npcId = parts[1]
-        val player = event.player
+        val action = args[1]
+        val npcId = args[2]
         val npc = plugin.npcManager.getNPC(npcId) ?: return
         
         when (action) {
