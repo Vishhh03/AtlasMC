@@ -86,9 +86,51 @@ class SupplyDropListener(private val plugin: AtlasPlugin) : Listener {
         } else {
             // Unlock message on first successful open
             if (aliveCount > 0) {
-                event.player.sendMessage(Component.text("☑ Supply drop unlocked! Remaining guardians: $aliveCount", NamedTextColor.GREEN))
+                event.player.sendMessage(Component.text("☑ Supply drop unlocked! Remaining guardians will disperse soon.", NamedTextColor.GREEN))
+                
+                // Accelerate despawn of remaining guardians to 1 minute
+                val cleanupManager = com.projectatlas.util.EntityCleanupManager(plugin) // Just to access key, or better use manual key
+                val expiryKey = NamespacedKey(plugin, "atlas_expiry")
+                val shortExpiry = System.currentTimeMillis() + (60 * 1000) // 1 minute
+                
+                guardians.mapNotNull { plugin.server.getEntity(it) }.forEach { entity ->
+                    entity.persistentDataContainer.set(expiryKey, PersistentDataType.LONG, shortExpiry)
+                }
             }
             // Clean up tracking
+            supplyDropGuardians.remove(locKey)
+            supplyDropInitialCount.remove(locKey)
+        }
+    }
+    
+    @EventHandler(priority = EventPriority.HIGHEST)
+    fun onChestBreak(event: org.bukkit.event.block.BlockBreakEvent) {
+        val block = event.block
+        if (block.type != Material.CHEST) return
+        
+        val locKey = "${block.x},${block.y},${block.z},${block.world.name}"
+        
+        // If it's a locked supply drop, verify guardians first
+        val guardians = supplyDropGuardians[locKey]
+        if (guardians != null) {
+            val initialCount = supplyDropInitialCount[locKey] ?: 0
+            val aliveCount = guardians.count { uuid -> plugin.server.getEntity(uuid)?.let { !it.isDead } ?: false }
+            val halfCount = (initialCount + 1) / 2
+            
+            if (aliveCount >= halfCount) {
+                event.isCancelled = true
+                event.player.sendMessage(Component.text("⚠ Cannot break locked supply drop! Kill guardians first.", NamedTextColor.RED))
+                return
+            }
+            
+            // If breakable (unlocked), accelerate despawn of guardians
+            val expiryKey = NamespacedKey(plugin, "atlas_expiry")
+            val shortExpiry = System.currentTimeMillis() + (60 * 1000) // 1 minute
+            
+            guardians.mapNotNull { plugin.server.getEntity(it) }.forEach { entity ->
+                entity.persistentDataContainer.set(expiryKey, PersistentDataType.LONG, shortExpiry)
+            }
+            
             supplyDropGuardians.remove(locKey)
             supplyDropInitialCount.remove(locKey)
         }

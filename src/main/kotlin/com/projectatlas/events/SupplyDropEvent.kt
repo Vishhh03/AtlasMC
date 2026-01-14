@@ -227,6 +227,10 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
                 removeWhenFarAway = false
                 persistentDataContainer.set(org.bukkit.NamespacedKey.fromString("atlas_guard")!!, org.bukkit.persistence.PersistentDataType.BYTE, 1.toByte())
                 
+                // Auto-despawn after 20 minutes (1200 seconds)
+                val expiryTime = System.currentTimeMillis() + (1200 * 1000)
+                persistentDataContainer.set(org.bukkit.NamespacedKey(plugin, "atlas_expiry"), org.bukkit.persistence.PersistentDataType.LONG, expiryTime)
+                
                 // --- ATTRIBUTES & BUFFS ---
                 val maxHealth = when(tier) {
                     DropTier.COMMON -> 30.0

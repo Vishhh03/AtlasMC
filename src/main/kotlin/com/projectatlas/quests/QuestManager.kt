@@ -486,6 +486,10 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
                     this.customName(Component.text("Quest Target", NamedTextColor.RED))
                     this.isCustomNameVisible = true
                     
+                    // Auto-despawn after 30 minutes
+                    val expiryTime = System.currentTimeMillis() + (1800 * 1000)
+                    this.persistentDataContainer.set(org.bukkit.NamespacedKey(plugin, "atlas_expiry"), org.bukkit.persistence.PersistentDataType.LONG, expiryTime)
+                    
                     // Helmet if day and burns
                     if (isDay && (type == EntityType.ZOMBIE || type == EntityType.SKELETON)) {
                         this.equipment?.helmet = org.bukkit.inventory.ItemStack(org.bukkit.Material.LEATHER_HELMET)

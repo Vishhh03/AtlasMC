@@ -35,6 +35,7 @@ import com.projectatlas.chat.ChatManager
 import com.projectatlas.events.SupplyDropListener
 import com.projectatlas.qol.QoLManager
 import com.projectatlas.visuals.AtmosphereManager
+import com.projectatlas.map.MapManager
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -71,6 +72,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var atmosphereManager: AtmosphereManager
     lateinit var wonderManager: com.projectatlas.city.WonderManager
     lateinit var outpostManager: com.projectatlas.territory.OutpostManager
+    lateinit var mapManager: MapManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -100,7 +102,7 @@ class AtlasPlugin : JavaPlugin() {
         worldBossManager = WorldBossManager(this)
         partyManager = PartyManager(this)
         dungeonManager = DungeonManager(this)
-        blueprintMarketplace = BlueprintMarketplace(this)
+        blueprintMarketplace = BlueprintMarketplace(this, schematicManager)
         skillTreeManager = SkillTreeManager(this)
         survivalManager = SurvivalManager(this)
         questBoardManager = QuestBoardManager(this)
@@ -110,6 +112,9 @@ class AtlasPlugin : JavaPlugin() {
         supplyDropListener = SupplyDropListener(this)
         qolManager = QoLManager(this)
         atmosphereManager = AtmosphereManager(this)
+        atmosphereManager = AtmosphereManager(this)
+        mapManager = MapManager(this)
+        val entityCleanupManager = com.projectatlas.util.EntityCleanupManager(this) // Auto-starts task
         
         // Register Events
         server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, guiManager), this)
@@ -135,6 +140,9 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(supplyDropListener, this)
         server.pluginManager.registerEvents(qolManager, this)
         server.pluginManager.registerEvents(atmosphereManager, this)
+        server.pluginManager.registerEvents(partyManager, this)
+        server.pluginManager.registerEvents(achievementManager, this)
+        server.pluginManager.registerEvents(mapManager, this)
         
 
         
