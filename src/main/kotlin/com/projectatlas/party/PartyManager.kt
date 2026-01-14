@@ -257,4 +257,24 @@ class PartyManager(private val plugin: AtlasPlugin) {
     private fun broadcastToParty(party: Party, message: Component) {
         party.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { it.sendMessage(message) }
     }
+    
+    /**
+     * Party Chat - Send a message only to party members
+     */
+    fun sendPartyChat(sender: Player, message: String) {
+        val party = getParty(sender)
+        if (party == null) {
+            sender.sendMessage(Component.text("You're not in a party!", NamedTextColor.RED))
+            return
+        }
+        
+        val formatted = Component.text("[Party] ", NamedTextColor.AQUA)
+            .append(Component.text("${sender.name}: ", NamedTextColor.WHITE))
+            .append(Component.text(message, NamedTextColor.GRAY))
+        
+        party.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { member ->
+            member.sendMessage(formatted)
+            member.playSound(member.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.3f, 1.5f)
+        }
+    }
 }

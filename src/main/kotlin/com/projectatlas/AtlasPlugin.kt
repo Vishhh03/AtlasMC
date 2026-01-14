@@ -33,6 +33,7 @@ import com.projectatlas.economy.MarketManager
 import com.projectatlas.visuals.VisualManager
 import com.projectatlas.chat.ChatManager
 import com.projectatlas.events.SupplyDropListener
+import com.projectatlas.qol.QoLManager
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -65,6 +66,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var visualManager: VisualManager
     lateinit var chatManager: ChatManager
     lateinit var supplyDropListener: SupplyDropListener
+    lateinit var qolManager: QoLManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -102,6 +104,7 @@ class AtlasPlugin : JavaPlugin() {
         visualManager = VisualManager(this)
         chatManager = ChatManager(this)
         supplyDropListener = SupplyDropListener(this)
+        qolManager = QoLManager(this)
         
         // Register Events
         server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, guiManager), this)
@@ -125,12 +128,13 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(marketManager, this) // Register Market Events
         server.pluginManager.registerEvents(chatManager, this)
         server.pluginManager.registerEvents(supplyDropListener, this)
+        server.pluginManager.registerEvents(qolManager, this)
         
 
         
         // Register Commands
-        // Register Commands
         getCommand("atlas")?.setExecutor(AtlasCommand(identityManager, economyManager, cityManager, guiManager, schematicManager, politicsManager))
+        getCommand("pc")?.setExecutor(com.projectatlas.party.PartyChatCommand(this))
         
         // Start Scheduler
         eventManager.startScheduler()

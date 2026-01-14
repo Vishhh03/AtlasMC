@@ -55,6 +55,12 @@ class AtlasCommand(
             "menu" -> handleMenu(sender)
             "skills", "skill", "tree" -> handleSkills(sender)
             "heal", "medkit" -> handleHeal(sender, args)
+            // QoL Commands
+            "sort" -> handleSort(sender)
+            "stats" -> handleStats(sender, args)
+            "scoreboard", "sb" -> handleScoreboard(sender)
+            "damage", "dmg" -> handleDamageToggle(sender)
+            "quickstack", "qs" -> handleQuickStack(sender)
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
         return true
@@ -324,14 +330,43 @@ class AtlasCommand(
     }
 
     private fun handleHelp(player: Player) {
-        player.sendMessage(Component.text("--- Project Atlas Help ---", NamedTextColor.GOLD))
-        player.sendMessage(Component.text("/atlas profile - View stats", NamedTextColor.YELLOW))
-        player.sendMessage(Component.text("/atlas bal - View balance", NamedTextColor.YELLOW))
-        player.sendMessage(Component.text("/atlas pay <player> <amount>", NamedTextColor.YELLOW))
-        player.sendMessage(Component.text("/atlas city <create|claim|invite|join|kick|leave|info|tax|deposit>", NamedTextColor.YELLOW))
+        player.sendMessage(Component.empty())
+        player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
+        player.sendMessage(Component.text("  ⚔ Project Atlas Help ⚔", NamedTextColor.YELLOW))
+        player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
+        player.sendMessage(Component.empty())
+        player.sendMessage(Component.text("  Core Commands:", NamedTextColor.WHITE))
+        player.sendMessage(Component.text("  /atlas - Open main menu", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas profile - View your stats", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas skills - Open skill tree", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas bal - View balance", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas pay <player> <amount>", NamedTextColor.GRAY))
+        player.sendMessage(Component.empty())
+        player.sendMessage(Component.text("  City & Social:", NamedTextColor.WHITE))
+        player.sendMessage(Component.text("  /atlas city <create|claim|invite|...>", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas party <create|invite|accept|...>", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas bounty <place|check|list>", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /pc <message> - Party chat", NamedTextColor.GRAY))
+        player.sendMessage(Component.empty())
+        player.sendMessage(Component.text("  QoL Features:", NamedTextColor.WHITE))
+        player.sendMessage(Component.text("  /atlas sort - Sort inventory", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas stats - View kill stats", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas sb - Toggle scoreboard", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas dmg - Toggle damage numbers", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas qs - Quick stack to nearby chests", NamedTextColor.GRAY))
+        player.sendMessage(Component.empty())
+        player.sendMessage(Component.text("  Content:", NamedTextColor.WHITE))
+        player.sendMessage(Component.text("  /atlas dungeon - Enter dungeons", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas blueprint - Schematic marketplace", NamedTextColor.GRAY))
         if (player.hasPermission("atlas.admin")) {
-            player.sendMessage(Component.text("/atlas event start - Force event", NamedTextColor.RED))
+            player.sendMessage(Component.empty())
+            player.sendMessage(Component.text("  Admin:", NamedTextColor.RED))
+            player.sendMessage(Component.text("  /atlas event start - Force supply drop", NamedTextColor.DARK_RED))
+            player.sendMessage(Component.text("  /atlas boss spawn - Force world boss", NamedTextColor.DARK_RED))
+            player.sendMessage(Component.text("  /atlas relic spawn - Force relic spawn", NamedTextColor.DARK_RED))
         }
+        player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
+        player.sendMessage(Component.empty())
     }
 
     // --- Tab Completion ---
@@ -705,6 +740,58 @@ class AtlasCommand(
         val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
         plugin.guiManager.openMainMenu(player)
     }
+    
+    // ============ QOL COMMANDS ============
+    
+    private fun handleSort(player: Player) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        plugin.qolManager.sortInventory(player)
+    }
+    
+    private fun handleStats(player: Player, args: Array<out String>) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        player.sendMessage(Component.empty())
+        player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
+        player.sendMessage(Component.text("  📊 YOUR STATISTICS", NamedTextColor.YELLOW))
+        player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
+        
+        // PvP Stats
+        val (kills, deaths) = plugin.qolManager.getPvPStats(player)
+        val kd = if (deaths > 0) kills.toDouble() / deaths else kills.toDouble()
+        player.sendMessage(Component.text("  ⚔ PvP K/D: $kills / $deaths (${String.format("%.2f", kd)})", NamedTextColor.RED))
+        
+        // Mob Kill Stats (top 5)
+        val mobStats = plugin.qolManager.getKillStats(player)
+            .entries.sortedByDescending { it.value }.take(5)
+        
+        if (mobStats.isNotEmpty()) {
+            player.sendMessage(Component.empty())
+            player.sendMessage(Component.text("  🎯 Top Mob Kills:", NamedTextColor.GREEN))
+            mobStats.forEach { (mob, count) ->
+                player.sendMessage(Component.text("    ${mob.lowercase().replace("_", " ")}: $count", NamedTextColor.GRAY))
+            }
+        }
+        
+        player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
+        player.sendMessage(Component.empty())
+    }
+    
+    private fun handleScoreboard(player: Player) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        plugin.qolManager.toggleScoreboard(player)
+    }
+    
+    private fun handleDamageToggle(player: Player) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        plugin.qolManager.toggleDamageNumbers(player)
+    }
+    
+    private fun handleQuickStack(player: Player) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        plugin.qolManager.quickStack(player)
+    }
+
 
     // ============ TAB COMPLETION ============
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
@@ -714,7 +801,8 @@ class AtlasCommand(
         return when (args.size) {
             1 -> listOf(
                 "profile", "balance", "pay", "city", "help", "menu",
-                "dungeon", "party", "bounty", "boss", "relic", "blueprint", "bp", "schem", "spawn"
+                "dungeon", "party", "bounty", "boss", "relic", "blueprint", "bp", "schem", "spawn",
+                "sort", "stats", "scoreboard", "sb", "damage", "dmg", "quickstack", "qs"
             ).filter { it.startsWith(args[0].lowercase()) }
             
             2 -> when (args[0].lowercase()) {
