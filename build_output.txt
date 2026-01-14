@@ -3,10 +3,7 @@
 > Task :processTestResources NO-SOURCE
 
 > Task :compileKotlin
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:254:23 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:339:29 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:400:40 'fun registerNewObjective(p0: @NotNull() String, p1: @NotNull() String, p2: @Nullable() Component?): @NotNull() Objective' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:489:33 'var bedSpawnLocation: @Nullable() Location?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/visuals/AtmosphereManager.kt:225:20 'val isOnGround: Boolean' is deprecated. Deprecated in Java.
 
 > Task :compileJava NO-SOURCE
 > Task :classes UP-TO-DATE
@@ -20,6 +17,6 @@ w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol
 > Task :check UP-TO-DATE
 > Task :build
 
-BUILD SUCCESSFUL in 3s
+BUILD SUCCESSFUL in 2s
 4 actionable tasks: 3 executed, 1 up-to-date
 Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.2.1/userguide/configuration_cache_enabling.html

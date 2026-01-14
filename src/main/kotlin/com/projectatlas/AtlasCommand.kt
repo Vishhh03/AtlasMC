@@ -61,6 +61,8 @@ class AtlasCommand(
             "scoreboard", "sb" -> handleScoreboard(sender)
             "damage", "dmg" -> handleDamageToggle(sender)
             "quickstack", "qs" -> handleQuickStack(sender)
+            "atmosphere", "ambient", "shaders" -> handleAtmosphere(sender)
+            
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
         return true
@@ -792,6 +794,11 @@ class AtlasCommand(
         plugin.qolManager.quickStack(player)
     }
 
+    private fun handleAtmosphere(player: Player) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        plugin.atmosphereManager.toggleAtmosphere(player)
+    }
+
 
     // ============ TAB COMPLETION ============
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
@@ -802,7 +809,8 @@ class AtlasCommand(
             1 -> listOf(
                 "profile", "balance", "pay", "city", "help", "menu",
                 "dungeon", "party", "bounty", "boss", "relic", "blueprint", "bp", "schem", "spawn",
-                "sort", "stats", "scoreboard", "sb", "damage", "dmg", "quickstack", "qs"
+                "sort", "stats", "scoreboard", "sb", "damage", "dmg", "quickstack", "qs",
+                "atmosphere", "ambient", "shaders"
             ).filter { it.startsWith(args[0].lowercase()) }
             
             2 -> when (args[0].lowercase()) {

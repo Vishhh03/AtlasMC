@@ -34,6 +34,7 @@ import com.projectatlas.visuals.VisualManager
 import com.projectatlas.chat.ChatManager
 import com.projectatlas.events.SupplyDropListener
 import com.projectatlas.qol.QoLManager
+import com.projectatlas.visuals.AtmosphereManager
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -67,6 +68,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var chatManager: ChatManager
     lateinit var supplyDropListener: SupplyDropListener
     lateinit var qolManager: QoLManager
+    lateinit var atmosphereManager: AtmosphereManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -105,6 +107,7 @@ class AtlasPlugin : JavaPlugin() {
         chatManager = ChatManager(this)
         supplyDropListener = SupplyDropListener(this)
         qolManager = QoLManager(this)
+        atmosphereManager = AtmosphereManager(this)
         
         // Register Events
         server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, guiManager), this)
@@ -129,6 +132,7 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(chatManager, this)
         server.pluginManager.registerEvents(supplyDropListener, this)
         server.pluginManager.registerEvents(qolManager, this)
+        server.pluginManager.registerEvents(atmosphereManager, this)
         
 
         
