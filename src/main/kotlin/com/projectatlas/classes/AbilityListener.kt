@@ -102,6 +102,9 @@ class AbilityListener(private val plugin: AtlasPlugin) : Listener {
         fireball.yield = 0F // No block damage
         fireball.setIsIncendiary(false)
         fireball.velocity = player.location.direction.multiply(1.5)
+        
+        // Visual effect
+        plugin.visualManager.showFireballTrail(player)
     }
     
     private fun castShieldWall(player: Player) {
@@ -109,8 +112,11 @@ class AbilityListener(private val plugin: AtlasPlugin) : Listener {
         player.playSound(player.location, Sound.ITEM_SHIELD_BLOCK, 1.0f, 0.5f)
         
         val duration = plugin.configManager.shieldWallDurationTicks
-        val effect = PotionEffect(PotionEffectType.RESISTANCE, duration, 2, false, false) // Res III for configured duration
+        val effect = PotionEffect(PotionEffectType.RESISTANCE, duration, 2, false, false)
         player.addPotionEffect(effect)
+        
+        // Visual effect
+        plugin.visualManager.showShieldWallEffect(player)
         
         // Allies
         player.getNearbyEntities(5.0, 5.0, 5.0).forEach { entity ->
@@ -125,7 +131,10 @@ class AbilityListener(private val plugin: AtlasPlugin) : Listener {
         player.sendMessage(Component.text("⚡ DASH!", NamedTextColor.AQUA))
         player.playSound(player.location, Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.2f)
         
-        player.addPotionEffect(PotionEffect(PotionEffectType.SPEED, 60, 3, false, false)) // Speed IV for 3s
+        // Visual effect (start before velocity change)
+        plugin.visualManager.showDashEffect(player)
+        
+        player.addPotionEffect(PotionEffect(PotionEffectType.SPEED, 60, 3, false, false))
         val velocity = plugin.configManager.dashVelocity
         player.velocity = player.location.direction.multiply(velocity).setY(0.5)
     }
@@ -133,7 +142,9 @@ class AbilityListener(private val plugin: AtlasPlugin) : Listener {
     private fun castHealingPulse(player: Player) {
         player.sendMessage(Component.text("❤ HEALING PULSE!", NamedTextColor.LIGHT_PURPLE))
         player.playSound(player.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f)
-        player.world.spawnParticle(org.bukkit.Particle.HEART, player.location.add(0.0, 1.0, 0.0), 10, 0.5, 0.5, 0.5)
+        
+        // Visual effect
+        plugin.visualManager.showHealingPulseEffect(player)
         
         val healAmount = plugin.configManager.healingPulseAmount
         
@@ -147,7 +158,6 @@ class AbilityListener(private val plugin: AtlasPlugin) : Listener {
                 val max = entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
                 entity.health = (entity.health + healAmount).coerceAtMost(max)
                 entity.sendMessage(Component.text("Healed by Pulse!", NamedTextColor.GREEN))
-                entity.world.spawnParticle(org.bukkit.Particle.HEART, entity.location.add(0.0, 1.0, 0.0), 5)
             }
         }
     }

@@ -120,6 +120,9 @@ class WorldBossManager(private val plugin: AtlasPlugin) : Listener {
         plugin.server.broadcast(Component.text("═══════════════════════════════", NamedTextColor.DARK_RED))
         plugin.server.broadcast(Component.empty())
         
+        // Visual effect
+        plugin.visualManager.showBossSpawnEffect(location, type.displayName)
+        
         plugin.server.onlinePlayers.forEach { 
             it.playSound(it.location, Sound.ENTITY_ENDER_DRAGON_GROWL, 1.0f, 0.5f)
         }

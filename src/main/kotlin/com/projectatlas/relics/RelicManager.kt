@@ -72,7 +72,10 @@ class RelicManager(private val plugin: AtlasPlugin) : Listener {
         item.customName(Component.text("✦ RELIC ✦", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD))
         item.isCustomNameVisible = true
         
-        // Particle beacon
+        // Visual effect - beacon beam and enchantment swirl
+        plugin.visualManager.showRelicDropEffect(location)
+        
+        // Particle beacon (ongoing)
         plugin.server.scheduler.runTaskTimer(plugin, Runnable {
             if (!item.isValid || item.isDead) return@Runnable
             item.world.spawnParticle(Particle.END_ROD, item.location.add(0.0, 1.0, 0.0), 5, 0.2, 0.5, 0.2, 0.01)

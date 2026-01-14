@@ -105,6 +105,13 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
     private val instancesByUUID = ConcurrentHashMap<UUID, DungeonInstance>() // Instance UUID -> Instance
     private val dungeonCooldowns = ConcurrentHashMap<UUID, Long>()
     private val pendingRespawns = ConcurrentHashMap<UUID, Location>()
+    
+    /**
+     * Get the active dungeon instance for a player
+     */
+    fun getActiveInstance(player: Player): DungeonInstance? {
+        return activeInstances[player.uniqueId]
+    }
 
     fun enterDungeon(player: Player, type: DungeonType, modifier: DungeonModifier = DungeonModifier.NONE): Boolean {
         if (activeInstances.containsKey(player.uniqueId)) {

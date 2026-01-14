@@ -111,6 +111,10 @@ class BountyManager(private val plugin: AtlasPlugin) : Listener {
         
         killer.playSound(killer.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f)
         
+        // Visual effects
+        plugin.visualManager.showBountyClaimEffect(victim.location, totalReward)
+        plugin.visualManager.showPlayerKillEffect(victim.location)
+        
         // Achievement: Bounty Hunter
         plugin.achievementManager.awardAchievement(killer, "bounty_hunter")
         

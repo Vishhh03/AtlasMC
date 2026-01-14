@@ -76,6 +76,12 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
             it.playSound(it.location, Sound.EVENT_RAID_HORN, 2.0f, 0.8f)
         }
         
+        // Start siege border visuals
+        plugin.server.scheduler.runTaskTimer(plugin, Runnable {
+            if (!activeSieges.containsKey(city.id)) return@Runnable
+            plugin.visualManager.showSiegeBorders(city.id)
+        }, 0L, 10L)
+        
         // Spawn Defenders (Barracks)
         val barracksLevel = city.infrastructure.barracksLevel
         val world = triggerLocation.world ?: return false
