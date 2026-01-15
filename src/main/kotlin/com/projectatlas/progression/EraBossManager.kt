@@ -409,18 +409,20 @@ class EraBossManager(private val plugin: AtlasPlugin) : Listener {
             player.playSound(player.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f)
         }
         
-        // Special drops
+        // Special drops - Use custom items with CustomModelData for unique visuals
         event.drops.clear()
-        event.drops.add(ItemStack(Material.NETHER_STAR).apply {
-            editMeta { meta ->
-                meta.displayName(Component.text("Era Key Fragment", boss.type.color, TextDecoration.BOLD))
-                meta.lore(listOf(
-                    Component.text("A fragment of power from ${boss.type.displayName}", NamedTextColor.GRAY),
-                    Component.empty(),
-                    Component.text("Proof of your victory.", NamedTextColor.DARK_GRAY)
-                ))
-            }
-        })
+        
+        // Era Key Fragment
+        event.drops.add(com.projectatlas.visual.CustomItemManager.createEraKeyFragment(boss.type.ordinal))
+        
+        // Unique weapon drop based on boss type
+        val weaponDrop = when (boss.type) {
+            BossType.HOLLOW_KNIGHT -> com.projectatlas.visual.CustomItemManager.createHollowKnightBlade()
+            BossType.TAX_COLLECTOR -> com.projectatlas.visual.CustomItemManager.createTaxCollectorAxe()
+            BossType.WARDEN_OF_FLAMES -> com.projectatlas.visual.CustomItemManager.createWardenFlameSword()
+            BossType.ENDER_SENTINEL -> com.projectatlas.visual.CustomItemManager.createEnderSentinelScythe()
+        }
+        event.drops.add(weaponDrop)
         
         // Bonus XP
         event.droppedExp = when (boss.type) {

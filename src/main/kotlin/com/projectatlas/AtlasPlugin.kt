@@ -77,6 +77,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var progressionManager: ProgressionManager
     lateinit var eraBossManager: com.projectatlas.progression.EraBossManager
     lateinit var milestoneListener: com.projectatlas.progression.MilestoneListener
+    lateinit var resourcePackManager: com.projectatlas.visual.ResourcePackManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -122,11 +123,13 @@ class AtlasPlugin : JavaPlugin() {
         eraBossManager = com.projectatlas.progression.EraBossManager(this)
         milestoneListener = com.projectatlas.progression.MilestoneListener(this)
         val mobScalingListener = com.projectatlas.progression.MobScalingListener(this)
+        resourcePackManager = com.projectatlas.visual.ResourcePackManager(this)
         val entityCleanupManager = com.projectatlas.util.EntityCleanupManager(this) // Auto-starts task
         
         // Register Events
         server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, guiManager), this)
         server.pluginManager.registerEvents(mobScalingListener, this)
+        server.pluginManager.registerEvents(resourcePackManager, this)
         server.pluginManager.registerEvents(guiManager, this)
         server.pluginManager.registerEvents(npcManager, this)
         server.pluginManager.registerEvents(questManager, this)
