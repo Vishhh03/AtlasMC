@@ -12,6 +12,10 @@ interface CodeableQuest {
     val name: String
     val description: String
     
+    // Typewriter Integration
+    val startScript: String? get() = null
+    val completeScript: String? get() = null
+    
     fun canStart(player: Player): Boolean
     fun onStart(player: Player)
     fun onComplete(player: Player)
@@ -35,6 +39,13 @@ object AgentQuestManager {
         if (!quest.canStart(player)) return false
         
         activeQuests.computeIfAbsent(player.uniqueId) { mutableSetOf() }.add(questId)
+        
+        // Visuals
+        val script = quest.startScript
+        if (script != null) {
+            com.projectatlas.integration.TypewriterManager.startVisuals(player, script)
+        }
+        
         quest.onStart(player)
         return true
     }
@@ -43,6 +54,13 @@ object AgentQuestManager {
         // Logic to complete
         if (activeQuests[player.uniqueId]?.contains(questId) == true) {
             val quest = quests[questId]
+            
+            // Visuals
+            val script = quest?.completeScript
+            if (script != null) {
+                com.projectatlas.integration.TypewriterManager.startVisuals(player, script)
+            }
+            
             quest?.onComplete(player)
             activeQuests[player.uniqueId]?.remove(questId)
         }

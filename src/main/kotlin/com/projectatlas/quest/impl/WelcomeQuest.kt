@@ -9,6 +9,8 @@ class WelcomeQuest : CodeableQuest {
     override val id = "welcome_quest"
     override val name = "Welcome to Atlas"
     override val description = "Get to know the city."
+    
+    override val startScript = "welcome_intro"
 
     override fun canStart(player: Player): Boolean {
         // Example condition: Always allow for testing
@@ -17,11 +19,7 @@ class WelcomeQuest : CodeableQuest {
 
     override fun onStart(player: Player) {
         player.sendMessage("§e[Quest] Starting Welcome Quest...")
-        
-        // Trigger Typewriter visual
-        // This assumes a script named 'welcome_intro' exists or will be created in Typewriter plugin
-        TypewriterManager.startVisuals(player, "welcome_intro")
-        
+        // Visuals handled automatically by AgentQuestManager now
         player.sendMessage("§7Hint: Watch the cutscene (if configured)!")
     }
 

@@ -265,6 +265,10 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         
         player.playSound(player.location, Sound.ENTITY_VILLAGER_YES, 1.0f, 1.0f)
         
+        // Attempt Typewriter Integration (Legacy Auto-Bridge)
+        // Checks for script named "quest_<id>_start"
+        com.projectatlas.integration.TypewriterManager.startVisuals(player, "quest_${quest.id}_start")
+        
         // Create boss bar for Hard+ quests
         if (quest.difficulty == Difficulty.HARD || quest.difficulty == Difficulty.NIGHTMARE ||
             quest.objective is QuestObjective.EscortVillager || 
@@ -471,6 +475,10 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         player.sendMessage(Component.empty())
         
         player.playSound(player.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f)
+        
+        // Attempt Typewriter Integration (Legacy Auto-Bridge)
+        // Checks for script named "quest_<id>_complete"
+        com.projectatlas.integration.TypewriterManager.startVisuals(player, "quest_${activeQuest.quest.id}_complete")
         
         // Award achievement
         plugin.achievementManager.awardAchievement(player, "quest_complete")
