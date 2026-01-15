@@ -38,6 +38,10 @@ sealed class QuestObjective {
     data class FishItems(val count: Int) : QuestObjective()
     data class TameAnimals(val count: Int) : QuestObjective()
     data class TradeWithVillager(val count: Int) : QuestObjective()
+    data class CompleteDungeon(val minDifficulty: Int, val count: Int) : QuestObjective()
+    // NEW QUEST TYPES
+     data class EscortVillager(val destinationName: String, val distance: Int) : QuestObjective()
+    data class DefendVillager(val surviveSeconds: Int, val waveCount: Int) : QuestObjective()
 }
 
 /**
@@ -46,7 +50,8 @@ sealed class QuestObjective {
 data class ActiveQuest(
     val quest: Quest,
     val startTime: Long = System.currentTimeMillis(),
-    var progress: Int = 0 // e.g., kills made or items collected
+    var progress: Int = 0, // e.g., kills made or items collected
+    var entityId: java.util.UUID? = null // For tracking quest-specific entities like the Escort Villager
 ) {
     fun isComplete(): Boolean {
         return when (val obj = quest.objective) {
@@ -64,6 +69,9 @@ data class ActiveQuest(
             is QuestObjective.FishItems -> progress >= obj.count
             is QuestObjective.TameAnimals -> progress >= obj.count
             is QuestObjective.TradeWithVillager -> progress >= obj.count
+            is QuestObjective.CompleteDungeon -> progress >= obj.count
+            is QuestObjective.EscortVillager -> progress >= obj.distance
+            is QuestObjective.DefendVillager -> progress >= obj.surviveSeconds
         }
     }
     
@@ -95,6 +103,9 @@ data class ActiveQuest(
             is QuestObjective.FishItems -> obj.count
             is QuestObjective.TameAnimals -> obj.count
             is QuestObjective.TradeWithVillager -> obj.count
+            is QuestObjective.CompleteDungeon -> obj.count
+            is QuestObjective.EscortVillager -> obj.distance
+            is QuestObjective.DefendVillager -> obj.surviveSeconds
         }
     }
 }

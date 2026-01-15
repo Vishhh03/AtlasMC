@@ -193,6 +193,9 @@ class RelicManager(private val plugin: AtlasPlugin) : Listener {
         
         cooldowns[key] = now
         event.isCancelled = true
+        
+        // Track progression milestone (first relic obtained)
+        plugin.milestoneListener.onRelicObtained(player)
     }
     
     private fun getCooldown(type: RelicType): Long {

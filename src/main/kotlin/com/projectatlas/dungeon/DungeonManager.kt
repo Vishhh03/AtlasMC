@@ -8,6 +8,8 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.PlayerDeathEvent
+import org.bukkit.event.entity.CreatureSpawnEvent
+import org.bukkit.entity.EntityType
 import org.bukkit.event.player.PlayerRespawnEvent
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -70,21 +72,21 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
         val world = plugin.server.getWorld("world_the_end") ?: plugin.server.worlds[0]
         val startLoc = Location(world, offset.toDouble() + 500.0, 100.0, 500.0)
         
-        generator.buildDungeon(startLoc, rooms, type.theme)
-        
-        // 4. Create Instance
-        val playerIds = partyMembers.map { it.uniqueId }.toMutableSet()
-        val dungeon = ProceduralDungeon(instanceId, plugin, type.theme, rooms, playerIds, startLoc)
-        
-        dungeonLog[instanceId] = dungeon
-        
-        // 5. Teleport Players
-        val spawn = startLoc.clone().add(0.0, 2.0, 0.0)
-        partyMembers.forEach { member ->
-            activeDungeons[member.uniqueId] = dungeon
-            member.teleport(spawn)
-            member.sendMessage(Component.text("Entered ${type.displayName}!", NamedTextColor.GREEN))
-            member.playSound(member.location, Sound.EVENT_RAID_HORN, 1.0f, 1.0f)
+        generator.buildDungeon(plugin, startLoc, rooms, type.theme) {
+            // 4. Create Instance
+            val playerIds = partyMembers.map { it.uniqueId }.toMutableSet()
+            val dungeon = ProceduralDungeon(instanceId, plugin, type.theme, type.difficulty, rooms, playerIds, startLoc)
+            
+            dungeonLog[instanceId] = dungeon
+            
+            // 5. Teleport Players
+            val spawn = startLoc.clone().add(0.0, 2.0, 0.0)
+            partyMembers.forEach { member ->
+                activeDungeons[member.uniqueId] = dungeon
+                member.teleport(spawn)
+                member.sendMessage(Component.text("Entered ${type.displayName}!", NamedTextColor.GREEN))
+                member.playSound(member.location, Sound.EVENT_RAID_HORN, 1.0f, 1.0f)
+            }
         }
         
         return true
@@ -108,25 +110,45 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
     @EventHandler
     fun onDeath(event: PlayerDeathEvent) {
         val player = event.entity
-        val dungeon = activeDungeons[player.uniqueId] ?: return
+        val dungeon = activeDungeons.remove(player.uniqueId) ?: return
         
         event.drops.clear()
         event.keepInventory = true
         event.keepLevel = true
         
-        player.sendMessage(Component.text("You fell in the dungeon!", NamedTextColor.RED))
+        // Remove from dungeon
+        dungeon.players.remove(player.uniqueId)
+        player.hideBossBar(dungeon.bossBar)
+        
+        player.sendMessage(Component.empty())
+        player.sendMessage(Component.text("═══ DUNGEON FAILED ═══", NamedTextColor.DARK_RED))
+        player.sendMessage(Component.text("You died in the dungeon and have been expelled!", NamedTextColor.RED))
+        player.sendMessage(Component.text("Your items have been preserved.", NamedTextColor.GRAY))
+        player.sendMessage(Component.empty())
+        
+        // End dungeon if no players left
+        if (dungeon.players.isEmpty()) {
+            dungeon.active = false
+        }
     }
     
     @EventHandler
     fun onRespawn(event: PlayerRespawnEvent) {
         val player = event.player
-        val dungeon = activeDungeons[player.uniqueId] ?: return
-        
-        // Respawn at start of dungeon if still active
-        if (dungeon.active) {
-            event.respawnLocation = dungeon.spawnLocation
-        } else {
-            activeDungeons.remove(player.uniqueId)
+        // Player already removed from dungeon in onDeath
+        // Respawn at world spawn (not dungeon)
+    }
+    
+    /**
+     * Block enderman spawns in dungeon areas (The End world)
+     */
+    @EventHandler
+    fun onCreatureSpawn(event: CreatureSpawnEvent) {
+        // Block natural/default enderman spawns in The End (dungeon world)
+        if (event.entity.world.name == "world_the_end" && 
+            event.entityType == EntityType.ENDERMAN &&
+            event.spawnReason != CreatureSpawnEvent.SpawnReason.CUSTOM) {
+            event.isCancelled = true
         }
     }
 }

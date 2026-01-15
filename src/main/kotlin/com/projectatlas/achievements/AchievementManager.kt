@@ -8,7 +8,10 @@ import org.bukkit.Sound
 import org.bukkit.entity.Player
 import java.util.UUID
 
-class AchievementManager(private val plugin: AtlasPlugin) {
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+
+class AchievementManager(private val plugin: AtlasPlugin) : Listener {
 
     // Achievement definitions
     private val achievements = mapOf(
@@ -34,7 +37,8 @@ class AchievementManager(private val plugin: AtlasPlugin) {
         "mayor" to Achievement("Mayor", "Become the mayor of a city", 250.0),
         "rich" to Achievement("Rich", "Accumulate 10,000 gold", 500.0),
         "ability_master" to Achievement("Ability Master", "Use your class ability 50 times", 200.0),
-        "dungeon_speed" to Achievement("Speed Runner", "Complete a dungeon with speed bonus", 400.0)
+        "dungeon_speed" to Achievement("Speed Runner", "Complete a dungeon with speed bonus", 400.0),
+        "dungeon_nightmare" to Achievement("Nightmare Survivor", "Complete a Nightmare difficulty dungeon", 1000.0)
     )
 
     data class Achievement(
@@ -96,5 +100,16 @@ class AchievementManager(private val plugin: AtlasPlugin) {
         val profile = plugin.identityManager.getPlayer(player.uniqueId)
         val earned = achievements.keys.count { profile?.titles?.contains("achievement:$it") ?: false }
         return earned to achievements.size
+    }
+
+    @EventHandler
+    fun onDungeonComplete(event: com.projectatlas.events.DungeonCompleteEvent) {
+        if (!event.success) return
+        
+        awardAchievement(event.player, "dungeon_conqueror")
+        
+        if (event.difficulty >= 5) {
+            awardAchievement(event.player, "dungeon_nightmare")
+        }
     }
 }

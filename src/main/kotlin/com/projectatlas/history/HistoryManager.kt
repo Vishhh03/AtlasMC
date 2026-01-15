@@ -25,7 +25,8 @@ enum class EventType {
     SIEGE,
     POLITICS,
     ECONOMY,
-    MEMBER
+    MEMBER,
+    CITY_UPGRADE
 }
 
 class HistoryManager(private val plugin: AtlasPlugin) {

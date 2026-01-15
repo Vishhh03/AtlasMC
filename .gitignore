@@ -53,3 +53,5 @@ build.err
 build.ps1
 
 test-server/
+
+build_output.txt

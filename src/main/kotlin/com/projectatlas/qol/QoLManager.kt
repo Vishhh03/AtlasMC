@@ -17,6 +17,7 @@ import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.player.*
 import org.bukkit.inventory.ItemStack
+import org.bukkit.persistence.PersistentDataType
 import org.bukkit.scheduler.BukkitRunnable
 import java.time.Duration
 import java.util.*
@@ -68,10 +69,27 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
     // DEATH COORDINATES
     // ═══════════════════════════════════════════════════════════════
     
+    private val deathCompassKey = NamespacedKey(plugin, "death_compass")
+    
     @EventHandler(priority = EventPriority.MONITOR)
     fun onPlayerDeath(event: PlayerDeathEvent) {
         val player = event.entity
         val location = player.location
+        
+        // Skip death compass for dungeon deaths (inventory is preserved)
+        val isDungeonDeath = location.world.name == "world_the_end" || event.keepInventory
+        if (isDungeonDeath) {
+            // Track PvP deaths only
+            if (event.entity.killer != null) {
+                pvpDeaths[player.uniqueId] = (pvpDeaths[player.uniqueId] ?: 0) + 1
+                val killer = event.entity.killer!!
+                pvpKills[killer.uniqueId] = (pvpKills[killer.uniqueId] ?: 0) + 1
+            }
+            return // Don't track death location for dungeons
+        }
+        
+        // Only track if player dropped items
+        val hasDrops = event.drops.isNotEmpty()
         
         deathLocations[player.uniqueId] = location
         deathTimestamps[player.uniqueId] = System.currentTimeMillis()
@@ -97,12 +115,21 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
             player.sendMessage(Component.text("  ☠ You died at:", NamedTextColor.RED))
             player.sendMessage(Component.text("  X: ${deathLoc.blockX}  Y: ${deathLoc.blockY}  Z: ${deathLoc.blockZ}", NamedTextColor.YELLOW))
             player.sendMessage(Component.text("  World: ${deathLoc.world?.name}", NamedTextColor.GRAY))
-            player.sendMessage(Component.text("  (Compass points here for 10 min)", NamedTextColor.DARK_GRAY))
-            player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GRAY))
             player.sendMessage(Component.empty())
             
             // Set compass target to death location
             player.compassTarget = deathLoc
+            
+            // Give Death Compass item
+            val deathCompass = createDeathCompass(deathLoc)
+            player.inventory.addItem(deathCompass)
+            
+            player.sendMessage(Component.text("  📍 You received a Death Compass!", NamedTextColor.AQUA))
+            player.sendMessage(Component.text("  Right-click it to track your death location.", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GRAY))
+            player.sendMessage(Component.empty())
+            
+            player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 0.5f)
         }, 5L)
         
         // Clear death location after 10 minutes
@@ -112,10 +139,63 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
                 deathTimestamps.remove(player.uniqueId)
                 if (player.isOnline) {
                     player.compassTarget = player.world.spawnLocation
-                    player.sendMessage(Component.text("☠ Death compass expired.", NamedTextColor.GRAY))
+                    player.sendMessage(Component.text("☠ Death compass expired. The trail has gone cold.", NamedTextColor.GRAY))
                 }
             }
         }, 12000L) // 10 minutes
+    }
+    
+    private fun createDeathCompass(deathLoc: Location): ItemStack {
+        val compass = ItemStack(Material.COMPASS)
+        val meta = compass.itemMeta!!
+        
+        meta.displayName(Component.text("☠ Death Compass", NamedTextColor.RED, TextDecoration.BOLD))
+        meta.lore(listOf(
+            Component.empty(),
+            Component.text("Your items await...", NamedTextColor.GRAY, TextDecoration.ITALIC),
+            Component.empty(),
+            Component.text("Death Location:", NamedTextColor.YELLOW),
+            Component.text("X: ${deathLoc.blockX}  Y: ${deathLoc.blockY}  Z: ${deathLoc.blockZ}", NamedTextColor.WHITE),
+            Component.text("World: ${deathLoc.world?.name}", NamedTextColor.GRAY),
+            Component.empty(),
+            Component.text("Right-click to update compass target", NamedTextColor.DARK_GRAY),
+            Component.text("Expires in 10 minutes", NamedTextColor.DARK_RED)
+        ))
+        
+        // Store death location in item
+        meta.persistentDataContainer.set(deathCompassKey, PersistentDataType.STRING, 
+            "${deathLoc.world?.name}:${deathLoc.blockX}:${deathLoc.blockY}:${deathLoc.blockZ}")
+        
+        compass.itemMeta = meta
+        return compass
+    }
+    
+    @EventHandler
+    fun onDeathCompassUse(event: PlayerInteractEvent) {
+        val item = event.item ?: return
+        if (item.type != Material.COMPASS) return
+        
+        val meta = item.itemMeta ?: return
+        val locData = meta.persistentDataContainer.get(deathCompassKey, PersistentDataType.STRING) ?: return
+        
+        // It's a death compass!
+        val parts = locData.split(":")
+        if (parts.size < 4) return
+        
+        val worldName = parts[0]
+        val x = parts[1].toIntOrNull() ?: return
+        val y = parts[2].toIntOrNull() ?: return
+        val z = parts[3].toIntOrNull() ?: return
+        
+        val world = plugin.server.getWorld(worldName) ?: return
+        val deathLoc = Location(world, x.toDouble(), y.toDouble(), z.toDouble())
+        
+        val player = event.player
+        player.compassTarget = deathLoc
+        
+        val distance = player.location.distance(deathLoc).toInt()
+        player.sendMessage(Component.text("☠ Compass updated! Death location is $distance blocks away.", NamedTextColor.RED))
+        player.playSound(player.location, Sound.UI_BUTTON_CLICK, 0.5f, 1.2f)
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -402,10 +482,23 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
         plugin.server.onlinePlayers.forEach { player ->
             val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return@forEach
             if (!profile.getSetting("scoreboard", true)) return@forEach
-            val scoreboard = Bukkit.getScoreboardManager().newScoreboard
-            val objective = scoreboard.registerNewObjective("atlas", "dummy", 
-                Component.text("⚔ Atlas ⚔", NamedTextColor.GOLD, TextDecoration.BOLD))
-            objective.displaySlot = org.bukkit.scoreboard.DisplaySlot.SIDEBAR
+            
+            var scoreboard = player.scoreboard
+            if (scoreboard == Bukkit.getScoreboardManager().mainScoreboard) {
+                scoreboard = Bukkit.getScoreboardManager().newScoreboard
+                player.scoreboard = scoreboard
+            }
+            
+            val objective = scoreboard.getObjective("atlas") 
+                ?: scoreboard.registerNewObjective("atlas", "dummy", 
+                    Component.text("⚔ Atlas ⚔", NamedTextColor.GOLD, TextDecoration.BOLD))
+            
+            if (objective.displaySlot != org.bukkit.scoreboard.DisplaySlot.SIDEBAR) {
+                objective.displaySlot = org.bukkit.scoreboard.DisplaySlot.SIDEBAR
+            }
+            
+            // Clear previous entries to avoid ghost lines
+            scoreboard.entries.forEach { scoreboard.resetScores(it) }
             
             var line = 15
             
@@ -455,8 +548,6 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
             if (bounty > 0) {
                 objective.getScore("§4Bounty: §c${bounty}g").score = line--
             }
-            
-            player.scoreboard = scoreboard
         }
     }
 

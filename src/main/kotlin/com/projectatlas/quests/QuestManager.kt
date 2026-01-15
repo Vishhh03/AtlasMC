@@ -101,10 +101,16 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         Quest("dungeon_delver", "Dungeon Delver", "Brave the mysterious dungeons.", 
             Difficulty.MEDIUM, QuestObjective.CompleteDungeon(0, 1), null, 500.0,
             "Use /atlas dungeon to enter."),
+        Quest("escort_merchant", "Merchant Escort", "Lead the merchant to safety (200 blocks away).", 
+            Difficulty.MEDIUM, QuestObjective.EscortVillager("Safe Haven", 200), 600, 500.0,
+            "Protect them from zombies while moving."), // New Escort Quest
             
         // ═══════════════════════════════════════════════════════════
         // HARD QUESTS (Significant challenge, longer objectives)
         // ═══════════════════════════════════════════════════════════
+        Quest("defend_cleric", "Cleric Defense", "Defend the cleric for 2 minutes.", 
+            Difficulty.HARD, QuestObjective.DefendVillager(120, 1), 120, 800.0,
+            "Keep zombies away from the cleric."), // New Defend Quest
         Quest("spider_nest", "Spider Extermination", "Eight legs, endless hunger... cleanse the nest.", 
             Difficulty.HARD, QuestObjective.KillMobs(EntityType.SPIDER, 20), 180, 600.0,
             "They hiss in the dark."),
@@ -260,7 +266,9 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         player.playSound(player.location, Sound.ENTITY_VILLAGER_YES, 1.0f, 1.0f)
         
         // Create boss bar for Hard+ quests
-        if (quest.difficulty == Difficulty.HARD || quest.difficulty == Difficulty.NIGHTMARE) {
+        if (quest.difficulty == Difficulty.HARD || quest.difficulty == Difficulty.NIGHTMARE ||
+            quest.objective is QuestObjective.EscortVillager || 
+            quest.objective is QuestObjective.DefendVillager) {
             val bossBar = BossBar.bossBar(
                 Component.text("${quest.name}: 0/${activeQuest.getTargetCount()}", NamedTextColor.RED),
                 0f,
@@ -269,6 +277,33 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
             )
             bossBars[player.uniqueId] = bossBar
             player.showBossBar(bossBar)
+        }
+        
+        // Handle Special Spawn Objectives
+        if (quest.objective is QuestObjective.EscortVillager) {
+            val villager = player.world.spawn(player.location, org.bukkit.entity.Villager::class.java)
+            villager.customName(Component.text("Escort Target", NamedTextColor.GREEN))
+            villager.isCustomNameVisible = true
+            villager.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MOVEMENT_SPEED)?.baseValue = 0.3
+            villager.age = 0 // Adult
+            villager.profession = org.bukkit.entity.Villager.Profession.CARTOGRAPHER
+            activeQuest.entityId = villager.uniqueId
+            
+            // Save start location for distance calculation
+            villager.persistentDataContainer.set(org.bukkit.NamespacedKey(plugin, "start_x"), org.bukkit.persistence.PersistentDataType.DOUBLE, player.location.x)
+            villager.persistentDataContainer.set(org.bukkit.NamespacedKey(plugin, "start_z"), org.bukkit.persistence.PersistentDataType.DOUBLE, player.location.z)
+            
+            player.sendMessage(Component.text("⚠ Protect the villager! Get them to ${quest.objective.destinationName}!", NamedTextColor.GOLD))
+        } else if (quest.objective is QuestObjective.DefendVillager) {
+            val villager = player.world.spawn(player.location, org.bukkit.entity.Villager::class.java)
+            villager.customName(Component.text("Target under attack!", NamedTextColor.RED))
+            villager.isCustomNameVisible = true
+            villager.setAI(false) // Stay put for defense
+            villager.age = 0
+            villager.profession = org.bukkit.entity.Villager.Profession.CLERIC
+            activeQuest.entityId = villager.uniqueId
+            
+            player.sendMessage(Component.text("⚠ Defend the villager for ${quest.objective.surviveSeconds} seconds!", NamedTextColor.GOLD))
         }
         
         // Start timeout checker
@@ -286,6 +321,10 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         bossBars.remove(player.uniqueId)?.let { player.hideBossBar(it) }
         
         if (quest != null) {
+            // Cleanup entity if exists
+            if (quest.entityId != null) {
+                plugin.server.getEntity(quest.entityId!!)?.remove()
+            }
             player.sendMessage(Component.text("Quest abandoned.", NamedTextColor.RED))
         }
     }
@@ -299,10 +338,36 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         val quest = activeQuests.remove(player.uniqueId) ?: return
         bossBars.remove(player.uniqueId)?.let { player.hideBossBar(it) }
         
+        // Cleanup quest entity
+        if (quest.entityId != null) {
+            plugin.server.getEntity(quest.entityId!!)?.remove()
+        }
+        
         player.sendMessage(Component.empty())
         player.sendMessage(Component.text("═══ QUEST FAILED ═══", NamedTextColor.DARK_RED))
         player.sendMessage(Component.text("You died! The quest '${quest.quest.name}' has been lost.", NamedTextColor.RED))
         player.sendMessage(Component.text("Find another quest board to try again.", NamedTextColor.GRAY))
+        player.sendMessage(Component.empty())
+    }
+    
+    /**
+     * Fail quest on Villager death
+     */
+    @EventHandler
+    fun onQuestEntityDeath(event: EntityDeathEvent) {
+        val entity = event.entity
+        
+        // Find which player owns this quest entity
+        val ownerId = activeQuests.entries.find { it.value.entityId == entity.uniqueId }?.key ?: return
+        val player = plugin.server.getPlayer(ownerId) ?: return
+        val quest = activeQuests.remove(ownerId)!!
+        
+        bossBars.remove(ownerId)?.let { player.hideBossBar(it) }
+        
+        player.sendMessage(Component.empty())
+        player.sendMessage(Component.text("═══ QUEST FAILED ═══", NamedTextColor.DARK_RED))
+        player.sendMessage(Component.text("The objective was killed!", NamedTextColor.RED))
+        player.sendMessage(Component.text("Quest '${quest.quest.name}' failed.", NamedTextColor.GRAY))
         player.sendMessage(Component.empty())
     }
     
@@ -324,6 +389,11 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         if (activeQuest.isExpired() && !activeQuest.isComplete()) {
             activeQuests.remove(player.uniqueId)
             bossBars.remove(player.uniqueId)?.let { player.hideBossBar(it) }
+            
+            // Cleanup entity
+            if (activeQuest.entityId != null) {
+                plugin.server.getEntity(activeQuest.entityId!!)?.remove()
+            }
             
             player.sendMessage(Component.text("═══ QUEST FAILED ═══", NamedTextColor.DARK_RED))
             player.sendMessage(Component.text("Time ran out!", NamedTextColor.RED))
@@ -364,9 +434,12 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         bossBars.remove(player.uniqueId)?.let { player.hideBossBar(it) }
         
         // Award reward
-        // Award reward with Tax Logic
         val profile = plugin.identityManager.getPlayer(player.uniqueId)
-        var finalReward = activeQuest.quest.reward
+        
+        // Skill Bonus
+        val skillMult = plugin.skillTreeManager.getBountyMultiplier(player)
+        var finalReward = activeQuest.quest.reward * skillMult
+        
         var taxAmount = 0.0
         
         if (profile != null) {
@@ -401,6 +474,9 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         
         // Award achievement
         plugin.achievementManager.awardAchievement(player, "quest_complete")
+        
+        // Track progression milestone
+        plugin.milestoneListener.onQuestComplete(player)
         
         // Grant Scaled XP
         val xpBonus = when(activeQuest.quest.difficulty) {
@@ -466,6 +542,87 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
             if (nearby < 3) {
                  spawnQuestMob(player, objective.mobType, isDay)
             }
+        }
+        
+        // Handle Defend Villager
+        if (objective is QuestObjective.DefendVillager) {
+             val entityId = activeQuest.entityId ?: return
+             val villager = plugin.server.getEntity(entityId) as? LivingEntity ?: return
+             
+             // Update progress (seconds survived)
+             val survivedSeconds = ((System.currentTimeMillis() - activeQuest.startTime) / 1000).toInt()
+             activeQuest.progress = survivedSeconds
+             
+             // Update Boss Bar
+             bossBars[player.uniqueId]?.let { bar ->
+                 val progress = activeQuest.progress.toFloat() / objective.surviveSeconds
+                 bar.progress(progress.coerceIn(0f, 1f))
+                 bar.name(Component.text("Defend Villager: ${activeQuest.progress}/${objective.surviveSeconds}s", NamedTextColor.RED))
+             }
+             
+             // Check completion
+             if (activeQuest.isComplete()) {
+                 completeQuest(player, activeQuest)
+                 return
+             }
+             
+             // Spawn attackers (10% chance per second)
+             if (Math.random() < 0.1) {
+                 spawnAttacker(villager)
+            }
+        } 
+        
+        // Handle Escort Villager
+        else if (objective is QuestObjective.EscortVillager) {
+             val entityId = activeQuest.entityId ?: return
+             val villager = plugin.server.getEntity(entityId) as? LivingEntity ?: return
+             
+             // Calculate distance from start
+             val startX = villager.persistentDataContainer.get(org.bukkit.NamespacedKey(plugin, "start_x"), org.bukkit.persistence.PersistentDataType.DOUBLE) ?: 0.0
+             val startZ = villager.persistentDataContainer.get(org.bukkit.NamespacedKey(plugin, "start_z"), org.bukkit.persistence.PersistentDataType.DOUBLE) ?: 0.0
+             
+             val currentDist = kotlin.math.sqrt(
+                 (villager.location.x - startX) * (villager.location.x - startX) + 
+                 (villager.location.z - startZ) * (villager.location.z - startZ)
+             ).toInt()
+             
+             activeQuest.progress = currentDist
+             
+             // Update Boss Bar
+             bossBars[player.uniqueId]?.let { bar ->
+                 val progress = activeQuest.progress.toFloat() / objective.distance
+                 bar.progress(progress.coerceIn(0f, 1f))
+                 bar.name(Component.text("Escort Villager: ${activeQuest.progress}/${objective.distance} blocks", NamedTextColor.GREEN))
+             }
+             
+             // Check completion
+             if (activeQuest.isComplete()) {
+                 completeQuest(player, activeQuest)
+                 return
+             }
+             
+             // Spawn attackers (5% chance per second)
+             if (Math.random() < 0.05) {
+                 spawnAttacker(villager)
+            }
+        }
+    }
+    
+    private fun spawnAttacker(target: LivingEntity) {
+        val world = target.world
+        // Pick random spot around target
+        val offsetX = (Math.random() * 20 - 10).toInt()
+        val offsetZ = (Math.random() * 20 - 10).toInt()
+        val spawnLoc = com.projectatlas.util.LocationUtils.getSafeSpawnLocationWithOffset(target.location, offsetX, offsetZ) ?: return
+        
+        world.spawn(spawnLoc, org.bukkit.entity.Zombie::class.java).apply {
+             target.world.spawnParticle(org.bukkit.Particle.EXPLOSION, location, 1)
+             // Set target to villager
+             this.target = target
+             customName(Component.text("Attacker", NamedTextColor.RED))
+             isCustomNameVisible = true
+             // Ensure it doesn't despawn instantly
+             persistentDataContainer.set(org.bukkit.NamespacedKey(plugin, "atlas_expiry"), org.bukkit.persistence.PersistentDataType.LONG, System.currentTimeMillis() + 60000) // 1 min life
         }
     }
     

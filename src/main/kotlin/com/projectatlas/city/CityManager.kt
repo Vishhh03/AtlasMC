@@ -9,6 +9,9 @@ import com.projectatlas.history.EventType
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 
 class CityManager(private val plugin: AtlasPlugin) {
     private val cities = ConcurrentHashMap<String, City>()
@@ -95,7 +98,17 @@ class CityManager(private val plugin: AtlasPlugin) {
         profile.cityId = city.id
         saveCity(city)
         player.sendMessage("Welcome to ${city.name}!")
-        // Notify members logic could go here
+        
+        // Track progression milestones
+        plugin.milestoneListener.onCityJoin(player)
+        plugin.milestoneListener.onCityMemberChange(player, city.members.size)
+        
+        // Notify other members
+        city.members.forEach { memberUUID ->
+            if (memberUUID != player.uniqueId) {
+                plugin.server.getPlayer(memberUUID)?.sendMessage("${player.name} has joined ${city.name}!")
+            }
+        }
     }
 
 
@@ -172,6 +185,79 @@ class CityManager(private val plugin: AtlasPlugin) {
         profile.cityId = null
         saveCity(city)
         player.sendMessage("You have left ${city.name}.")
+    }
+
+    fun upgradeInfrastructure(player: Player, module: String) {
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
+        val cityId = profile.cityId ?: return
+        val city = getCity(cityId) ?: return
+        
+        // MAYOR/OFFICER Check
+        if (city.mayor != player.uniqueId) {
+            player.sendMessage(Component.text("Only the mayor can build upgrades.", NamedTextColor.RED))
+            return
+        }
+
+        val infra = city.infrastructure
+        var cost: Int? = null
+        var newLevel = 0
+        var moduleName = ""
+
+        when (module.lowercase()) {
+            "wall" -> {
+                cost = infra.getWallUpgradeCost()
+                newLevel = infra.wallLevel + 1
+                moduleName = "Wall"
+            }
+            "generator" -> {
+                cost = infra.getGeneratorUpgradeCost()
+                newLevel = infra.generatorLevel + 1
+                moduleName = "Generator"
+            }
+            "barracks" -> {
+                cost = infra.getBarracksUpgradeCost()
+                newLevel = infra.barracksLevel + 1
+                moduleName = "Barracks"
+            }
+            "market" -> {
+                cost = infra.getMarketUpgradeCost()
+                newLevel = infra.marketLevel + 1
+                moduleName = "Market"
+            }
+            "clinic" -> {
+                cost = infra.getClinicUpgradeCost()
+                newLevel = infra.clinicLevel + 1
+                moduleName = "Clinic"
+            }
+            else -> {
+                player.sendMessage(Component.text("Unknown module: $module. valid: wall, generator, barracks, market, clinic", NamedTextColor.RED))
+                return
+            }
+        }
+
+        if (cost == null) {
+            player.sendMessage(Component.text("$moduleName is already at max level.", NamedTextColor.RED))
+            return
+        }
+
+        if (city.treasury < cost) {
+            player.sendMessage(Component.text("Insufficient funds. Need $cost g (Treasury: ${city.treasury})", NamedTextColor.RED))
+            return
+        }
+
+        // Execute Upgrade
+        city.treasury -= cost
+        when (module.lowercase()) {
+            "wall" -> infra.wallLevel = newLevel
+            "generator" -> infra.generatorLevel = newLevel
+            "barracks" -> infra.barracksLevel = newLevel
+            "market" -> infra.marketLevel = newLevel
+            "clinic" -> infra.clinicLevel = newLevel
+        }
+        
+        saveCity(city)
+        player.sendMessage(Component.text("Upgraded $moduleName to Level $newLevel! (-$cost g)", NamedTextColor.GREEN))
+        plugin.historyManager.logEvent(city.id, "${city.name} built/upgraded $moduleName to Level $newLevel", EventType.CITY_UPGRADE)
     }
 
     // Persistence

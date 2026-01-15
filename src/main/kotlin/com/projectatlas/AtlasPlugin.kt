@@ -36,6 +36,7 @@ import com.projectatlas.events.SupplyDropListener
 import com.projectatlas.qol.QoLManager
 import com.projectatlas.visuals.AtmosphereManager
 import com.projectatlas.map.MapManager
+import com.projectatlas.progression.ProgressionManager
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -73,6 +74,9 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var wonderManager: com.projectatlas.city.WonderManager
     lateinit var outpostManager: com.projectatlas.territory.OutpostManager
     lateinit var mapManager: MapManager
+    lateinit var progressionManager: ProgressionManager
+    lateinit var eraBossManager: com.projectatlas.progression.EraBossManager
+    lateinit var milestoneListener: com.projectatlas.progression.MilestoneListener
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -114,10 +118,15 @@ class AtlasPlugin : JavaPlugin() {
         atmosphereManager = AtmosphereManager(this)
         atmosphereManager = AtmosphereManager(this)
         mapManager = MapManager(this)
+        progressionManager = ProgressionManager(this)
+        eraBossManager = com.projectatlas.progression.EraBossManager(this)
+        milestoneListener = com.projectatlas.progression.MilestoneListener(this)
+        val mobScalingListener = com.projectatlas.progression.MobScalingListener(this)
         val entityCleanupManager = com.projectatlas.util.EntityCleanupManager(this) // Auto-starts task
         
         // Register Events
         server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, guiManager), this)
+        server.pluginManager.registerEvents(mobScalingListener, this)
         server.pluginManager.registerEvents(guiManager, this)
         server.pluginManager.registerEvents(npcManager, this)
         server.pluginManager.registerEvents(questManager, this)
@@ -143,6 +152,9 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(partyManager, this)
         server.pluginManager.registerEvents(achievementManager, this)
         server.pluginManager.registerEvents(mapManager, this)
+        server.pluginManager.registerEvents(progressionManager, this)
+        server.pluginManager.registerEvents(eraBossManager, this)
+        server.pluginManager.registerEvents(milestoneListener, this)
         
 
         

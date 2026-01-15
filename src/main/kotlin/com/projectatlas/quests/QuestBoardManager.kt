@@ -58,10 +58,10 @@ class QuestBoardManager(private val plugin: AtlasPlugin) : Listener {
         // Set sign text
         val sign = signLoc.block.state as? Sign ?: return false
         val side = sign.getSide(Side.FRONT)
-        side.line(0, Component.text("═══════════", NamedTextColor.GOLD))
-        side.line(1, Component.text("QUEST", NamedTextColor.RED, TextDecoration.BOLD))
-        side.line(2, Component.text(quest.name.take(15), NamedTextColor.DARK_AQUA))
-        side.line(3, Component.text("Right-Click", NamedTextColor.GRAY))
+        side.line(0, Component.text(quest.name.take(15), NamedTextColor.DARK_AQUA, TextDecoration.BOLD))
+        side.line(1, Component.text(getShortObjective(quest.objective), NamedTextColor.WHITE))
+        side.line(2, Component.text("${quest.reward.toInt()}g", NamedTextColor.GOLD))
+        side.line(3, Component.text("[${quest.difficulty.displayName}]", getDifficultyColor(quest.difficulty)))
         
         // Store quest data in sign
         sign.persistentDataContainer.set(questBoardKey, PersistentDataType.BYTE, 1)
@@ -185,7 +185,7 @@ class QuestBoardManager(private val plugin: AtlasPlugin) : Listener {
         if (holder !is Barrel) return
         val barrel = holder
         
-        val isTurnIn = barrel.persistentDataContainer.get(turnInChestKey, PersistentDataType.BYTE) == 1.toByte()
+        val isTurnIn = barrel.persistentDataContainer.get(turnInChestKey, PersistentDataType.BYTE)?.equals(1.toByte()) == true
         if (!isTurnIn) return
         
         // Get player's active quest
@@ -278,6 +278,9 @@ class QuestBoardManager(private val plugin: AtlasPlugin) : Listener {
             is QuestObjective.CraftItems -> "Craft ${objective.count} ${objective.material.name.lowercase().replace("_", " ")}"
             is QuestObjective.ReachLocation -> "Reach ${objective.locationName}"
             is QuestObjective.KillHorde -> "Survive ${objective.waveCount} waves"
+            is QuestObjective.CompleteDungeon -> "Complete ${objective.count} Dungeon(s)"
+            is QuestObjective.EscortVillager -> "Escort villager to ${objective.destinationName}"
+            is QuestObjective.DefendVillager -> "Defend villager for ${objective.surviveSeconds}s"
         }
     }
     
@@ -288,6 +291,28 @@ class QuestBoardManager(private val plugin: AtlasPlugin) : Listener {
             Difficulty.HARD -> NamedTextColor.RED
             Difficulty.NIGHTMARE -> NamedTextColor.DARK_PURPLE
         }
+    }
+    
+    private fun getShortObjective(objective: QuestObjective): String {
+        return when (objective) {
+            is QuestObjective.KillMobs -> "Kill ${objective.count}x"
+            is QuestObjective.KillAnyMobs -> "Kill ${objective.count} mobs"
+            is QuestObjective.FetchItem -> "Get ${objective.count}x"
+            is QuestObjective.FindNPC -> "Find NPC"
+            is QuestObjective.VisitBiome -> "Explore"
+            is QuestObjective.TravelDistance -> "Walk ${objective.blocks}m"
+            is QuestObjective.SurviveTime -> "Survive"
+            is QuestObjective.MineBlocks -> "Mine ${objective.count}x"
+            is QuestObjective.FishItems -> "Fish ${objective.count}x"
+            is QuestObjective.TameAnimals -> "Tame ${objective.count}x"
+            is QuestObjective.TradeWithVillager -> "Trade ${objective.count}x"
+            is QuestObjective.CraftItems -> "Craft ${objective.count}x"
+            is QuestObjective.ReachLocation -> "Reach location"
+            is QuestObjective.KillHorde -> "Horde ${objective.waveCount}w"
+            is QuestObjective.CompleteDungeon -> "Dungeon"
+            is QuestObjective.EscortVillager -> "Escort"
+            is QuestObjective.DefendVillager -> "Defend"
+        }.take(15) // Limit to sign line width
     }
     
     /**

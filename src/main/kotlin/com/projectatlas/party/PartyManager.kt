@@ -9,11 +9,14 @@ import org.bukkit.Sound
 import org.bukkit.entity.Player
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.entity.EntityDamageByEntityEvent
 
 /**
  * Party System - Group players together for dungeons and raids!
  */
-class PartyManager(private val plugin: AtlasPlugin) {
+class PartyManager(private val plugin: AtlasPlugin) : Listener {
     
     data class Party(
         val id: UUID = UUID.randomUUID(),
@@ -275,6 +278,30 @@ class PartyManager(private val plugin: AtlasPlugin) {
         party.members.mapNotNull { Bukkit.getPlayer(it) }.forEach { member ->
             member.sendMessage(formatted)
             member.playSound(member.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.3f, 1.5f)
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // EVENT HANDLERS
+    // ═══════════════════════════════════════════════════════════════
+    
+    @EventHandler
+    fun onEntityDamage(event: EntityDamageByEntityEvent) {
+        val victim = event.entity as? Player ?: return
+        val attacker = when(val d = event.damager) {
+            is Player -> d
+            is org.bukkit.entity.Projectile -> d.shooter as? Player
+            else -> null
+        } ?: return
+        
+        if (victim == attacker) return
+        
+        val partyA = playerParties[attacker.uniqueId] ?: return
+        val partyB = playerParties[victim.uniqueId] ?: return
+        
+        if (partyA == partyB) {
+            event.isCancelled = true
+            attacker.sendActionBar(Component.text("Friendly Fire!", NamedTextColor.RED))
         }
     }
 }

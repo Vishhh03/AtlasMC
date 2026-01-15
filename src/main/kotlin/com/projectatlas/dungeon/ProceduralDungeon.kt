@@ -9,7 +9,11 @@ import org.bukkit.Particle
 import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
+import org.bukkit.Material
+import org.bukkit.block.Chest
+import org.bukkit.inventory.ItemStack
 import java.util.UUID
+import kotlin.random.Random
 
 /**
  * Represents a live, procedural dungeon instance.
@@ -18,6 +22,7 @@ class ProceduralDungeon(
     val id: UUID,
     val plugin: AtlasPlugin,
     val theme: DungeonTheme,
+    val difficulty: Int,
     val rooms: List<DungeonRoom>,
     val players: MutableSet<UUID>,
     val startLocation: Location
@@ -95,16 +100,26 @@ class ProceduralDungeon(
             // instant clear for non-combat rooms
             room.cleared = true
             room.active = false
+            
+            if (room.type == RoomType.TREASURE_ROOM) {
+                val center = startLocation.clone().add((room.x * 64).toDouble(), 1.0, (room.z * 64).toDouble())
+                val chest = center.block.state as? Chest
+                if (chest != null) {
+                    fillLoot(chest, difficulty)
+                    players.forEach { it.sendMessage(Component.text("You found a Treasure Room!", NamedTextColor.GOLD)) }
+                }
+            }
+            
             players.forEach { it.playSound(it.location, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f) }
         }
     }
     
     private fun spawnMobs(room: DungeonRoom, scaling: Int) {
         val center = startLocation.clone().add((room.x * 64).toDouble(), 1.0, (room.z * 64).toDouble())
+        val isBoss = room.type == RoomType.BOSS_ROOM
+        // Scaling: 4 base + 2 per player. Boss is just 1.
+        val mobCount = if (isBoss) 1 else 4 + (scaling * 2)
         
-        val mobCount = if (room.type == RoomType.BOSS_ROOM) 1 else 5 * scaling
-        
-        // Spawn logic in a task to stagger
         object : BukkitRunnable() {
             var spawned = 0
             val aliveMobs = mutableListOf<UUID>()
@@ -112,7 +127,7 @@ class ProceduralDungeon(
             override fun run() {
                  if (!active) { cancel(); return }
                  
-                 // Check if mobs died
+                 // Cleanup invalid mobs
                  aliveMobs.removeIf { plugin.server.getEntity(it)?.isValid != true }
                  
                  if (aliveMobs.isEmpty() && spawned >= mobCount) {
@@ -123,37 +138,124 @@ class ProceduralDungeon(
                          it.sendMessage(Component.text("Room Cleared!", NamedTextColor.GREEN))
                          it.playSound(it.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f)
                      }
-                     if (room.type == RoomType.BOSS_ROOM) finishDungeon(true)
+                     
+                     // Spawn Reward Chest
+                     if (room.type == RoomType.COMBAT_ARENA || room.type == RoomType.BOSS_ROOM) {
+                         val chestLoc = center.clone()
+                         chestLoc.block.type = Material.CHEST
+                         val chest = chestLoc.block.state as? Chest
+                         if (chest != null) {
+                             fillLoot(chest, difficulty)
+                         }
+                     }
+                     
+                     if (isBoss) finishDungeon(true)
                      cancel()
                      return
                  }
                  
-                 // Spawn more if needed
-                 if (spawned < mobCount && aliveMobs.size < 5 + (scaling * 2)) {
-                     val type = if (room.type == RoomType.BOSS_ROOM) theme.boss else theme.mobs.random()
+                 // Spawn loop
+                 if (spawned < mobCount && aliveMobs.size < 8) { // Max 8 alive at once to prevent lag
+                     val type = if (isBoss) theme.boss else theme.mobs.random()
                      
                      val spawnLoc = center.clone().add(
-                        (Math.random() - 0.5) * 10,
+                        (Math.random() - 0.5) * 12,
                         1.0,
-                        (Math.random() - 0.5) * 10
+                        (Math.random() - 0.5) * 12
                      )
                      
+                     // Ensure valid spawn (air check)
+                     if (spawnLoc.block.type.isSolid) return 
+                     
                      val mob = center.world.spawnEntity(spawnLoc, type)
-                     // Buff mob?
+                     if (mob is org.bukkit.entity.LivingEntity) {
+                         equipMob(mob, difficulty, isBoss)
+                     }
+                     
                      aliveMobs.add(mob.uniqueId)
                      spawned++
                      
-                     // Atmosphere
-                     center.world.spawnParticle(Particle.CLOUD, spawnLoc, 10)
+                     // Visuals
+                     center.world.spawnParticle(theme.particle ?: Particle.CLOUD, spawnLoc, 10, 0.5, 0.5, 0.5, 0.05)
                  }
             }
         }.runTaskTimer(plugin, 0L, 20L)
+    }
+
+    private fun equipMob(entity: org.bukkit.entity.LivingEntity, diff: Int, isBoss: Boolean) {
+        // Stats
+        val baseHp = if (isBoss) 150.0 else 20.0
+        val hpMult = 1.0 + (diff * 0.4) // Lv 1 = 1.4x, Lv 5 = 3.0x
+        val finalHp = baseHp * hpMult
+        
+        entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.baseValue = finalHp
+        entity.health = finalHp
+        
+        val dmgMult = 1.0 + (diff * 0.2)
+        entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_ATTACK_DAMAGE)?.baseValue = 4.0 * dmgMult
+        
+        // Armor
+        // Lv 1-2: Leather/Chain, Lv 3-4: Iron, Lv 5: Diamond
+        val equip = entity.equipment ?: return
+        
+        if (isBoss) {
+            entity.customName(Component.text("☠ ${theme.name} Boss ☠", NamedTextColor.RED))
+            entity.isCustomNameVisible = true
+            // Boss Gear
+            equip.helmet = org.bukkit.inventory.ItemStack(org.bukkit.Material.DIAMOND_HELMET)
+            equip.chestplate = org.bukkit.inventory.ItemStack(org.bukkit.Material.DIAMOND_CHESTPLATE)
+            // Add enchants...
+        } else {
+            // Minion Gear
+            if (diff >= 3) {
+                 equip.chestplate = org.bukkit.inventory.ItemStack(org.bukkit.Material.IRON_CHESTPLATE)
+                 equip.setItemInMainHand(org.bukkit.inventory.ItemStack(org.bukkit.Material.IRON_SWORD))
+            } else {
+                 equip.chestplate = org.bukkit.inventory.ItemStack(org.bukkit.Material.LEATHER_CHESTPLATE)
+                 equip.setItemInMainHand(org.bukkit.inventory.ItemStack(org.bukkit.Material.STONE_SWORD))
+            }
+        }
+        
+        // Drop chances (don't drop scaling gear usually)
+        equip.itemInMainHandDropChance = 0.05f
+        equip.itemInOffHandDropChance = 0.05f
+        equip.helmetDropChance = 0.05f
+        equip.chestplateDropChance = 0.05f
+        equip.leggingsDropChance = 0.05f
+        equip.bootsDropChance = 0.05f
+    }
+    
+    private fun fillLoot(chest: Chest, diff: Int) {
+        val inv = chest.inventory
+        val rand = Random.Default
+        
+        // Always: Coins/Gold
+        inv.addItem(ItemStack(Material.GOLD_NUGGET, rand.nextInt(3, 10 + (diff * 5))))
+        
+        // Food
+        if (rand.nextBoolean()) inv.addItem(ItemStack(Material.COOKED_BEEF, rand.nextInt(1, 5)))
+        
+        // Rare: Diamonds/Iron
+        if (rand.nextDouble() < 0.3 + (diff * 0.1)) {
+            inv.addItem(ItemStack(Material.IRON_INGOT, rand.nextInt(1, 4)))
+        }
+        if (diff >= 3 && rand.nextDouble() < 0.1 + (diff * 0.05)) {
+            inv.addItem(ItemStack(Material.DIAMOND, rand.nextInt(1, 2 + (diff/2))))
+        }
+        
+        // Boss Loot
+        if (diff >= 5 && rand.nextDouble() < 0.2) {
+            inv.addItem(ItemStack(Material.NETHERITE_SCRAP))
+        }
     }
     
     fun finishDungeon(success: Boolean) {
         active = false
         val onlinePlayers = players.mapNotNull { plugin.server.getPlayer(it) }
         onlinePlayers.forEach { 
+            // Fire completion event
+            plugin.server.pluginManager.callEvent(com.projectatlas.events.DungeonCompleteEvent(it, difficulty, success))
+            
             it.hideBossBar(bossBar)
             if (success) {
                 it.sendMessage(Component.text("🏆 Dungeon Completed! 🏆", NamedTextColor.GOLD))

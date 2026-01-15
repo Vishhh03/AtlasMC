@@ -161,9 +161,14 @@ class MarketManager(private val plugin: AtlasPlugin) : Listener {
         
         val city = plugin.cityManager.getCityAt(block.chunk)
         if (city != null) {
-            val cityTax = price * (city.taxRate / 100.0)
-            city.treasury += cityTax
-            postTaxIncome -= cityTax
+            val baseCityTax = price * (city.taxRate / 100.0)
+            val infraBonus = city.infrastructure.getMarketTaxBonus() // +5% per level, etc.
+            
+            // City gets Base + Bonus (Bonus is generated, not taken from seller)
+            val totalRevenue = baseCityTax * (1.0 + infraBonus)
+            city.treasury += totalRevenue
+            
+            postTaxIncome -= baseCityTax
             plugin.cityManager.saveCity(city)
         }
 

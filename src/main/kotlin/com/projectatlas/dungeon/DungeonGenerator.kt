@@ -5,6 +5,9 @@ import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.BlockFace
 import java.util.Random
+import java.util.ArrayDeque
+import org.bukkit.scheduler.BukkitRunnable
+import com.projectatlas.AtlasPlugin
 
 /**
  * Procedural Dungeon Generator
@@ -57,11 +60,10 @@ class DungeonGenerator {
     }
 
     /**
-     * Physically builds the dungeon in the world based on the logical room list.
+     * Physically builds the dungeon in the world asynchronously.
      */
-    fun buildDungeon(startLocation: Location, rooms: List<DungeonRoom>, theme: DungeonTheme) {
-        val world = startLocation.world
-        val startY = startLocation.blockY
+    fun buildDungeon(plugin: AtlasPlugin, startLocation: Location, rooms: List<DungeonRoom>, theme: DungeonTheme, callback: () -> Unit) {
+        val queue = ArrayDeque<Pair<Location, Material>>()
         
         for (room in rooms) {
             val roomCenter = startLocation.clone().add(
@@ -71,24 +73,40 @@ class DungeonGenerator {
             )
             
             when (room.type) {
-                RoomType.ENTRANCE -> buildAntechamber(roomCenter, theme)
-                RoomType.COMBAT_ARENA -> buildArena(roomCenter, theme, 20, 20)
-                RoomType.BOSS_ROOM -> buildArena(roomCenter, theme, 30, 30) // Bigger
-                RoomType.TRAP_ROOM -> buildHallway(roomCenter, theme, true)
-                RoomType.HALLWAY -> buildHallway(roomCenter, theme, false)
-                RoomType.TREASURE_ROOM -> buildTreasureRoom(roomCenter, theme)
-                RoomType.PUZZLE_ROOM -> buildPuzzleRoom(roomCenter, theme)
+                RoomType.ENTRANCE -> buildAntechamber(queue, roomCenter, theme)
+                RoomType.COMBAT_ARENA -> buildArena(queue, roomCenter, theme, 20, 20)
+                RoomType.BOSS_ROOM -> buildArena(queue, roomCenter, theme, 30, 30)
+                RoomType.TRAP_ROOM -> buildHallway(queue, roomCenter, theme, true)
+                RoomType.HALLWAY -> buildHallway(queue, roomCenter, theme, false)
+                RoomType.TREASURE_ROOM -> buildTreasureRoom(queue, roomCenter, theme)
+                RoomType.PUZZLE_ROOM -> buildPuzzleRoom(queue, roomCenter, theme)
             }
             
-            // Generate corridors connecting PREVIOUS room to CURRENT room would require graph traversal
-            // For this grid system, we can just build openings based on neighbors.
-            connectNeighbors(roomCenter, room, rooms, theme)
+            connectNeighbors(queue, roomCenter, room, rooms, theme)
         }
+        
+        // Process Queue
+        object : BukkitRunnable() {
+            override fun run() {
+                val limit = 2500 
+                var count = 0
+                while (count < limit && !queue.isEmpty()) {
+                     val (loc, mat) = queue.poll()
+                     loc.block.type = mat
+                     count++
+                }
+                
+                if (queue.isEmpty()) {
+                    cancel()
+                    callback()
+                }
+            }
+        }.runTaskTimer(plugin, 0L, 1L)
     }
     
     // --- Room Builders (Procedural Architecture) ---
     
-    private fun buildBox(center: Location, radiusX: Int, radiusY: Int, radiusZ: Int, theme: DungeonTheme) {
+    private fun buildBox(queue: ArrayDeque<Pair<Location, Material>>, center: Location, radiusX: Int, radiusY: Int, radiusZ: Int, theme: DungeonTheme) {
         val world = center.world
         val cx = center.blockX
         val cy = center.blockY
@@ -99,27 +117,25 @@ class DungeonGenerator {
                 for (z in -radiusZ..radiusZ) {
                     val loc = Location(world, (cx + x).toDouble(), (cy + y).toDouble(), (cz + z).toDouble())
                     
-                    // Walls/Floor/Ceiling
-                    if (y == 0) loc.block.type = theme.floor
-                    else if (y == radiusY) loc.block.type = theme.ceiling
+                    if (y == 0) queue.add(loc to theme.floor)
+                    else if (y == radiusY) queue.add(loc to theme.ceiling)
                     else if (x == -radiusX || x == radiusX || z == -radiusZ || z == radiusZ) {
-                        loc.block.type = if (random.nextDouble() < 0.2) theme.detail else theme.wall
+                        queue.add(loc to (if (random.nextDouble() < 0.2) theme.detail else theme.wall))
                     } else {
-                        loc.block.type = Material.AIR
+                        queue.add(loc to Material.AIR)
                     }
                 }
             }
         }
     }
     
-    private fun buildAntechamber(center: Location, theme: DungeonTheme) {
-        buildBox(center, 8, 6, 8, theme)
-        // Add some ambience
-        center.clone().add(0.0, 1.0, 0.0).block.type = Material.TORCH
+    private fun buildAntechamber(queue: ArrayDeque<Pair<Location, Material>>, center: Location, theme: DungeonTheme) {
+        buildBox(queue, center, 8, 6, 8, theme)
+        queue.add(center.clone().add(0.0, 1.0, 0.0) to Material.TORCH)
     }
     
-    private fun buildArena(center: Location, theme: DungeonTheme, sizeX: Int, sizeZ: Int) {
-        buildBox(center, sizeX, 10, sizeZ, theme)
+    private fun buildArena(queue: ArrayDeque<Pair<Location, Material>>, center: Location, theme: DungeonTheme, sizeX: Int, sizeZ: Int) {
+        buildBox(queue, center, sizeX, 10, sizeZ, theme)
         
         // Add Pillars
         for (i in 0 until 4) {
@@ -127,93 +143,71 @@ class DungeonGenerator {
             val pz = (random.nextInt(sizeZ - 4) + 2) * (if (random.nextBoolean()) 1 else -1)
             
             for (y in 1 until 10) {
-                center.clone().add(px.toDouble(), y.toDouble(), pz.toDouble()).block.type = theme.detail
+                queue.add(center.clone().add(px.toDouble(), y.toDouble(), pz.toDouble()) to theme.detail)
             }
         }
         
-        // Central Feature (Pit or Altar)
         if (random.nextBoolean()) {
-            // Pit
             for (x in -2..2) {
                 for (z in -2..2) {
-                    center.clone().add(x.toDouble(), 0.0, z.toDouble()).block.type = theme.liquid
+                    queue.add(center.clone().add(x.toDouble(), 0.0, z.toDouble()) to theme.liquid)
                 }
             }
         }
     }
     
-    private fun buildHallway(center: Location, theme: DungeonTheme, isTrap: Boolean) {
-        buildBox(center, 4, 5, 12, theme) // Long Z-axis hallway
+    private fun buildHallway(queue: ArrayDeque<Pair<Location, Material>>, center: Location, theme: DungeonTheme, isTrap: Boolean) {
+        buildBox(queue, center, 4, 5, 12, theme)
         
         if (isTrap) {
-            // Lava Pits
             for (z in -8..8 step 4) {
                 for (x in -2..2) {
-                    center.clone().add(x.toDouble(), 0.0, z.toDouble()).block.type = theme.liquid
+                    queue.add(center.clone().add(x.toDouble(), 0.0, z.toDouble()) to theme.liquid)
                 }
             }
         }
     }
     
-    private fun buildTreasureRoom(center: Location, theme: DungeonTheme) {
-        buildBox(center, 6, 6, 6, theme)
-        center.clone().add(0.0, 1.0, 0.0).block.type = Material.CHEST
-        center.clone().add(0.0, 1.0, 0.0).block.state.update()
+    private fun buildTreasureRoom(queue: ArrayDeque<Pair<Location, Material>>, center: Location, theme: DungeonTheme) {
+        buildBox(queue, center, 6, 6, 6, theme)
+        queue.add(center.clone().add(0.0, 1.0, 0.0) to Material.CHEST)
     }
     
-    private fun buildPuzzleRoom(center: Location, theme: DungeonTheme) {
-        buildBox(center, 8, 8, 8, theme)
-        // Parkour blocks
+    private fun buildPuzzleRoom(queue: ArrayDeque<Pair<Location, Material>>, center: Location, theme: DungeonTheme) {
+        buildBox(queue, center, 8, 8, 8, theme)
         for (i in 0..5) {
-            center.clone().add(
+            queue.add(center.clone().add(
                 (random.nextInt(10) - 5).toDouble(),
                 (i + 1).toDouble(),
                 (random.nextInt(10) - 5).toDouble()
-            ).block.type = theme.detail
+            ) to theme.detail)
         }
     }
 
-    private fun connectNeighbors(center: Location, current: DungeonRoom, allRooms: List<DungeonRoom>, theme: DungeonTheme) {
-        // Simple corridor carving. If a room exists at (x+1), carve a door + path to +32 blocks X
-        // Implementation simplified: just carve open the walls if neighbor exists
-        
+    private fun connectNeighbors(queue: ArrayDeque<Pair<Location, Material>>, center: Location, current: DungeonRoom, allRooms: List<DungeonRoom>, theme: DungeonTheme) {
         val neighbors = allRooms.filter { 
             (it.x == current.x + 1 && it.z == current.z) ||
             (it.x == current.x - 1 && it.z == current.z) ||
             (it.x == current.x && it.z == current.z + 1) ||
             (it.x == current.x && it.z == current.z - 1)
-        } // Direct neighbors
+        }
         
         for (neighbor in neighbors) {
             val dx = neighbor.x - current.x
             val dz = neighbor.z - current.z
-            
-            // Carve a 3x3 tunnel in that direction
-            // Center wall coordinates active radius
-            val wallDist = 10 // Approximate, need better radius logic, but safely carving 'infinite' tunnel 
-                             // until midpoint works for grid systems
-            
-            // Vector to neighbor center
             val direction = Location(center.world, dx.toDouble(), 0.0, dz.toDouble())
             
             for (i in 5 until GRID_SIZE - 5) {
-                val tunnelLoc = center.clone().add(
-                    direction.x * i,
-                    1.0,
-                    direction.z * i
-                )
-                // Clear air
+                val tunnelLoc = center.clone().add(direction.x * i, 1.0, direction.z * i)
                 for (y in 0..3) {
                     for (w in -1..1) {
-                         // Orthogonal width
                          val wx = if (dx == 0) w else 0
                          val wz = if (dz == 0) w else 0
-                         
                          val digLoc = tunnelLoc.clone().add(wx.toDouble(), y.toDouble(), wz.toDouble())
                          
-                         if (y == 0) digLoc.block.type = theme.floor 
-                         else if (y == 3) digLoc.block.type = theme.ceiling
-                         else digLoc.block.type = Material.AIR
+                         if (y == 0) queue.add(digLoc to theme.floor)
+                         else if (y == 3) queue.add(digLoc to theme.ceiling)
+                         else queue.add(digLoc to Material.AIR)
                     }
                 }
             }

@@ -67,6 +67,7 @@ class AtlasCommand(
             "dialogue" -> handleDialogue(sender, args)
             "quest" -> handleQuest(sender, args)
             "map" -> handleMap(sender)
+            "progress", "journey", "era" -> handleProgress(sender)
             
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
@@ -87,6 +88,17 @@ class AtlasCommand(
     private fun handleSkills(player: Player) {
         val plugin = player.server.pluginManager.getPlugin("ProjectAtlas") as? AtlasPlugin
         if (plugin != null) {
+            // Era Gate: Skill tree requires Era 1 (Settlement)
+            if (!plugin.progressionManager.canAccessSkillTree(player)) {
+                player.sendMessage(Component.empty())
+                player.sendMessage(Component.text("═══════════════════════════════════", NamedTextColor.DARK_RED))
+                player.sendMessage(Component.text("  ✗ SKILL TREE LOCKED", NamedTextColor.RED))
+                player.sendMessage(Component.text("  Complete Era 0 to unlock!", NamedTextColor.GRAY))
+                player.sendMessage(Component.text("  Use /atlas progress to check.", NamedTextColor.YELLOW))
+                player.sendMessage(Component.text("═══════════════════════════════════", NamedTextColor.DARK_RED))
+                player.sendMessage(Component.empty())
+                return
+            }
             plugin.skillTreeManager.openSkillTree(player)
         } else {
             player.sendMessage(Component.text("Skill Tree is not available.", NamedTextColor.RED))
@@ -230,10 +242,17 @@ class AtlasCommand(
                 
                 // Calculate chunk cost (scales with territory size)
                 val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
-                val cost = plugin.configManager.getChunkClaimCost(city.claimedChunks.size)
+                val baseCost = plugin.configManager.getChunkClaimCost(city.claimedChunks.size)
+                
+                // Diplomacy Skill Discount
+                val discount = plugin.skillTreeManager.getTradeDiscount(player)
+                val cost = baseCost * (1.0 - discount)
                 
                 if (city.treasury < cost) {
                     player.sendMessage(Component.text("Chunk claim costs ${"%.0f".format(cost)}g from treasury. Treasury has ${city.treasury}g.", NamedTextColor.RED))
+                    if (discount > 0) {
+                        player.sendMessage(Component.text("(Original cost: ${"%.0f".format(baseCost)}g - Discount: ${(discount * 100).toInt()}%)", NamedTextColor.GRAY, TextDecoration.ITALIC))
+                    }
                     return
                 }
 
@@ -246,6 +265,14 @@ class AtlasCommand(
                 } else {
                     player.sendMessage(Component.text("Claim failed (already owned?).", NamedTextColor.RED))
                 }
+            }
+            "build", "upgrade" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas city build <module>", NamedTextColor.RED))
+                    player.sendMessage(Component.text("Modules: Wall, Generator, Barracks, Market, Clinic", NamedTextColor.GRAY))
+                    return
+                }
+                cityManager.upgradeInfrastructure(player, args[2])
             }
             "invite" -> {
                 if (args.size < 3) {
@@ -374,6 +401,7 @@ class AtlasCommand(
         player.sendMessage(Component.text("  Core Commands:", NamedTextColor.WHITE))
         player.sendMessage(Component.text("  /atlas - Open main menu", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas profile - View your stats", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas progress - View journey/era", NamedTextColor.AQUA))
         player.sendMessage(Component.text("  /atlas skills - Open skill tree", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas bal - View balance", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas pay <player> <amount>", NamedTextColor.GRAY))
@@ -392,8 +420,10 @@ class AtlasCommand(
         player.sendMessage(Component.text("  /atlas qs - Quick stack to nearby chests", NamedTextColor.GRAY))
         player.sendMessage(Component.empty())
         player.sendMessage(Component.text("  Content:", NamedTextColor.WHITE))
-        player.sendMessage(Component.text("  /atlas dungeon - Enter dungeons", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas quest - Quest board", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas dungeon - Enter dungeons (Era 2+)", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas blueprint - Schematic marketplace", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  /atlas map - World map", NamedTextColor.GRAY))
         if (player.hasPermission("atlas.admin")) {
             player.sendMessage(Component.empty())
             player.sendMessage(Component.text("  Admin:", NamedTextColor.RED))
@@ -539,6 +569,33 @@ class AtlasCommand(
         
         val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
         
+        if (args.size >= 2 && args[1].lowercase() == "era") {
+            // Era boss spawning
+            val bossType = if (args.size >= 3) args[2].lowercase() else "hollow"
+            when (bossType) {
+                "hollow", "knight", "0" -> {
+                    plugin.eraBossManager.spawnHollowKnight(player)
+                    player.sendMessage(Component.text("Spawned: Hollow Knight (Era 0 Boss)", NamedTextColor.GREEN))
+                }
+                "tax", "collector", "1" -> {
+                    plugin.eraBossManager.spawnTaxCollector(player)
+                    player.sendMessage(Component.text("Spawned: Tax Collector (Era 1 Boss)", NamedTextColor.GREEN))
+                }
+                "warden", "flames", "2" -> {
+                    plugin.eraBossManager.spawnWardenOfFlames(player)
+                    player.sendMessage(Component.text("Spawned: Warden of Flames (Era 2 Boss)", NamedTextColor.GREEN))
+                }
+                "ender", "sentinel", "3" -> {
+                    plugin.eraBossManager.spawnEnderSentinel(player)
+                    player.sendMessage(Component.text("Spawned: Ender Sentinel (Era 3 Boss)", NamedTextColor.GREEN))
+                }
+                else -> {
+                    player.sendMessage(Component.text("Era Bosses: hollow, tax, warden, ender (or 0-3)", NamedTextColor.YELLOW))
+                }
+            }
+            return
+        }
+        
         if (args.size < 2 || args[1].lowercase() == "spawn") {
             val type = if (args.size >= 3) args[2] else null
             if (plugin.worldBossManager.forceSpawn(player, type)) {
@@ -569,6 +626,18 @@ class AtlasCommand(
     
     private fun handleDungeon(player: Player, args: Array<out String>) {
         val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        // Era Gate: Dungeons require Era 2 (Expedition)
+        if (!plugin.progressionManager.canAccessDungeons(player)) {
+            player.sendMessage(Component.empty())
+            player.sendMessage(Component.text("═══════════════════════════════════", NamedTextColor.DARK_RED))
+            player.sendMessage(Component.text("  ✗ DUNGEONS LOCKED", NamedTextColor.RED))
+            player.sendMessage(Component.text("  Complete Era 1 to unlock!", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("  Use /atlas progress to check.", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("═══════════════════════════════════", NamedTextColor.DARK_RED))
+            player.sendMessage(Component.empty())
+            return
+        }
         
         if (args.size < 2) {
             // List dungeons
@@ -832,6 +901,11 @@ class AtlasCommand(
         plugin.mapManager.openMap(player)
     }
 
+    private fun handleProgress(player: Player) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        plugin.progressionManager.openProgressGUI(player)
+    }
+
     // ============ TAB COMPLETION ============
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
         if (sender !is Player) return emptyList()
@@ -839,10 +913,10 @@ class AtlasCommand(
         
         return when (args.size) {
             1 -> listOf(
-                "profile", "balance", "pay", "city", "help", "menu", "map",
+                "profile", "balance", "pay", "city", "help", "menu", "map", "progress", "journey", "era",
                 "dungeon", "party", "bounty", "boss", "relic", "blueprint", "bp", "schem", "spawn",
                 "sort", "stats", "scoreboard", "sb", "damage", "dmg", "quickstack", "qs",
-                "atmosphere", "ambient", "shaders", "quest", "heal", "medkit"
+                "atmosphere", "ambient", "shaders", "quest", "heal", "medkit", "skills", "skill", "tree"
             ).filter { it.startsWith(args[0].lowercase()) }
             
             2 -> when (args[0].lowercase()) {

@@ -15,7 +15,10 @@ data class City(
     var lastSiegeTime: Long = 0L,
     val completedWonders: MutableSet<CityWonder> = mutableSetOf(),
     // Wonder -> Material -> Amount contributed
-    val wonderProgress: MutableMap<CityWonder, MutableMap<Material, Int>> = mutableMapOf()
+    val wonderProgress: MutableMap<CityWonder, MutableMap<Material, Int>> = mutableMapOf(),
+    // ═══ ERA PROGRESSION (City-Based Competition) ═══
+    var currentEra: Int = 0, // 0 = Awakening, 1 = Settlement, etc.
+    val completedMilestones: MutableSet<String> = mutableSetOf() // milestone IDs
 ) {
     fun addMember(uuid: UUID) {
         if (!members.contains(uuid)) members.add(uuid)

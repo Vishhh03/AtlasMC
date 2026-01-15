@@ -1,5 +1,5 @@
 # Project Atlas
-## Canonical Design Document (CDD) v1.0
+## Canonical Design Document (CDD) v1.5
 
 > **A multiplayer-first RPG game built entirely inside Minecraft using server-side systems.**
 
@@ -333,14 +333,25 @@ It does not belong in Project Atlas.
 
 ---
 
-**End of Canonical Design Document v1.3**
+**End of Canonical Design Document v1.5**
 
 
-## 15. RECENT IMPLEMENTATIONS (v1.3)
-- **Skill Tree**: A massive passive progression system with PoE-style nodes (Life Leech, Double Jump, Vein Mining).
+## 15. RECENT IMPLEMENTATIONS (v1.5)
+- **Skill Tree Expansion**: Added "Rest", "Siege", "Trade", and "Ocean" branches.
+  - **Siege Defender**: Bonus damage during sieges.
+  - **Diplomacy**: Discounts on city claims.
+  - **Mariner / Iron Lungs**: Swim speed and water breathing.
+  - **Restful Sleep**: Bonus healing from beds.
+- **Ocean Update**: Added "Hypothermia" mechanic for cold oceans (freezing damage) and counter-skills.
+- **City Infrastructure (Phase 3 Core)**:
+  - **Modules**: Cities can now build/upgrade Barracks, Clinics, Markets, and Generators.
+  - **Barracks**: Spawns Iron Golem defenders during sieges (Level 1-3).
+  - **Clinic**: Grants Regeneration buff to city members (Level 1-3).
+  - **Market**: Increases tax revenue efficiency (Level 1-3).
+  - **Walls**: Reduces siege damage to core.
+- **Quest System**: Added Escort and Defend objectives.
 - **Dungeon System**: Instanced PvE arenas with unique themes (Shadow Cavern, Infernal Pit) and wave-based combat.
 - **Relic System**: Rare artifacts spawning in the world with active abilities.
-- **World-Based Quests**: Quest boards spawning in the wilderness for organic discovery.
 
 ## 16. FUTURE CONCEPTS (BRAINSTORMING)
 ### 16.1 Active Class Abilities

@@ -4,6 +4,85 @@ This document tracks all custom gameplay systems implemented in Project Atlas.
 
 ---
 
+## ⚔️ PROGRESSION SYSTEM (City-Based Competition)
+
+### Philosophy
+Like **Elden Ring**, progression is **gated by achievement**, not just time.
+Like **Minecraft**, each tier unlocks new **dimensions and mechanics**.
+
+**Key Design: Cities are Teams!**
+- **Era is shared** by all members of a city
+- Any member's achievement counts for the whole city
+- Creates **competition between rival cities**
+- Players without a city are **stuck at Era 0**
+
+### The Five Eras
+
+| Era | Name | Level | Key Unlocks | Gate Boss |
+|-----|------|-------|-------------|-----------|
+| 0 | **Awakening** | 1-10 | Basic survival, quests, parties | Hollow Knight |
+| 1 | **Settlement** | 5-25 | Cities, Skill Tree, Economy | Tax Collector Raid |
+| 2 | **Expedition** | 15-40 | Nether, Dungeons, Sieges | Warden of Flames |
+| 3 | **Ascension** | 30-60 | End Portal, Alliances, Keystones | Ender Sentinel |
+| 4 | **Legend** | 50+ | Dragon, World Events, Legacy | Enhanced Dragon |
+
+### Dimension Locks
+- **Nether**: Sealed until Era 2 (must complete Era 1 milestones)
+- **End**: Sealed until Era 3 (must complete Era 2 milestones)
+
+### Feature Locks
+| Feature | Required Era |
+|---------|--------------|
+| Skill Tree | 1 (Settlement) |
+| Dungeons | 2 (Expedition) |
+| City Sieges | 2 (Expedition) |
+| Relics | First dungeon complete |
+| City Alliances | 3 (Ascension) |
+
+### Commands
+- `/atlas progress` - View current era and milestones
+- `/atlas journey` - Same as above (alias)
+- `/atlas boss era <type>` - (Admin) Spawn era boss
+
+### Era Bosses
+
+| Boss | Era | Health | Special Mechanics |
+|------|-----|--------|-------------------|
+| **Hollow Knight** | 0→1 | 100 HP | Netherite gear, Fire Resist |
+| **Tax Collector** | 1→2 | 200 HP | Summons Vindicator minions |
+| **Warden of Flames** | 2→3 | 350 HP | Fire Nova AoE attack |
+| **Ender Sentinel** | 3→4 | 500 HP | Teleport behind players |
+
+### Mob Scaling by Era
+
+Hostile mobs scale based on the highest-era player nearby:
+
+| Era | Mob HP | Mob Damage |
+|-----|--------|------------|
+| 0 (Awakening) | 100% | 100% |
+| 1 (Settlement) | 120% | 110% |
+| 2 (Expedition) | 150% | 130% |
+| 3 (Ascension) | 200% | 150% |
+| 4 (Legend) | 250% | 175% |
+
+### Era Milestones (Examples)
+
+**Era 0 (Awakening)**:
+- Reach Level 5
+- Complete 3 Quests
+- Craft iron gear set
+- Sleep in a bed
+- Defeat Hollow Knight
+
+**Era 1 (Settlement)**:
+- Join/found a city
+- Earn 1,000 gold
+- City has 3+ members
+- Build first infrastructure
+- Defeat Tax Collector
+
+---
+
 ## 🍖 Food & Saturation System
 
 ### Core Changes
@@ -98,6 +177,44 @@ Even if the night doesn't skip (multiplayer), you still heal by just laying in b
 - Shows time spent resting
 - Heals proportional amount
 - Message: "💤 Rested for Xs - Restored X.X health"
+
+---
+
+## ✦ Skill Tree System
+
+### Overview
+A **Path of Exile-style** passive skill tree with 5 role-based branches. Players earn 1 skill point per level and can navigate a grid-based interface to unlock nodes.
+
+### Command
+- `/atlas skills` - Opens the skill tree GUI
+
+### Role Branches
+
+| Branch | Color | Focus | Key Skills |
+|--------|-------|-------|------------|
+| **Vanguard** | 🔵 Blue | Tank/Defense | Health, Armor, Regen, Thorns, Poise |
+| **Berserker** | 🔴 Red | DPS/Combat | Melee Damage, Crits, Lifesteal, Execute |
+| **Scout** | 🔷 Cyan | Mobility/Stealth | Speed, Double Jump, Sneak Damage, Dodge |
+| **Artisan** | 🟠 Orange | Mining/Gathering | Haste, Vein Miner, Auto-Smelt, Lumberjack |
+| **Settler** | 🟢 Green | Economy/City | Trade Discount, Quest Gold, Siege Defense |
+
+### Node Tiers
+| Tier | Cost | Description |
+|------|------|-------------|
+| **Minor** | 1 pt | Small stat bonuses |
+| **Notable** | 2 pts | Medium bonuses, unlocks mechanics |
+| **Keystone** | 3 pts | Powerful effects, some are **exclusive** |
+
+### Exclusive Keystones
+Some powerful nodes lock out others, forcing meaningful build choices:
+- **Colossus** (Max Health) ⚔ **Executioner** (Execute Damage)
+- **Vein Miner** ⚔ **Auto-Smelt**
+
+### GUI Features
+- 🗺️ **Pannable Grid**: Navigate with arrow buttons
+- 📊 **Progress Tracker**: Shows % of tree unlocked
+- 📖 **Legend**: Color-coded branch reference
+- ✨ **Visual Feedback**: Glowing unlocked nodes, connection indicators
 
 ---
 
@@ -211,6 +328,14 @@ Located in `world_the_end`
 - Signs with clickable interaction
 - Barrel for item turn-in
 
+### Quest Types
+- **Kill Mobs**: Defeat specific enemies.
+- **Fetch Item**: Gather and turn in resources.
+- **Escort Villager**: Lead a vulnerable NPC to a destination while protecting them from zombies.
+- **Defend Villager**: Protect an NPC from waves of enemies for a set duration.
+- **Explore**: Visit biomes or travel long distances.
+- **Dungeon**: Complete a difficulty-rated dungeon.
+
 ---
 
 ## 🏰 City System
@@ -310,6 +435,25 @@ Cities provide passive buffs to members in territory:
 ### Party Info
 - `/atlas party` - Show party info and members
 - `/atlas party list` - List online party members
+
+---
+
+---
+
+## 🌳 Skill Tree / Progression
+
+Players earn skill points to unlock passive bonuses and special abilities.
+
+### New Skills (v1.4 Expansion)
+| Skill | Category | Tier | Effect |
+|-------|----------|------|--------|
+| **Deep Sleep** | Survival | Notable | +50% Healing from Sleep/Rest |
+| **Bounty Hunter** | Combat/Util | Notable | +25% Gold from Quests |
+| **Siege Defender** | Defense | Notable | +25% Damage vs Siege Raiders |
+| **Silver Tongue** | Utility | Notable | 10% Discount on City Territory Claims |
+| **Mariner** | Mobility | Minor | Move faster in water (Dolphins Grace) |
+| **Polar Fur** | Survival | Minor | Immunity to Hypothermia (Freezing water) |
+| **Iron Lungs** | Utility | Keystone | Breathe underwater indefinitely |
 
 ---
 

@@ -15,7 +15,10 @@ class CityBuffTask(private val plugin: AtlasPlugin) : Runnable {
                 player.addPotionEffect(PotionEffect(PotionEffectType.HASTE, 220, 0, false, false, true))
                 
                 // Apply City Regen
-                player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 220, 0, false, false, true))
+                val regenAmp = city.infrastructure.getClinicRegenAmplifier()
+                if (regenAmp >= 0) {
+                    player.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 220, regenAmp, false, false, true))
+                }
             }
         }
     }

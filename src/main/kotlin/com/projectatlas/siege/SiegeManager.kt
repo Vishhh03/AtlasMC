@@ -101,6 +101,9 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
         // Start Turret Task
         startTurretTask(city, siege)
         
+        // Spawn Defenders (Barracks)
+        spawnDefenders(city, triggerLocation)
+        
         // Start first wave
         spawnWave(city, siege, triggerLocation)
         return true
@@ -124,6 +127,27 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
                 target.world.playSound(target.location, Sound.ENTITY_ARROW_HIT, 1.0f, 1.0f)
             }
         }, 40L, 40L) // Every 2 seconds
+    }
+
+    private fun spawnDefenders(city: City, location: Location) {
+        val count = city.infrastructure.getDefenderCount()
+        if (count <= 0) return
+        
+        for (i in 0 until count) {
+            val spawnLoc = location.clone().add((Math.random() * 4 - 2), 0.0, (Math.random() * 4 - 2))
+            spawnLoc.world.spawn(spawnLoc, org.bukkit.entity.IronGolem::class.java).apply {
+                customName(Component.text("Defender of ${city.name}", NamedTextColor.BLUE))
+                isCustomNameVisible = true
+                isPlayerCreated = true 
+            }
+        }
+        
+        // Notify
+        city.members.forEach { memberId ->
+            plugin.server.getPlayer(memberId)?.sendMessage(
+                Component.text("Barracks deployed $count defenders!", NamedTextColor.GREEN)
+            )
+        }
     }
 
     private fun spawnWave(city: City, siege: ActiveSiege, location: Location) {
@@ -213,6 +237,30 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
             }
         }
     }
+    
+    @EventHandler
+    fun onEntityDamage(event: org.bukkit.event.entity.EntityDamageByEntityEvent) {
+        val damager = event.damager as? Player ?: return
+        val entity = event.entity
+        
+        // Is target a siege mob?
+        var isSiegeMob = false
+        for (siege in activeSieges.values) {
+            if (siege.spawnedMobs.contains(entity.uniqueId)) {
+                isSiegeMob = true
+                break
+            }
+        }
+        
+        if (isSiegeMob) {
+            val mult = plugin.skillTreeManager.getSiegeDamageMultiplier(damager)
+            if (mult > 1.0) {
+                 event.damage *= mult
+                 // Visual effect
+                 damager.world.spawnParticle(org.bukkit.Particle.ENCHANTED_HIT, entity.location.add(0.0, 1.0, 0.0), 5)
+            }
+        }
+    }
 
     private fun onWaveComplete(cityId: String, siege: ActiveSiege) {
         val city = plugin.cityManager.getCity(cityId) ?: return
@@ -280,17 +328,24 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
             plugin.server.broadcast(Component.text("═══════════════════════════════", NamedTextColor.GREEN))
             
             city.members.forEach { memberId ->
-                plugin.server.getPlayer(memberId)?.playSound(
-                    plugin.server.getPlayer(memberId)!!.location,
-                    Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f
-                )
+                plugin.server.getPlayer(memberId)?.let { player ->
+                    player.playSound(player.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f)
+                    // Track progression milestone - siege survived AND won
+                    plugin.milestoneListener.onSiegeSurvive(player, isWin = true)
+                }
             }
             plugin.historyManager.logEvent(city.id, "Defended against a Siege (Wave $WAVES_PER_SIEGE)", EventType.SIEGE)
         } else {
             // Defeat: Lose treasury %
             val loss = city.treasury * 0.25
             city.treasury -= loss
-            city.infrastructure.coreHealth -= 25
+            
+            // Wall Mitigation
+            val rawDamage = 25.0
+            val reduction = city.infrastructure.getWallDamageReduction()
+            val finalDamage = (rawDamage * (1.0 - reduction)).toInt().coerceAtLeast(5)
+            
+            city.infrastructure.coreHealth -= finalDamage
             city.lastSiegeTime = System.currentTimeMillis()
             plugin.cityManager.saveCity(city)
             

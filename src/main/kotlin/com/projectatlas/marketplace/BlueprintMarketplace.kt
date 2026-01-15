@@ -1,6 +1,8 @@
 package com.projectatlas.marketplace
 
 import com.projectatlas.AtlasPlugin
+import com.projectatlas.schematic.SchematicManager
+import com.projectatlas.schematic.Schematic
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
@@ -8,7 +10,6 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.*
-import org.bukkit.block.Block
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -21,16 +22,11 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Blueprint Marketplace - Players can capture builds, sell them as recipes, and buyers can preview & place them.
- * 
- * ROBUST FEATURES:
- * - Plot selection with wand tool
- * - Air block filtering (don't save unnecessary air)
- * - Collision detection before placing
- * - Ghost block preview system
- * - Revenue sharing to original builder
+ * Blueprint Marketplace - Consolidated with SchematicManager for block storage.
+ * BlueprintMarketplace handles marketplace logic (pricing, purchases, listings).
+ * SchematicManager handles actual block data storage/loading.
  */
-class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
+class BlueprintMarketplace(private val plugin: AtlasPlugin, private val schematicManager: SchematicManager) : Listener {
 
     data class Blueprint(
         val id: UUID = UUID.randomUUID(),
@@ -42,7 +38,6 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
         val height: Int,
         val length: Int,
         val blockCount: Int,
-        val blocks: Map<String, String>, // "x,y,z" -> "MATERIAL:data"
         val createdAt: Long = System.currentTimeMillis(),
         var salesCount: Int = 0,
         var totalRevenue: Double = 0.0,
@@ -51,9 +46,7 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
 
     data class SelectionSession(
         var pos1: Location? = null,
-        var pos2: Location? = null,
-        var pendingName: String? = null,
-        var pendingPrice: Double = 0.0
+        var pos2: Location? = null
     )
 
     data class PreviewSession(
@@ -67,19 +60,17 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
     private val blueprints = ConcurrentHashMap<UUID, Blueprint>()
     private val selectionSessions = ConcurrentHashMap<UUID, SelectionSession>()
     private val previewSessions = ConcurrentHashMap<UUID, PreviewSession>()
-    private val purchasedBlueprints = ConcurrentHashMap<UUID, MutableSet<UUID>>() // Player -> Set of Blueprint IDs
+    private val purchasedBlueprints = ConcurrentHashMap<UUID, MutableSet<UUID>>()
     
     private val dataFolder = File(plugin.dataFolder, "blueprints")
     private val listingsFile = File(dataFolder, "listings.json")
     private val purchasesFile = File(dataFolder, "purchases.json")
 
-    // Materials to ignore when capturing (air-like blocks)
     private val ignoredMaterials = setOf(
         Material.AIR, Material.CAVE_AIR, Material.VOID_AIR,
         Material.BARRIER, Material.LIGHT
     )
 
-    // Blocks that shouldn't be overwritten when pasting
     private val protectedMaterials = setOf(
         Material.BEDROCK, Material.END_PORTAL, Material.END_PORTAL_FRAME,
         Material.NETHER_PORTAL, Material.END_GATEWAY
@@ -134,7 +125,6 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
             else -> {}
         }
 
-        // Show selection info
         if (session.pos1 != null && session.pos2 != null) {
             val dims = getSelectionDimensions(session)
             player.sendMessage(Component.text("Selection: ${dims.first} x ${dims.second} x ${dims.third} blocks", NamedTextColor.YELLOW))
@@ -144,8 +134,6 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
     private fun showSelectionParticles(player: Player, session: SelectionSession) {
         val pos1 = session.pos1 ?: return
         val pos2 = session.pos2 ?: return
-
-        // Show corner particles
         player.spawnParticle(Particle.END_ROD, pos1.clone().add(0.5, 0.5, 0.5), 5, 0.1, 0.1, 0.1, 0.01)
         player.spawnParticle(Particle.END_ROD, pos2.clone().add(0.5, 0.5, 0.5), 5, 0.1, 0.1, 0.1, 0.01)
     }
@@ -179,7 +167,6 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
             return false
         }
 
-        // Check size limits
         val dims = getSelectionDimensions(session)
         val maxSize = plugin.configManager.blueprintMaxDimension
         if (dims.first > maxSize || dims.second > maxSize || dims.third > maxSize) {
@@ -193,18 +180,15 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
             return false
         }
 
-        // Check for duplicate names
         if (blueprints.values.any { it.name.equals(name, true) && it.creatorUUID == player.uniqueId }) {
             player.sendMessage(Component.text("You already have a blueprint with that name!", NamedTextColor.RED))
             return false
         }
 
-        // Capture the blocks
-        val blocks = mutableMapOf<String, String>()
+        // Count non-air blocks for validation
         val pos1 = session.pos1!!
         val pos2 = session.pos2!!
         val world = pos1.world!!
-
         val minX = minOf(pos1.blockX, pos2.blockX)
         val minY = minOf(pos1.blockY, pos2.blockY)
         val minZ = minOf(pos1.blockZ, pos2.blockZ)
@@ -213,29 +197,13 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
         val maxZ = maxOf(pos1.blockZ, pos2.blockZ)
 
         var capturedCount = 0
-        var skippedAir = 0
-
         for (x in minX..maxX) {
             for (y in minY..maxY) {
                 for (z in minZ..maxZ) {
                     val block = world.getBlockAt(x, y, z)
-                    
-                    // Skip air and ignored materials
-                    if (block.type in ignoredMaterials) {
-                        skippedAir++
-                        continue
+                    if (block.type !in ignoredMaterials) {
+                        capturedCount++
                     }
-
-                    // Store relative position
-                    val relX = x - minX
-                    val relY = y - minY
-                    val relZ = z - minZ
-                    val key = "$relX,$relY,$relZ"
-                    
-                    // Store material and basic data
-                    val blockData = block.blockData.asString
-                    blocks[key] = blockData
-                    capturedCount++
                 }
             }
         }
@@ -245,8 +213,10 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
             return false
         }
 
-        // Create blueprint
+        // Create blueprint metadata
+        val blueprintId = UUID.randomUUID()
         val blueprint = Blueprint(
+            id = blueprintId,
             name = name,
             creatorUUID = player.uniqueId,
             creatorName = player.name,
@@ -254,21 +224,27 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
             width = dims.first,
             height = dims.second,
             length = dims.third,
-            blockCount = capturedCount,
-            blocks = blocks
+            blockCount = capturedCount
         )
+
+        // Use SchematicManager to save the actual blocks
+        schematicManager.setPos1(player, pos1)
+        schematicManager.setPos2(player, pos2)
+        
+        if (!schematicManager.saveSchematic("bp_${blueprintId}", player)) {
+            player.sendMessage(Component.text("Failed to save schematic data!", NamedTextColor.RED))
+            return false
+        }
 
         blueprints[blueprint.id] = blueprint
         saveData()
-
-        // Clear selection
         selectionSessions.remove(player.uniqueId)
 
         player.sendMessage(Component.empty())
         player.sendMessage(Component.text("═══ BLUEPRINT CAPTURED ═══", NamedTextColor.GREEN, TextDecoration.BOLD))
         player.sendMessage(Component.text("Name: $name", NamedTextColor.YELLOW))
         player.sendMessage(Component.text("Size: ${dims.first} x ${dims.second} x ${dims.third}", NamedTextColor.GRAY))
-        player.sendMessage(Component.text("Blocks: $capturedCount (skipped $skippedAir air)", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("Blocks: $capturedCount", NamedTextColor.GRAY))
         player.sendMessage(Component.text("Price: ${price}g", NamedTextColor.GOLD))
         player.sendMessage(Component.text("Your blueprint is now listed on the marketplace!", NamedTextColor.GREEN))
         player.sendMessage(Component.empty())
@@ -282,7 +258,7 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
     fun listBlueprints(player: Player, page: Int = 1) {
         val listed = blueprints.values.filter { it.isListed }.sortedByDescending { it.salesCount }
         val pageSize = 8
-        val totalPages = (listed.size + pageSize - 1) / pageSize
+        val totalPages = maxOf(1, (listed.size + pageSize - 1) / pageSize)
         val startIdx = (page - 1) * pageSize
 
         player.sendMessage(Component.text("═══ BLUEPRINT MARKETPLACE ═══ (Page $page/$totalPages)", NamedTextColor.GOLD, TextDecoration.BOLD))
@@ -335,28 +311,25 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
             return false
         }
 
-        // Cancel existing preview
+        val schematic = schematicManager.loadSchematic("bp_${blueprint.id}")
+        if (schematic == null) {
+            player.sendMessage(Component.text("Schematic data missing!", NamedTextColor.RED))
+            return false
+        }
+
         cancelPreview(player)
 
         val baseLocation = player.location.block.location
         val session = PreviewSession(blueprint, baseLocation)
 
-        // Show ghost blocks using particles
         session.taskId = plugin.server.scheduler.runTaskTimer(plugin, Runnable {
             if (!player.isOnline) {
                 cancelPreview(player)
                 return@Runnable
             }
 
-            blueprint.blocks.forEach { (posKey, blockDataStr) ->
-                val parts = posKey.split(",")
-                val x = parts[0].toInt()
-                val y = parts[1].toInt()
-                val z = parts[2].toInt()
-
-                val loc = baseLocation.clone().add(x.toDouble() + 0.5, y.toDouble() + 0.5, z.toDouble() + 0.5)
-                
-                // Check if there's a collision
+            schematic.blocks.forEach { block ->
+                val loc = baseLocation.clone().add(block.x.toDouble() + 0.5, block.y.toDouble() + 0.5, block.z.toDouble() + 0.5)
                 val existing = loc.block
                 val hasCollision = existing.type !in ignoredMaterials
 
@@ -403,41 +376,34 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
             return false
         }
 
-        // Check if already owned
         if (purchasedBlueprints[player.uniqueId]?.contains(blueprint.id) == true) {
             player.sendMessage(Component.text("You already own this blueprint!", NamedTextColor.RED))
             return false
         }
 
-        // Check balance
         val profile = plugin.identityManager.getPlayer(player.uniqueId)
         if (profile == null || profile.balance < blueprint.price) {
             player.sendMessage(Component.text("Insufficient funds! Need ${blueprint.price}g", NamedTextColor.RED))
             return false
         }
 
-        // Deduct from buyer
         profile.balance -= blueprint.price
         plugin.identityManager.saveProfile(player.uniqueId)
 
-        // Pay creator (Revenue sharing from config)
         val creatorShare = blueprint.price * (plugin.configManager.blueprintCreatorRevenue / 100.0)
         val creatorProfile = plugin.identityManager.getPlayer(blueprint.creatorUUID)
         if (creatorProfile != null) {
             creatorProfile.balance += creatorShare
             plugin.identityManager.saveProfile(blueprint.creatorUUID)
             
-            // Notify creator if online
-             Bukkit.getPlayer(blueprint.creatorUUID)?.sendMessage(
+            Bukkit.getPlayer(blueprint.creatorUUID)?.sendMessage(
                 Component.text("💰 ${player.name} purchased your blueprint '${blueprint.name}'! +${creatorShare}g", NamedTextColor.GOLD)
             )
         }
 
-        // Update blueprint stats
         blueprint.salesCount++
         blueprint.totalRevenue += creatorShare
 
-        // Add to purchased list
         purchasedBlueprints.getOrPut(player.uniqueId) { mutableSetOf() }.add(blueprint.id)
         saveData()
 
@@ -461,8 +427,6 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
         }
 
         val blueprint = session.blueprint
-
-        // Check ownership (creator always owns, or must have purchased)
         val isOwner = blueprint.creatorUUID == player.uniqueId
         val hasPurchased = purchasedBlueprints[player.uniqueId]?.contains(blueprint.id) == true
         if (!isOwner && !hasPurchased) {
@@ -470,20 +434,20 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
             return false
         }
 
+        val schematic = schematicManager.loadSchematic("bp_${blueprint.id}")
+        if (schematic == null) {
+            player.sendMessage(Component.text("Schematic data missing!", NamedTextColor.RED))
+            return false
+        }
+
         val baseLocation = player.location.block.location
         val world = baseLocation.world!!
 
-        // Pre-check for collisions and protected blocks
         val collisions = mutableListOf<String>()
         val protectedHits = mutableListOf<String>()
 
-        blueprint.blocks.forEach { (posKey, _) ->
-            val parts = posKey.split(",")
-            val x = parts[0].toInt()
-            val y = parts[1].toInt()
-            val z = parts[2].toInt()
-
-            val targetBlock = world.getBlockAt(baseLocation.blockX + x, baseLocation.blockY + y, baseLocation.blockZ + z)
+        schematic.blocks.forEach { block ->
+            val targetBlock = world.getBlockAt(baseLocation.blockX + block.x, baseLocation.blockY + block.y, baseLocation.blockZ + block.z)
             
             if (targetBlock.type in protectedMaterials) {
                 protectedHits.add("${targetBlock.x}, ${targetBlock.y}, ${targetBlock.z}")
@@ -492,24 +456,20 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
             }
         }
 
-        // Block placement if hitting protected blocks
         if (protectedHits.isNotEmpty()) {
             player.sendMessage(Component.text("Cannot place here! Protected blocks in the way:", NamedTextColor.RED))
             player.sendMessage(Component.text(protectedHits.take(3).joinToString(", "), NamedTextColor.GRAY))
             return false
         }
 
-        // Warn about collisions but allow override with confirmation
         if (collisions.isNotEmpty()) {
             val uniqueTypes = collisions.toSet()
             player.sendMessage(Component.text("⚠ Warning: ${collisions.size} blocks will be replaced:", NamedTextColor.YELLOW))
             player.sendMessage(Component.text(uniqueTypes.take(5).joinToString(", "), NamedTextColor.GRAY))
             player.sendMessage(Component.text("Use /atlas blueprint force to place anyway", NamedTextColor.YELLOW))
-            // Store for force-place
             return false
         }
 
-        // Actually place the blocks
         return doPlaceBlueprint(player, blueprint, baseLocation)
     }
 
@@ -524,38 +484,32 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin) : Listener {
     }
 
     private fun doPlaceBlueprint(player: Player, blueprint: Blueprint, baseLocation: Location): Boolean {
+        val schematic = schematicManager.loadSchematic("bp_${blueprint.id}")
+        if (schematic == null) {
+            player.sendMessage(Component.text("Schematic data missing!", NamedTextColor.RED))
+            return false
+        }
+
         val world = baseLocation.world!!
         var placedCount = 0
         var failedCount = 0
 
-        blueprint.blocks.forEach { (posKey, blockDataStr) ->
-            val parts = posKey.split(",")
-            val x = parts[0].toInt()
-            val y = parts[1].toInt()
-            val z = parts[2].toInt()
-
-            val targetBlock = world.getBlockAt(baseLocation.blockX + x, baseLocation.blockY + y, baseLocation.blockZ + z)
+        schematic.blocks.forEach { block ->
+            val targetBlock = world.getBlockAt(baseLocation.blockX + block.x, baseLocation.blockY + block.y, baseLocation.blockZ + block.z)
             
-            // Skip protected blocks
             if (targetBlock.type in protectedMaterials) {
                 failedCount++
                 return@forEach
             }
 
             try {
-                val blockData = Bukkit.createBlockData(blockDataStr)
+                val blockData = Bukkit.createBlockData(block.blockData)
                 targetBlock.blockData = blockData
                 placedCount++
             } catch (e: Exception) {
-                // Fallback: try just the material
                 try {
-                    val material = Material.matchMaterial(blockDataStr.substringBefore('['))
-                    if (material != null) {
-                        targetBlock.type = material
-                        placedCount++
-                    } else {
-                        failedCount++
-                    }
+                    targetBlock.type = block.material
+                    placedCount++
                 } catch (e2: Exception) {
                     failedCount++
                 }

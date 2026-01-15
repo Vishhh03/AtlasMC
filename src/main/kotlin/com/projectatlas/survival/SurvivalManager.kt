@@ -34,6 +34,64 @@ class SurvivalManager(private val plugin: AtlasPlugin) : Listener {
     private val healingItemKey = NamespacedKey(plugin, "healing_item")
     private val healingCooldowns = mutableMapOf<UUID, Long>()
     
+    init {
+        // Ocean & Hypothermia Task
+        plugin.server.scheduler.runTaskTimer(plugin, Runnable {
+            plugin.server.onlinePlayers.forEach { handleOceanMechanics(it) }
+        }, 40L, 40L)
+    }
+
+    private fun handleOceanMechanics(player: Player) {
+        if (player.gameMode == org.bukkit.GameMode.CREATIVE || player.gameMode == org.bukkit.GameMode.SPECTATOR) return
+        
+        val loc = player.location
+        val biome = loc.block.biome
+        
+        // 1. Hypothermia (Cold Water)
+        val isCold = biome == org.bukkit.block.Biome.FROZEN_OCEAN || 
+                     biome == org.bukkit.block.Biome.DEEP_FROZEN_OCEAN ||
+                     biome == org.bukkit.block.Biome.COLD_OCEAN ||
+                     biome == org.bukkit.block.Biome.DEEP_COLD_OCEAN ||
+                     biome == org.bukkit.block.Biome.SNOWY_BEACH ||
+                     biome == org.bukkit.block.Biome.ICE_SPIKES
+
+        if (isCold && player.isInWater) {
+             val hasSkill = plugin.skillTreeManager.hasColdResistance(player)
+             // Simple armor check: If wearing Leather Chestplate
+             val chest = player.inventory.chestplate
+             val hasLeather = chest?.type == Material.LEATHER_CHESTPLATE
+             
+             if (!hasSkill && !hasLeather) {
+                 val currentFreeze = player.freezeTicks
+                 val maxFreeze = player.maxFreezeTicks
+                 player.freezeTicks = (currentFreeze + 50).coerceAtMost(maxFreeze) // Increase freezing fast
+                 
+                 if (player.freezeTicks >= maxFreeze) {
+                     player.damage(1.0)
+                     player.sendActionBar(Component.text("❄ You are freezing! Get out! ❄", NamedTextColor.AQUA))
+                 }
+             } else {
+                 // Recover warmth if protected
+                 if (player.freezeTicks > 0) player.freezeTicks = (player.freezeTicks - 30).coerceAtLeast(0)
+             }
+        }
+        
+        // 2. Skills
+        if (player.isInWater) {
+             // Swim Speed
+             val swimLevel = plugin.skillTreeManager.getSwimSpeedLevel(player)
+             if (swimLevel > 0) {
+                 player.addPotionEffect(PotionEffect(PotionEffectType.DOLPHINS_GRACE, 60, swimLevel - 1, false, false))
+             }
+             
+             // Water Breathing (Iron Lungs)
+             if (plugin.skillTreeManager.hasWaterBreathing(player)) {
+                 player.addPotionEffect(PotionEffect(PotionEffectType.CONDUIT_POWER, 60, 0, false, false))
+                 player.remainingAir = player.maximumAir
+             }
+        }
+    }
+    
     // Bed quality ratings for healing
     enum class BedQuality(val healAmount: Double, val displayName: String) {
         BASIC(4.0, "Rough Rest"),      // Wool beds
@@ -391,6 +449,9 @@ class SurvivalManager(private val plugin: AtlasPlugin) : Listener {
             BedQuality.LUXURY -> 2.0
         }
         
+        // Skill bonus
+        val skillMultiplier = plugin.skillTreeManager.getRestMultiplier(player)
+        
         val currentHealth = player.health
         val maxHealth = player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
         
@@ -400,7 +461,7 @@ class SurvivalManager(private val plugin: AtlasPlugin) : Listener {
         
         if (didNightSkip) {
             // FULL SLEEP - bonus healing + buffs
-            val fullSleepHeal = quality.healAmount
+            val fullSleepHeal = quality.healAmount * skillMultiplier
             val newHealth = (currentHealth + fullSleepHeal).coerceAtMost(maxHealth)
             player.health = newHealth
             
@@ -419,7 +480,7 @@ class SurvivalManager(private val plugin: AtlasPlugin) : Listener {
             
         } else if (timeSpentMs >= MIN_REST_TIME_MS) {
             // PARTIAL REST - heal based on time spent
-            val restHeal = (timeSpentSeconds * REST_HEAL_RATE * qualityMultiplier).coerceAtMost(quality.healAmount)
+            val restHeal = (timeSpentSeconds * REST_HEAL_RATE * qualityMultiplier * skillMultiplier).coerceAtMost(quality.healAmount * skillMultiplier)
             
             if (restHeal >= 0.5) { // Only heal if at least 0.5 HP
                 val newHealth = (currentHealth + restHeal).coerceAtMost(maxHealth)
