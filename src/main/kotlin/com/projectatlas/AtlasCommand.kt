@@ -68,6 +68,7 @@ class AtlasCommand(
             "quest" -> handleQuest(sender, args)
             "map" -> handleMap(sender)
             "progress", "journey", "era" -> handleProgress(sender)
+            "admin" -> handleAdmin(sender, args)
             
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }
@@ -906,6 +907,103 @@ class AtlasCommand(
         plugin.progressionManager.openProgressGUI(player)
     }
 
+    // ============ ADMIN COMMANDS ============
+    
+
+
+    // ============ ADMIN COMMANDS ============
+    
+    private fun handleAdmin(player: Player, args: Array<out String>) {
+        if (!player.hasPermission("atlas.admin")) {
+            player.sendMessage(Component.text("You do not have permission to use this command.", NamedTextColor.RED))
+            return
+        }
+        
+        if (args.size < 2) {
+            player.sendMessage(Component.text("Admin Commands:", NamedTextColor.GOLD))
+            player.sendMessage(Component.text("  /atlas admin give <player> <amount> - Give gold", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas admin reset <player> - Reset progression", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas admin xp <player> <amount> - Give XP", NamedTextColor.YELLOW))
+            return
+        }
+        
+        when (args[1].lowercase()) {
+            "give" -> {
+                if (args.size < 4) {
+                    player.sendMessage(Component.text("Usage: /atlas admin give <player> <amount>", NamedTextColor.RED))
+                    return
+                }
+                
+                val targetName = args[2]
+                val target = player.server.getPlayer(targetName)
+                if (target == null) {
+                    player.sendMessage(Component.text("Player '$targetName' not found or offline.", NamedTextColor.RED))
+                    return
+                }
+                
+                val amount = args[3].toDoubleOrNull()
+                if (amount == null || amount <= 0) {
+                    player.sendMessage(Component.text("Invalid amount.", NamedTextColor.RED))
+                    return
+                }
+                
+                economyManager.deposit(target.uniqueId, amount)
+                player.sendMessage(Component.text("Gave ${amount.toInt()} gold to ${target.name}.", NamedTextColor.GREEN))
+                target.sendMessage(Component.text("You received ${amount.toInt()} gold from an admin.", NamedTextColor.GREEN))
+            }
+            "reset" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas admin reset <player>", NamedTextColor.RED))
+                    return
+                }
+                val targetName = args[2]
+                val target = player.server.getPlayer(targetName)
+                if (target == null) {
+                    player.sendMessage(Component.text("Player '$targetName' not found or offline.", NamedTextColor.RED))
+                    return
+                }
+                
+                val profile = identityManager.getPlayer(target.uniqueId)
+                if (profile != null) {
+                     if (profile.cityId != null) {
+                         val city = cityManager.getCity(profile.cityId!!)
+                         if (city != null) {
+                             city.removeMember(target.uniqueId)
+                             cityManager.saveCity(city)
+                         }
+                         profile.cityId = null
+                     }
+                     // Reset era
+                     val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+                     plugin.progressionManager.resetPlayer(target) // resetPlayer is confirmed to exist now
+                     
+                     player.sendMessage(Component.text("Reset progression for ${target.name}.", NamedTextColor.GREEN))
+                }
+            }
+            "xp" -> {
+                if (args.size < 4) {
+                    player.sendMessage(Component.text("Usage: /atlas admin xp <player> <amount>", NamedTextColor.RED))
+                    return
+                }
+                val targetName = args[2]
+                val target = player.server.getPlayer(targetName)
+                if (target == null) {
+                    player.sendMessage(Component.text("Player '$targetName' not found or offline.", NamedTextColor.RED))
+                    return
+                }
+                val amount = args[3].toIntOrNull()
+                if (amount == null) {
+                    player.sendMessage(Component.text("Invalid amount.", NamedTextColor.RED))
+                    return
+                }
+                
+                target.giveExp(amount)
+                player.sendMessage(Component.text("Gave $amount XP to ${target.name}.", NamedTextColor.GREEN))
+            }
+            else -> player.sendMessage(Component.text("Unknown admin subcommand. Use /atlas admin", NamedTextColor.RED))
+        }
+    }
+
     // ============ TAB COMPLETION ============
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
         if (sender !is Player) return emptyList()
@@ -916,7 +1014,8 @@ class AtlasCommand(
                 "profile", "balance", "pay", "city", "help", "menu", "map", "progress", "journey", "era",
                 "dungeon", "party", "bounty", "boss", "relic", "blueprint", "bp", "schem", "spawn",
                 "sort", "stats", "scoreboard", "sb", "damage", "dmg", "quickstack", "qs",
-                "atmosphere", "ambient", "shaders", "quest", "heal", "medkit", "skills", "skill", "tree"
+                "atmosphere", "ambient", "shaders", "quest", "heal", "medkit", "skills", "skill", "tree",
+                "admin"
             ).filter { it.startsWith(args[0].lowercase()) }
             
             2 -> when (args[0].lowercase()) {
@@ -938,6 +1037,7 @@ class AtlasCommand(
                 "spawn" -> listOf("merchant_hut", "quest_camp").filter { it.startsWith(args[1].lowercase()) }
                 "pay" -> org.bukkit.Bukkit.getOnlinePlayers().map { it.name }
                     .filter { it.lowercase().startsWith(args[1].lowercase()) }
+                "admin" -> if (sender.hasPermission("atlas.admin")) listOf("give", "reset", "xp").filter { it.startsWith(args[1].lowercase()) } else emptyList()
                 else -> emptyList()
             }
             

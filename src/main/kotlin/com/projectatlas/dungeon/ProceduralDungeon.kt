@@ -31,6 +31,7 @@ class ProceduralDungeon(
     private var currentRoomIndex: Int = 0 // Tracks "progress" loosely
     private val completedRooms = mutableSetOf<Int>() // HashCode of rooms or Index
     val spawnLocation = startLocation.clone().add(0.0, 2.0, 0.0)
+    var bossEntity: org.bukkit.entity.LivingEntity? = null
     
     // Bossbar
     val bossBar = BossBar.bossBar(
@@ -83,6 +84,24 @@ class ProceduralDungeon(
         return rooms.find { it.x == gridX && it.z == gridZ }
     }
     
+    private val spawnedEntities = mutableListOf<UUID>()
+
+    fun cleanup() {
+        active = false
+        // Remove bosses
+        bossEntity?.let {
+             plugin.packetManager.removeBossHealthBar(it)
+             it.remove() 
+        }
+        // Remove all tracked mobs
+        spawnedEntities.forEach { uuid ->
+            plugin.server.getEntity(uuid)?.remove()
+        }
+        spawnedEntities.clear()
+        
+        // Unload chunks? (Optional/Native)
+    }
+
     private fun activateRoom(room: DungeonRoom, players: List<Player>) {
         room.active = true
         
@@ -94,8 +113,11 @@ class ProceduralDungeon(
         // Spawn Mobs logic
         if (room.type == RoomType.COMBAT_ARENA || room.type == RoomType.BOSS_ROOM) {
             spawnMobs(room, players.size)
-            
-            // Lock room? (Visual barriers)
+        } else if (room.type == RoomType.TRAP_ROOM) {
+            players.forEach { it.sendMessage(Component.text("⚠ IT'S A TRAP! ⚠", NamedTextColor.RED)) }
+            players.forEach { it.playSound(it.location, Sound.ENTITY_TNT_PRIMED, 1.0f, 1.0f) }
+            // Ambush!
+            spawnMobs(room, players.size) // Uses standard logic but in a hallway
         } else {
             // instant clear for non-combat rooms
             room.cleared = true
@@ -117,8 +139,8 @@ class ProceduralDungeon(
     private fun spawnMobs(room: DungeonRoom, scaling: Int) {
         val center = startLocation.clone().add((room.x * 64).toDouble(), 1.0, (room.z * 64).toDouble())
         val isBoss = room.type == RoomType.BOSS_ROOM
-        // Scaling: 4 base + 2 per player. Boss is just 1.
-        val mobCount = if (isBoss) 1 else 4 + (scaling * 2)
+        // Scaling: 4 base + 2 per player. Boss is just 1. Trap is fewer.
+        val mobCount = if (isBoss) 1 else if (room.type == RoomType.TRAP_ROOM) 3 + scaling else 4 + (scaling * 2)
         
         object : BukkitRunnable() {
             var spawned = 0
@@ -169,10 +191,17 @@ class ProceduralDungeon(
                      
                      val mob = center.world.spawnEntity(spawnLoc, type)
                      if (mob is org.bukkit.entity.LivingEntity) {
+                         mob.removeWhenFarAway = false // PREVENT DESPAWNING
                          equipMob(mob, difficulty, isBoss)
+                         
+                         if (isBoss) {
+                             this@ProceduralDungeon.bossEntity = mob
+                             plugin.packetManager.updateBossHealthBar(mob, "☠ ${theme.name} Boss ☠", 1.0)
+                         }
                      }
                      
                      aliveMobs.add(mob.uniqueId)
+                     spawnedEntities.add(mob.uniqueId) // Track for global cleanup
                      spawned++
                      
                      // Visuals
@@ -250,7 +279,6 @@ class ProceduralDungeon(
     }
     
     fun finishDungeon(success: Boolean) {
-        active = false
         val onlinePlayers = players.mapNotNull { plugin.server.getPlayer(it) }
         onlinePlayers.forEach { 
             // Fire completion event
@@ -259,16 +287,15 @@ class ProceduralDungeon(
             it.hideBossBar(bossBar)
             if (success) {
                 it.sendMessage(Component.text("🏆 Dungeon Completed! 🏆", NamedTextColor.GOLD))
-                // Give Rewards
                 plugin.economyManager.deposit(it.uniqueId, 1000.0)
             } else {
                 it.sendMessage(Component.text("☠ Dungeon Failed", NamedTextColor.RED))
             }
             
             // Teleport out after 10s
-            plugin.server.scheduler.runTaskLater(plugin, Runnable {
-                it.teleport(it.world.spawnLocation)
-            }, 200L)
+             plugin.server.scheduler.runTaskLater(plugin, Runnable {
+                 plugin.dungeonManager.leaveDungeon(it)
+             }, 200L)
         }
     }
 }

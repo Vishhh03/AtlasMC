@@ -12,6 +12,9 @@ commands:
     description: Party chat
     usage: /pc <message>
     aliases: [partychat]
+  agentquest:
+    description: Manage Agent/Codeable quests
+    usage: /agentquest start <id>
 permissions:
   atlas.admin:
     description: Allows administrative control over Atlas systems

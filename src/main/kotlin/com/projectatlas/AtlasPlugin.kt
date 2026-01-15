@@ -78,6 +78,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var eraBossManager: com.projectatlas.progression.EraBossManager
     lateinit var milestoneListener: com.projectatlas.progression.MilestoneListener
     lateinit var resourcePackManager: com.projectatlas.visual.ResourcePackManager
+    lateinit var packetManager: com.projectatlas.visual.PacketManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -124,7 +125,19 @@ class AtlasPlugin : JavaPlugin() {
         milestoneListener = com.projectatlas.progression.MilestoneListener(this)
         val mobScalingListener = com.projectatlas.progression.MobScalingListener(this)
         resourcePackManager = com.projectatlas.visual.ResourcePackManager(this)
+        
+        // Initialize PacketManager (uses native 1.21 Display Entities - no ProtocolLib needed)
+        packetManager = com.projectatlas.visual.PacketManager(this)
+        logger.info("PacketManager enabled with native Display Entities!")
+        
         val entityCleanupManager = com.projectatlas.util.EntityCleanupManager(this) // Auto-starts task
+        
+        // Initialize Integrations
+        com.projectatlas.integration.TypewriterManager.init()
+        
+        // Initialize Agent Quest System
+        com.projectatlas.quest.AgentQuestManager.registerQuest(com.projectatlas.quest.impl.WelcomeQuest())
+
         
         // Register Events
         server.pluginManager.registerEvents(AtlasListener(identityManager, cityManager, guiManager), this)
@@ -164,6 +177,7 @@ class AtlasPlugin : JavaPlugin() {
         // Register Commands
         getCommand("atlas")?.setExecutor(AtlasCommand(identityManager, economyManager, cityManager, guiManager, schematicManager, politicsManager))
         getCommand("pc")?.setExecutor(com.projectatlas.party.PartyChatCommand(this))
+        getCommand("agentquest")?.setExecutor(com.projectatlas.quest.AgentQuestCommand())
         
         // Start Scheduler
         eventManager.startScheduler()

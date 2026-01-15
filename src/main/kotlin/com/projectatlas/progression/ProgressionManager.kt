@@ -507,4 +507,25 @@ class ProgressionManager(private val plugin: AtlasPlugin) : Listener {
 
         player.openInventory(inv)
     }
+
+    fun resetPlayer(player: Player) {
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
+        
+        // Reset Level & XP
+        profile.level = 1
+        profile.currentXp = 0
+        player.level = 1
+        player.exp = 0.0f
+        
+        // Reset Titles
+        profile.titles.clear()
+        
+        // Reset Balance (optional, but consistent with full reset)
+        profile.balance = 100.0
+        
+        plugin.identityManager.saveProfile(player.uniqueId)
+        
+        player.sendMessage(Component.text("Your progression has been reset by an admin.", NamedTextColor.RED))
+        player.playSound(player.location, Sound.ENTITY_WITHER_DEATH, 1.0f, 2.0f)
+    }
 }

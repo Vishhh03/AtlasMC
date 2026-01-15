@@ -268,44 +268,13 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
     }
     
     private fun showDamageNumber(viewer: Player, location: Location, damage: Double) {
-        val damageText = String.format("%.1f", damage)
-        val color = when {
-            damage >= 10 -> NamedTextColor.RED
-            damage >= 5 -> NamedTextColor.GOLD
-            else -> NamedTextColor.YELLOW
-        }
-        
-        // Spawn armor stand with damage text (brief display)
-        val world = location.world ?: return
-        val displayLoc = location.clone().add(
-            (Math.random() - 0.5) * 0.5,
-            Math.random() * 0.3,
-            (Math.random() - 0.5) * 0.5
+        // Use native 1.21 TextDisplay via PacketManager for smooth animated damage numbers
+        plugin.packetManager.showDamageNumber(
+            location = location,
+            damage = damage,
+            isCritical = damage >= 15.0,
+            viewer = viewer
         )
-        
-        // Use hologram-style display with armor stand
-        val armorStand = world.spawn(displayLoc, org.bukkit.entity.ArmorStand::class.java) { stand ->
-            stand.isVisible = false
-            stand.isMarker = true
-            stand.isSmall = true
-            stand.setGravity(false)
-            stand.isCustomNameVisible = true
-            stand.customName(Component.text("❤ $damageText", color, TextDecoration.BOLD))
-        }
-        
-        // Animate upward and remove
-        object : BukkitRunnable() {
-            var ticks = 0
-            override fun run() {
-                if (ticks >= 20 || !armorStand.isValid) {
-                    armorStand.remove()
-                    cancel()
-                    return
-                }
-                armorStand.teleport(armorStand.location.add(0.0, 0.05, 0.0))
-                ticks++
-            }
-        }.runTaskTimer(plugin, 0L, 1L)
     }
     
     private fun updateCombo(damager: Player, target: LivingEntity) {
@@ -318,12 +287,17 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
             val newCombo = (comboCounts[damager.uniqueId] ?: 0) + 1
             comboCounts[damager.uniqueId] = newCombo
             
+            // Show visual combo counter using TextDisplay (3D floating) + action bar
+            if (newCombo >= 2) {
+                plugin.packetManager.updateComboDisplay(damager, newCombo)
+            }
             if (newCombo >= 3) {
                 damager.sendActionBar(Component.text("⚔ COMBO x$newCombo ⚔", NamedTextColor.GOLD))
             }
         } else {
             // Reset combo
             comboCounts[damager.uniqueId] = 1
+            plugin.packetManager.clearComboDisplay(damager)
         }
         
         comboTargets[damager.uniqueId] = target.uniqueId

@@ -9,12 +9,16 @@ version = "1.0-SNAPSHOT"
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://repo.dmulloy2.net/repository/public/")
+    maven("https://repo.codemc.io/repository/maven-public/")
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
+    // ProtocolLib removed - using native Display Entities
     implementation(kotlin("stdlib"))
     implementation("com.google.code.gson:gson:2.10.1")
+    compileOnly(files("test-server/plugins/Typewriter-0.8.0.jar"))
 }
 
 tasks.withType<JavaCompile> {
