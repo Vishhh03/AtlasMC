@@ -1,24 +1,74 @@
 {
   "stats": {
+    "minecraft:killed": {
+      "minecraft:pig": 5,
+      "minecraft:cow": 4,
+      "minecraft:vex": 1
+    },
     "minecraft:picked_up": {
-      "minecraft:yellow_bed": 1
+      "minecraft:yellow_bed": 1,
+      "minecraft:porkchop": 12,
+      "minecraft:oak_log": 3,
+      "minecraft:cobblestone": 8,
+      "minecraft:sugar_cane": 10,
+      "minecraft:leather": 5,
+      "minecraft:crafting_table": 2,
+      "minecraft:jungle_log": 3,
+      "minecraft:beef": 8
     },
     "minecraft:mined": {
-      "minecraft:yellow_bed": 1
+      "minecraft:short_grass": 3,
+      "minecraft:yellow_bed": 1,
+      "minecraft:crafting_table": 2,
+      "minecraft:oak_log": 3,
+      "minecraft:jungle_log": 3,
+      "minecraft:sugar_cane": 3,
+      "minecraft:stone": 8
+    },
+    "minecraft:used": {
+      "minecraft:wooden_axe": 17,
+      "minecraft:crafting_table": 2,
+      "minecraft:wooden_pickaxe": 8,
+      "minecraft:bread": 4,
+      "minecraft:obsidian": 1
     },
     "minecraft:custom": {
-      "minecraft:sprint_one_cm": 5122,
-      "minecraft:open_chest": 1,
-      "minecraft:talked_to_villager": 33,
-      "minecraft:time_since_rest": 1830,
-      "minecraft:fall_one_cm": 781,
-      "minecraft:walk_one_cm": 730,
-      "minecraft:total_world_time": 1830,
-      "minecraft:leave_game": 1,
-      "minecraft:fly_one_cm": 7723,
-      "minecraft:play_time": 1830,
-      "minecraft:jump": 41,
-      "minecraft:time_since_death": 1830
+      "minecraft:talked_to_villager": 42,
+      "minecraft:time_since_rest": 5479,
+      "minecraft:leave_game": 3,
+      "minecraft:mob_kills": 10,
+      "minecraft:damage_taken": 220,
+      "minecraft:time_since_death": 5441,
+      "minecraft:total_world_time": 21828,
+      "minecraft:swim_one_cm": 7793,
+      "minecraft:crouch_one_cm": 119,
+      "minecraft:climb_one_cm": 534,
+      "minecraft:deaths": 1,
+      "minecraft:damage_dealt_resisted": 20,
+      "minecraft:interact_with_crafting_table": 3,
+      "minecraft:walk_one_cm": 14794,
+      "minecraft:walk_under_water_one_cm": 66,
+      "minecraft:play_time": 21828,
+      "minecraft:damage_dealt": 1104,
+      "minecraft:jump": 497,
+      "minecraft:open_barrel": 1,
+      "minecraft:sprint_one_cm": 85406,
+      "minecraft:open_chest": 4,
+      "minecraft:fall_one_cm": 15778,
+      "minecraft:fly_one_cm": 113171,
+      "minecraft:walk_on_water_one_cm": 1609,
+      "minecraft:sneak_time": 319
+    },
+    "minecraft:killed_by": {
+      "minecraft:skeleton": 1
+    },
+    "minecraft:crafted": {
+      "minecraft:stick": 8,
+      "minecraft:jungle_planks": 12,
+      "minecraft:wooden_axe": 2,
+      "minecraft:wooden_pickaxe": 2,
+      "minecraft:oak_planks": 12,
+      "minecraft:crafting_table": 2
     }
   },
   "DataVersion": 4671

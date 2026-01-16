@@ -293,7 +293,8 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
                     }
                     
                     // --- EFFECTS ---
-                    addPotionEffect(PotionEffect(PotionEffectType.GLOWING, PotionEffect.INFINITE_DURATION, 0, false, false))
+                    // REPLACED: Glowing removed for less visibility from distance
+                    // addPotionEffect(PotionEffect(PotionEffectType.GLOWING, PotionEffect.INFINITE_DURATION, 0, false, false))
                     if (tier == DropTier.RARE) {
                         addPotionEffect(PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0))
                     }

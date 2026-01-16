@@ -15,7 +15,7 @@ class GlobalThreatManager(private val plugin: AtlasPlugin) {
     private var tickCounter = 0
     
     // Config
-    private val threatIncreasePerMinute = 0.5 // +30% per hour
+    private val threatIncreasePerMinute = 0.1 // +6% per hour (was 0.5)
     private val threatReductionPerDungeon = 10.0
     
     init {
@@ -46,8 +46,8 @@ class GlobalThreatManager(private val plugin: AtlasPlugin) {
         // Increase threat
         increaseThreat(netIncrease)
         
-        // Update visuals (only when threat is notable or every 5 minutes)
-        if (threatLevel >= 30 || tickCounter % 5 == 0) {
+        // Update visuals (only when threat is notable)
+        if (threatLevel >= 30) {
             updateVisuals()
         }
         

@@ -158,13 +158,14 @@ class PacketManager(private val plugin: AtlasPlugin) {
             else -> TextColor.color(255, 255, 150)         // Light yellow
         }
         
+        var damageNumComp = Component.text(damageText, color)
+        if (isCritical) {
+            damageNumComp = damageNumComp.decorate(TextDecoration.BOLD)
+        }
+
         val text = Component.text()
             .append(Component.text("❤ ", NamedTextColor.DARK_RED))
-            .append(
-                Component.text(damageText, color).let { 
-                    if (isCritical) it.decorate(TextDecoration.BOLD) else it 
-                }
-            )
+            .append(damageNumComp)
             .build()
         
         // Randomize spawn position slightly for visual variety

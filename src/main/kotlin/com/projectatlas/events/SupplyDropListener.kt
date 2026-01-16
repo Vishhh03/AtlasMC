@@ -28,9 +28,47 @@ class SupplyDropListener(private val plugin: AtlasPlugin) : Listener {
     // ChestLocation (as string) -> Set of Guardian UUIDs
     private val supplyDropGuardians = ConcurrentHashMap<String, MutableSet<UUID>>()
     private val supplyDropInitialCount = ConcurrentHashMap<String, Int>()
+    private val supplyDropCreationTimes = ConcurrentHashMap<String, Long>()
     
     private val guardKey = NamespacedKey.fromString("atlas_guard")!!
+    private val dropDurationMillis = 20 * 60 * 1000L // 20 Minutes (Syncd with guardians)
     
+    init {
+        // Expiry Checker Task (Run every minute)
+        plugin.server.scheduler.runTaskTimer(plugin, Runnable {
+            checkExpiredDrops()
+        }, 1200L, 1200L)
+        
+        // Dynamic Glowing Task (Run every 2 seconds)
+        // Applies glowing only when player is nearby (< 40 blocks) to simulate "short range" glow
+        plugin.server.scheduler.runTaskTimer(plugin, Runnable {
+            updateGuardianGlowing()
+        }, 40L, 40L)
+    }
+
+    private fun updateGuardianGlowing() {
+        supplyDropGuardians.values.forEach { guardianSet ->
+            guardianSet.forEach { uuid ->
+                val entity = plugin.server.getEntity(uuid) as? LivingEntity ?: return@forEach
+                if (!entity.isValid) return@forEach
+                
+                // Check for nearby players
+                val nearbyPlayer = entity.getNearbyEntities(40.0, 40.0, 40.0).any { it is Player }
+                
+                if (nearbyPlayer) {
+                    // Apply glowing for 2.5 seconds (overlapping slightly with 2s task)
+                    entity.addPotionEffect(org.bukkit.potion.PotionEffect(
+                        org.bukkit.potion.PotionEffectType.GLOWING, 
+                        50, // 2.5s
+                        0, 
+                        false, 
+                        false // No Particles
+                    ))
+                }
+            }
+        }
+    }
+
     /**
      * Register a supply drop chest and its guardians
      */
@@ -38,6 +76,52 @@ class SupplyDropListener(private val plugin: AtlasPlugin) : Listener {
         val locKey = "${chestLocation.blockX},${chestLocation.blockY},${chestLocation.blockZ},${chestLocation.world?.name}"
         supplyDropGuardians[locKey] = guardians.map { it.uniqueId }.toMutableSet()
         supplyDropInitialCount[locKey] = guardians.size
+        supplyDropCreationTimes[locKey] = System.currentTimeMillis()
+    }
+    
+    private fun checkExpiredDrops() {
+        val now = System.currentTimeMillis()
+        val toRemove = mutableListOf<String>()
+        
+        supplyDropCreationTimes.forEach { (locKey, creationTime) ->
+            if (now - creationTime > dropDurationMillis) {
+                expireDrop(locKey)
+                toRemove.add(locKey)
+            }
+        }
+        
+        toRemove.forEach { supplyDropCreationTimes.remove(it) }
+    }
+
+    private fun expireDrop(locKey: String) {
+        val parts = locKey.split(",")
+        if (parts.size != 4) return
+        
+        val world = plugin.server.getWorld(parts[3]) ?: return
+        val x = parts[0].toIntOrNull() ?: return
+        val y = parts[1].toIntOrNull() ?: return
+        val z = parts[2].toIntOrNull() ?: return
+        
+        val loc = org.bukkit.Location(world, x.toDouble(), y.toDouble(), z.toDouble())
+        
+        // 1. Remove Chest
+        if (loc.block.type == Material.CHEST) {
+            loc.block.type = Material.AIR
+            world.spawnParticle(org.bukkit.Particle.CLOUD, loc.add(0.5, 0.5, 0.5), 20, 0.5, 0.5, 0.5, 0.1)
+            world.playSound(loc, org.bukkit.Sound.BLOCK_FIRE_EXTINGUISH, 1.0f, 1.0f)
+        }
+        
+        // 2. Remove Guardians
+        supplyDropGuardians[locKey]?.forEach { uuid ->
+            plugin.server.getEntity(uuid)?.remove()
+        }
+        
+        // 3. Cleanup Maps
+        supplyDropGuardians.remove(locKey)
+        supplyDropInitialCount.remove(locKey)
+        
+        // 4. Broadcast
+        plugin.server.broadcast(Component.text("The Supply Drop at $x, $z has expired and vanished!", NamedTextColor.GRAY))
     }
     
     @EventHandler(priority = EventPriority.HIGH)
@@ -101,6 +185,7 @@ class SupplyDropListener(private val plugin: AtlasPlugin) : Listener {
             // Clean up tracking
             supplyDropGuardians.remove(locKey)
             supplyDropInitialCount.remove(locKey)
+            supplyDropCreationTimes.remove(locKey)
         }
     }
     
@@ -134,6 +219,7 @@ class SupplyDropListener(private val plugin: AtlasPlugin) : Listener {
             
             supplyDropGuardians.remove(locKey)
             supplyDropInitialCount.remove(locKey)
+            supplyDropCreationTimes.remove(locKey)
         }
     }
     

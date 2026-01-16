@@ -494,7 +494,7 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
                 player.sendMessage(Component.text("• Creation:", NamedTextColor.WHITE).append(Component.text(" Cost gold to found. Requires Era 1.", NamedTextColor.GRAY)))
                 player.sendMessage(Component.text("• Claims:", NamedTextColor.WHITE).append(Component.text(" Mayors can claim chunks to protect land.", NamedTextColor.GRAY)))
                 player.sendMessage(Component.text("• Infrastructure:", NamedTextColor.WHITE).append(Component.text(" Build Walls (defense), Generators (income),", NamedTextColor.GRAY)))
-                player.sendMessage(Component.text("  and Turrets (combat) via the City Menu.", NamedTextColor.GRAY)))
+                player.sendMessage(Component.text("  and Turrets (combat) via the City Menu.", NamedTextColor.GRAY))
                 player.sendMessage(Component.text("• Taxes:", NamedTextColor.WHITE).append(Component.text(" Mayors set taxes on member income (quests/bounties).", NamedTextColor.GRAY)))
             }
             
@@ -506,7 +506,7 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
                 player.sendMessage(Component.text("• Earning:", NamedTextColor.WHITE).append(Component.text(" Complete Quests, hunt Bounties, or kill mobs.", NamedTextColor.GRAY)))
                 player.sendMessage(Component.text("• Trading:", NamedTextColor.WHITE).append(Component.text(" /pay <player> to transfer funds.", NamedTextColor.GRAY)))
                 player.sendMessage(Component.text("• Villagers:", NamedTextColor.WHITE).append(Component.text(" Villagers barely trade with nomads.", NamedTextColor.GRAY)))
-                player.sendMessage(Component.text("  Join a city to unlock better trades!", NamedTextColor.YELLOW)))
+                player.sendMessage(Component.text("  Join a city to unlock better trades!", NamedTextColor.YELLOW))
             }
             
             "action:guide_combat" -> {
@@ -526,7 +526,7 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
                 player.sendMessage(Component.text("Atlas is harsher than vanilla.", NamedTextColor.GRAY))
                 player.sendMessage(Component.text("• Scaling:", NamedTextColor.WHITE).append(Component.text(" Mobs get stronger the further you go from spawn.", NamedTextColor.GRAY)))
                 player.sendMessage(Component.text("• Healing:", NamedTextColor.WHITE).append(Component.text(" Use Bandages and Medkits. Natural regen is slow.", NamedTextColor.GRAY)))
-                player.sendMessage(Component.text("• Use /atlas heal items to see available meds.", NamedTextColor.YELLOW)))
+                player.sendMessage(Component.text("• Use /atlas heal items to see available meds.", NamedTextColor.YELLOW))
             }
             "settings:toggle_atmosphere" -> handleSettingToggle(player, "atmosphere")
             "settings:toggle_scoreboard" -> handleSettingToggle(player, "scoreboard")

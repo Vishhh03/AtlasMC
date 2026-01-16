@@ -32,15 +32,9 @@ class VillageTradeManager(private val plugin: AtlasPlugin) : Listener {
             return
         }
         
-        // CITY REQUIREMENT
-        val city = plugin.cityManager.getCityAt(villager.location.chunk)
-        if (city == null && !player.isOp) {
-             player.sendActionBar(Component.text("This villager belongs to no city.", NamedTextColor.RED))
-             event.isCancelled = true
-             // Only shake head if not recruiting
-             villager.shakeHead()
-             return
-        }
+        // CITY REQUIREMENT - REMOVED for better UX (Wild villagers can trade)
+        // val city = plugin.cityManager.getCityAt(villager.location.chunk)
+        // if (city == null && !player.isOp) { ... }
         
         // RESTOCK LOGIC
         val lastRestockKey = org.bukkit.NamespacedKey(plugin, "atlas_last_restock")
