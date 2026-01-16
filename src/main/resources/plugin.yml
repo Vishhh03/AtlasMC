@@ -4,6 +4,7 @@ main: com.projectatlas.AtlasPlugin
 api-version: '1.21'
 authors: [Antigravity]
 description: A multiplayer-first RPG systems plugin.
+softdepend: [Typewriter]
 commands:
   atlas:
     description: Main command for Project Atlas

@@ -15,12 +15,16 @@ object TypewriterManager {
 
     fun init() {
         typewriterPlugin = Bukkit.getPluginManager().getPlugin(PLUGIN_NAME)
-        if (typewriterPlugin != null && typewriterPlugin!!.isEnabled) {
-            Bukkit.getLogger().info("Successfully hooked into Typewriter plugin version ${typewriterPlugin!!.description.version}")
-            // Analyze capabilities if possible (Reflection)
-            analyzeApi()
+        if (typewriterPlugin != null) {
+            if (typewriterPlugin!!.isEnabled) {
+                Bukkit.getLogger().info("Successfully hooked into Typewriter plugin version ${typewriterPlugin!!.description.version}")
+                // Analyze capabilities if possible (Reflection)
+                analyzeApi()
+            } else {
+                Bukkit.getLogger().warning("Typewriter plugin detected but DISABLED. It likely crashed on startup. Visuals will be disabled.")
+            }
         } else {
-            Bukkit.getLogger().warning("Typewriter plugin not found or disabled. Quest visuals may not work.")
+            Bukkit.getLogger().warning("Typewriter plugin not found. Visuals will be disabled.")
         }
     }
 
