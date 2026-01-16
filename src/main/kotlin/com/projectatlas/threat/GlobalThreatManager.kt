@@ -1,9 +1,9 @@
 package com.projectatlas.threat
 
 import com.projectatlas.AtlasPlugin
-import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
 import org.bukkit.GameRule
 import org.bukkit.entity.Player
@@ -12,21 +12,13 @@ import org.bukkit.scheduler.BukkitRunnable
 class GlobalThreatManager(private val plugin: AtlasPlugin) {
 
     var threatLevel: Double = 0.0 // 0.0 to 100.0
-    private var bossBar: BossBar? = null
+    private var tickCounter = 0
     
     // Config
     private val threatIncreasePerMinute = 0.5 // +30% per hour
     private val threatReductionPerDungeon = 10.0
     
     init {
-        // Initialize BossBar
-        bossBar = BossBar.bossBar(
-            Component.text("Global Threat: LOW", NamedTextColor.GREEN),
-            0.0f,
-            BossBar.Color.GREEN,
-            BossBar.Overlay.NOTCHED_10
-        )
-        
         // Timer Task
         object : BukkitRunnable() {
             override fun run() {
@@ -36,6 +28,8 @@ class GlobalThreatManager(private val plugin: AtlasPlugin) {
     }
     
     fun tick() {
+        tickCounter++
+        
         // Calculate Arcane Sanctum mitigation
         var arcaneCount = 0
         plugin.cityManager.getAllCities().forEach { city ->
@@ -52,8 +46,10 @@ class GlobalThreatManager(private val plugin: AtlasPlugin) {
         // Increase threat
         increaseThreat(netIncrease)
         
-        // Update visuals
-        updateVisuals()
+        // Update visuals (only when threat is notable or every 5 minutes)
+        if (threatLevel >= 30 || tickCounter % 5 == 0) {
+            updateVisuals()
+        }
         
         // Triggers
         if (threatLevel >= 100.0) {
@@ -63,7 +59,11 @@ class GlobalThreatManager(private val plugin: AtlasPlugin) {
     
     fun increaseThreat(amount: Double) {
         threatLevel = (threatLevel + amount).coerceIn(0.0, 100.0)
-        updateVisuals()
+        
+        // Only update visuals if it's a significant increase
+        if (amount >= 5.0) {
+            updateVisuals()
+        }
     }
     
     fun reduceThreat(amount: Double) {
@@ -75,33 +75,31 @@ class GlobalThreatManager(private val plugin: AtlasPlugin) {
     }
     
     private fun updateVisuals() {
-        // BossBar Text & Color
-        val (title, color) = when {
-            threatLevel < 30 -> "Global Threat: LOW" to BossBar.Color.GREEN
-            threatLevel < 70 -> "Global Threat: MODERATE" to BossBar.Color.YELLOW
-            threatLevel < 90 -> "Global Threat: HIGH" to BossBar.Color.RED
-            else -> "Global Threat: CRITICAL" to BossBar.Color.PURPLE
+        // Determine threat level display
+        val (icon, label, color) = when {
+            threatLevel < 30 -> Triple("☀", "LOW", NamedTextColor.GREEN)
+            threatLevel < 70 -> Triple("⚠", "MODERATE", NamedTextColor.YELLOW)
+            threatLevel < 90 -> Triple("🔥", "HIGH", NamedTextColor.RED)
+            else -> Triple("☠", "CRITICAL", NamedTextColor.DARK_PURPLE)
         }
         
-        val bar = bossBar ?: return
-        bar.name(Component.text("$title (${String.format("%.1f", threatLevel)}%)", 
-            if (color == BossBar.Color.PURPLE) NamedTextColor.DARK_PURPLE else NamedTextColor.WHITE))
-        bar.color(color)
-        bar.progress((threatLevel / 100.0).toFloat().coerceIn(0f, 1f))
+        // Build compact action bar message
+        val actionBarText = Component.text()
+            .append(Component.text("$icon ", color))
+            .append(Component.text("Threat: ", NamedTextColor.GRAY))
+            .append(Component.text(label, color).let { 
+                if (threatLevel >= 90) it.decorate(TextDecoration.BOLD) else it 
+            })
+            .append(Component.text(" ${String.format("%.0f", threatLevel)}%", NamedTextColor.WHITE))
+            .build()
         
-        // Show to all players
+        // Show to all players via action bar (less intrusive)
         plugin.server.onlinePlayers.forEach { player ->
-            player.showBossBar(bar)
-            
-            // Red Sky Effect (Packet/Time manipulation)
-            if (threatLevel > 80) {
-                 // Spooky red tint visual logic (Packet logic handled by visual manager)
-                 // Or simple time shift:
-                 // player.setPlayerTime(18000, false) // Midnight visual
-            }
+            // Only show action bar, not a boss bar
+            player.sendActionBar(actionBarText)
         }
         
-        // World Border redness? Atmosphere manager handles particle fog
+        // Atmosphere effects for high threat
         plugin.atmosphereManager.setThreatLevel(threatLevel)
     }
     

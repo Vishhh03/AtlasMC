@@ -32,43 +32,44 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
         val centerZ = 0
         val range = plugin.configManager.supplyDropRadius
 
-        // 1. Find Location (avoid claimed city territory and water)
+        // 1. Find Location (avoid claimed city territory, water, and trees/vegetation)
         var x: Int
         var z: Int
-        var targetBlock: org.bukkit.block.Block
+        var safeY: Int? = null
         var attempts = 0
-        val maxAttempts = 20
+        val maxAttempts = 30
         
         do {
             x = centerX + (random.nextInt(range * 2) - range)
             z = centerZ + (random.nextInt(range * 2) - range)
-            val highestBlock = world.getHighestBlockAt(x, z)
-            targetBlock = highestBlock.location.add(0.0, 1.0, 0.0).block
-            attempts++
             
-            val claimedCity = plugin.cityManager.getCityAt(targetBlock.chunk)
-            val groundBlock = highestBlock
+            // Use safe ground finder to skip trees, bamboo, etc.
+            safeY = LocationUtils.findSafeGroundY(world, x, z)
+            if (safeY == null) {
+                attempts++
+                continue
+            }
+            
+            val groundBlock = world.getBlockAt(x, safeY - 1, z)
+            val claimedCity = plugin.cityManager.getCityAt(groundBlock.chunk)
+            
+            // Check for liquids
             val isWater = groundBlock.type == Material.WATER || 
                           groundBlock.type == Material.LAVA ||
-                          groundBlock.type == Material.SEAGRASS ||
-                          groundBlock.type == Material.TALL_SEAGRASS ||
-                          groundBlock.type == Material.KELP ||
-                          groundBlock.type == Material.KELP_PLANT ||
                           groundBlock.isLiquid
             
             if (claimedCity == null && !isWater) break
             
+            attempts++
         } while (attempts < maxAttempts)
         
         // Final validation
-        val groundBlock = world.getHighestBlockAt(targetBlock.x, targetBlock.z)
-        val isInWater = groundBlock.type == Material.WATER || groundBlock.isLiquid
-        
-        if (plugin.cityManager.getCityAt(targetBlock.chunk) != null || isInWater) {
+        if (safeY == null || plugin.cityManager.getCityAt(world.getBlockAt(x, safeY - 1, z).chunk) != null) {
             plugin.logger.info("Supply drop aborted: could not find valid land location after $maxAttempts attempts")
             return
         }
         
+        val targetBlock = world.getBlockAt(x, safeY, z)
         val dropLocation = targetBlock.location.add(0.5, 0.0, 0.5)
         
         // ========== VISUAL EFFECTS ==========

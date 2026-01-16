@@ -32,15 +32,29 @@ object LocationUtils {
      * Check if a material is not suitable ground for spawning
      */
     fun isInvalidGround(type: Material): Boolean {
+        val name = type.name
         return isTreeBlock(type) || 
                type.isAir ||
                type == Material.WATER ||
                type == Material.LAVA ||
                type == Material.CACTUS ||
                type == Material.BAMBOO ||
+               type == Material.BAMBOO_SAPLING ||
                type == Material.SUGAR_CANE ||
                type == Material.KELP ||
-               type == Material.SEAGRASS
+               type == Material.KELP_PLANT ||
+               type == Material.SEAGRASS ||
+               type == Material.TALL_SEAGRASS ||
+               type == Material.CHORUS_PLANT ||
+               type == Material.CHORUS_FLOWER ||
+               type == Material.POINTED_DRIPSTONE ||
+               type == Material.SWEET_BERRY_BUSH ||
+               type == Material.DEAD_BUSH ||
+               name.endsWith("_CORAL") ||
+               name.endsWith("_CORAL_BLOCK") ||
+               name.endsWith("_CORAL_FAN") ||
+               name.contains("MUSHROOM") ||
+               name.contains("FERN")
     }
     
     /**
