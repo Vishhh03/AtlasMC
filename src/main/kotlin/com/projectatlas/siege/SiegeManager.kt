@@ -197,6 +197,7 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
             zombie.customName(Component.text("Siege Grunt", NamedTextColor.GRAY))
             zombie.isCustomNameVisible = true
             zombie.addPotionEffect(PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0, false, false))
+            zombie.persistentDataContainer.set(org.bukkit.NamespacedKey(plugin, SiegeRoles.ROLE_KEY), org.bukkit.persistence.PersistentDataType.STRING, SiegeRoles.GRUNT)
         }
     }
 
@@ -206,6 +207,7 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
             vin.isCustomNameVisible = true
             vin.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, PotionEffect.INFINITE_DURATION, 1, false, false))
             vin.addPotionEffect(PotionEffect(PotionEffectType.RESISTANCE, PotionEffect.INFINITE_DURATION, 1, false, false))
+            vin.persistentDataContainer.set(org.bukkit.NamespacedKey(plugin, SiegeRoles.ROLE_KEY), org.bukkit.persistence.PersistentDataType.STRING, SiegeRoles.BREACHER)
         }
     }
 
@@ -367,6 +369,8 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
     }
     
     fun getActiveSiege(cityId: String): ActiveSiege? = activeSieges[cityId]
+            
+    fun getAllActiveSieges(): Collection<ActiveSiege> = activeSieges.values
     
     @EventHandler
     fun onPlayerInteract(event: PlayerInteractEvent) {

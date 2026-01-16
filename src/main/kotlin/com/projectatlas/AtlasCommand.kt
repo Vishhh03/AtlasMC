@@ -31,6 +31,7 @@ class AtlasCommand(
             sender.sendMessage("Only players can use this command.")
             return true
         }
+        val player = sender
 
         if (args.isEmpty()) {
             guiManager.openMainMenu(sender)
@@ -70,10 +71,52 @@ class AtlasCommand(
             "progress", "journey", "era" -> handleProgress(sender)
             "admin" -> handleAdmin(sender, args)
             "guide", "wiki", "tutorial" -> guiManager.openGuideMenu(sender)
+            "anim", "animation" -> handleAnimation(sender, args)
+            "schem" -> handleSchematic(player, args)
+            // Resource Pack Command
+            "resourcepack", "rp" -> handleResourcePack(player, args)
+            "siege" -> handleSiege(player, args)
             
-            else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
+            "dungeon" -> handleDungeon(player, args)
+
+            else -> player.sendMessage(Component.text("Unknown command. Type /atlas help for help.", NamedTextColor.RED))
         }
         return true
+    }
+
+    private fun handleResourcePack(player: Player, args: Array<out String>) {
+         // /atlas rp generate
+         if (args.size > 1 && args[1].lowercase() == "generate") {
+             if (!player.hasPermission("atlas.admin")) {
+                 player.sendMessage(Component.text("No permission.", NamedTextColor.RED))
+                 return
+             }
+             
+             player.sendMessage(Component.text("Generating resource pack...", NamedTextColor.YELLOW))
+             
+             // Run async to avoid lag
+             val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+             plugin.server.scheduler.runTaskAsynchronously(plugin, Runnable {
+                 try {
+                     val generator = com.projectatlas.visual.ResourcePackGenerator(plugin)
+                     generator.generatePack()
+                     plugin.server.scheduler.runTask(plugin, Runnable {
+                         player.sendMessage(Component.text("Resource pack generated successfully in /plugins/ProjectAtlas/resource-pack/", NamedTextColor.GREEN))
+                     })
+                 } catch (e: Exception) {
+                     e.printStackTrace()
+                     plugin.server.scheduler.runTask(plugin, Runnable {
+                         player.sendMessage(Component.text("Failed to generate pack: ${e.message}", NamedTextColor.RED))
+                     })
+                 }
+             })
+             return
+         }
+         
+         // Default behavior: Send pack
+         val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+         plugin.resourcePackManager.sendResourcePack(player)
+         player.sendMessage(Component.text("Attempting to send resource pack...", NamedTextColor.GREEN))
     }
 
     // --- Subcommand Logic ---
@@ -665,12 +708,27 @@ class AtlasCommand(
     }
     
     private fun handleBoss(player: Player, args: Array<out String>) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        // Player Command: Start/Summon Era Boss
+        if (args.size >= 2 && (args[1].lowercase() == "start" || args[1].lowercase() == "summon")) {
+            if (plugin.eraBossManager.checkNaturalBossSpawn(player)) {
+                player.sendMessage(Component.text("⚔ Boss Summoned! Prepare for battle!", NamedTextColor.GREEN, TextDecoration.BOLD))
+            } else {
+                player.sendMessage(Component.text("You cannot summon a boss right now.", NamedTextColor.RED))
+                player.sendMessage(Component.text("Requirements:", NamedTextColor.GRAY))
+                player.sendMessage(Component.text("1. Complete all non-boss milestones for your Era", NamedTextColor.GRAY))
+                player.sendMessage(Component.text("2. Boss must not be already defeated", NamedTextColor.GRAY))
+                player.sendMessage(Component.text("3. Check /atlas progress", NamedTextColor.YELLOW))
+            }
+            return
+        }
+
+        // Admin Checks
         if (!player.hasPermission("atlas.admin")) {
             player.sendMessage(Component.text("No permission.", NamedTextColor.RED))
             return
         }
-        
-        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
         
         if (args.size >= 2 && args[1].lowercase() == "era") {
             // Era boss spawning
@@ -1032,7 +1090,7 @@ class AtlasCommand(
         when (args[1].lowercase()) {
             "give" -> {
                 if (args.size < 4) {
-                    player.sendMessage(Component.text("Usage: /atlas admin give <player> <amount>", NamedTextColor.RED))
+                    player.sendMessage(Component.text("Usage: /atlas admin give <player> <amount|item>", NamedTextColor.RED))
                     return
                 }
                 
@@ -1043,9 +1101,28 @@ class AtlasCommand(
                     return
                 }
                 
-                val amount = args[3].toDoubleOrNull()
+                val arg3 = args[3]
+                
+                // Check if it's a known custom item
+                val customItem = when(arg3.lowercase()) {
+                    "healing_salve" -> com.projectatlas.visual.CustomItemManager.createHealingSalve()
+                    "spirit_totem" -> com.projectatlas.visual.CustomItemManager.createSpiritTotem()
+                    "hollow_blade" -> com.projectatlas.visual.CustomItemManager.createHollowKnightBlade()
+                    "warden_sword" -> com.projectatlas.visual.CustomItemManager.createWardenFlameSword()
+                    "ender_scythe" -> com.projectatlas.visual.CustomItemManager.createEnderSentinelScythe()
+                    else -> null
+                }
+                
+                if (customItem != null) {
+                    target.inventory.addItem(customItem)
+                    player.sendMessage(Component.text("Gave ${arg3} to ${target.name}.", NamedTextColor.GREEN))
+                    return
+                }
+                
+                // Otherwise assume it's gold
+                val amount = arg3.toDoubleOrNull()
                 if (amount == null || amount <= 0) {
-                    player.sendMessage(Component.text("Invalid amount.", NamedTextColor.RED))
+                    player.sendMessage(Component.text("Invalid amount or unknown item.", NamedTextColor.RED))
                     return
                 }
                 
@@ -1105,6 +1182,199 @@ class AtlasCommand(
             else -> player.sendMessage(Component.text("Unknown admin subcommand. Use /atlas admin", NamedTextColor.RED))
         }
     }
+    
+    private fun handleAnimation(player: Player, args: Array<out String>) {
+        if (!player.hasPermission("atlas.admin")) {
+            player.sendMessage(Component.text("No permission.", NamedTextColor.RED))
+            return
+        }
+        
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        if (args.size < 2) {
+            player.sendMessage(Component.empty())
+            player.sendMessage(Component.text("═══ ANIMATION SYSTEM ═══", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD))
+            player.sendMessage(Component.text("Active Models: ${plugin.animationSystem.getActiveModelCount()}", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("Registered Animations: ${plugin.animationSystem.getAnimationCount()}", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("Model Blueprints: ${plugin.animationSystem.getModelBlueprintCount()}", NamedTextColor.GRAY))
+            player.sendMessage(Component.empty())
+            player.sendMessage(Component.text("Commands:", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas anim spawn <model> - Spawn animated mob", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("  /atlas anim play <animation> - Play anim on target", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("  /atlas anim stop - Stop target's animation", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("  /atlas anim detach - Remove model from target", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("  /atlas anim list <models|anims> - List available", NamedTextColor.GRAY))
+            player.sendMessage(Component.empty())
+            player.sendMessage(Component.text("Models: humanoid, boss_golem, floating_skull, spider_boss, crystal_guardian", NamedTextColor.AQUA))
+            player.sendMessage(Component.text("Anims: idle, walk, attack, hurt, death, spawn, celebrate, charge", NamedTextColor.GREEN))
+            return
+        }
+        
+        when (args[1].lowercase()) {
+            "spawn" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas anim spawn <model> [entity_type]", NamedTextColor.RED))
+                    return
+                }
+                val modelName = args[2].lowercase()
+                val entityTypeStr = args.getOrNull(3)?.uppercase() ?: "ZOMBIE"
+                
+                val entityType = try {
+                    org.bukkit.entity.EntityType.valueOf(entityTypeStr)
+                } catch (e: Exception) {
+                    org.bukkit.entity.EntityType.ZOMBIE
+                }
+                
+                // Spawn entity
+                val entity = player.world.spawnEntity(player.location.add(2.0, 0.0, 0.0), entityType) as? org.bukkit.entity.LivingEntity
+                if (entity == null) {
+                    player.sendMessage(Component.text("Failed to spawn entity.", NamedTextColor.RED))
+                    return
+                }
+                
+                // Make it not despawn
+                entity.isCustomNameVisible = true
+                entity.customName(Component.text("⚙ Animated $modelName", NamedTextColor.LIGHT_PURPLE))
+                entity.removeWhenFarAway = false
+                entity.isPersistent = true
+                
+                // Attach animated model
+                val model = plugin.animationSystem.attachModel(entity, modelName)
+                if (model != null) {
+                    player.sendMessage(Component.text("✓ Spawned animated entity with model '$modelName'!", NamedTextColor.GREEN))
+                    player.sendMessage(Component.text("  Model has ${model.bones.size} bones.", NamedTextColor.GRAY))
+                } else {
+                    player.sendMessage(Component.text("Model '$modelName' not found.", NamedTextColor.RED))
+                }
+            }
+            "attach" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas anim attach <model>", NamedTextColor.RED))
+                    player.sendMessage(Component.text("Look at an entity first.", NamedTextColor.GRAY))
+                    return
+                }
+                
+                val target = player.getTargetEntity(10) as? org.bukkit.entity.LivingEntity
+                if (target == null) {
+                    player.sendMessage(Component.text("Look at an entity!", NamedTextColor.RED))
+                    return
+                }
+                
+                val modelName = args[2].lowercase()
+                val model = plugin.animationSystem.attachModel(target, modelName)
+                if (model != null) {
+                    player.sendMessage(Component.text("Attached model to ${target.type.name}!", NamedTextColor.GREEN))
+                } else {
+                    player.sendMessage(Component.text("Model not found: $modelName", NamedTextColor.RED))
+                }
+            }
+            "play" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas anim play <animation>", NamedTextColor.RED))
+                    return
+                }
+                
+                val target = player.getTargetEntity(10) as? org.bukkit.entity.LivingEntity
+                if (target == null) {
+                    player.sendMessage(Component.text("Look at an entity!", NamedTextColor.RED))
+                    return
+                }
+                
+                val animName = args[2].lowercase()
+                val loop = args.getOrNull(3)?.lowercase() != "once"
+                
+                if (plugin.animationSystem.playAnimation(target, animName, loop)) {
+                    player.sendMessage(Component.text("Playing '$animName' on ${target.type.name}!", NamedTextColor.GREEN))
+                } else {
+                    player.sendMessage(Component.text("Entity has no model or animation not found.", NamedTextColor.RED))
+                }
+            }
+            "stop" -> {
+                val target = player.getTargetEntity(10) as? org.bukkit.entity.LivingEntity
+                if (target == null) {
+                    player.sendMessage(Component.text("Look at an entity!", NamedTextColor.RED))
+                    return
+                }
+                
+                plugin.animationSystem.stopAnimation(target)
+                player.sendMessage(Component.text("Stopped animation on ${target.type.name}.", NamedTextColor.YELLOW))
+            }
+            "detach" -> {
+                val target = player.getTargetEntity(10) as? org.bukkit.entity.LivingEntity
+                if (target == null) {
+                    player.sendMessage(Component.text("Look at an entity!", NamedTextColor.RED))
+                    return
+                }
+                
+                plugin.animationSystem.detachModel(target)
+                player.sendMessage(Component.text("Model detached from ${target.type.name}.", NamedTextColor.YELLOW))
+            }
+            "list" -> {
+                val listType = args.getOrNull(2)?.lowercase() ?: "both"
+                
+                if (listType == "models" || listType == "both") {
+                    player.sendMessage(Component.text("Available Models:", NamedTextColor.AQUA))
+                    player.sendMessage(Component.text("  humanoid, boss_golem, floating_skull, spider_boss, crystal_guardian, simple", NamedTextColor.GRAY))
+                }
+                
+                if (listType == "anims" || listType == "animations" || listType == "both") {
+                    player.sendMessage(Component.text("Available Animations:", NamedTextColor.GREEN))
+                    player.sendMessage(Component.text("  idle, walk, attack, hurt, death, spawn, celebrate, charge", NamedTextColor.GRAY))
+                }
+            }
+            "effect" -> {
+                // One-shot effect at location
+                val animName = args.getOrNull(2) ?: "spawn"
+                val duration = args.getOrNull(3)?.toIntOrNull() ?: 40
+                
+                plugin.animationSystem.playEffectAnimation(player.location, animName, duration)
+                player.sendMessage(Component.text("Playing effect '$animName' at your location!", NamedTextColor.GREEN))
+            }
+            "procedural", "proc" -> {
+                if (args.size < 4) {
+                    player.sendMessage(Component.text("Usage: /atlas anim proc <target|defaults> <feature> [value]", NamedTextColor.RED))
+                    player.sendMessage(Component.text("Features: all, look, breath, lean, bob, sway, wings, tail", NamedTextColor.GRAY))
+                    return
+                }
+                
+                val target = player.getTargetEntity(10) as? org.bukkit.entity.LivingEntity
+                if (target == null) {
+                    player.sendMessage(Component.text("Look at an entity!", NamedTextColor.RED))
+                    return
+                }
+                
+                // This is a simplified test implementation. 
+                // In production, you'd fetch the existing config and modify it.
+                // For now, we apply presets.
+                val presetName = args[2].uppercase()
+                
+                val config = when(presetName) {
+                     "HUMANOID" -> com.projectatlas.animation.ProceduralConfig.HUMANOID
+                     "FLOATING" -> com.projectatlas.animation.ProceduralConfig.FLOATING
+                     "FLYING" -> com.projectatlas.animation.ProceduralConfig.FLYING
+                     "BEAST" -> com.projectatlas.animation.ProceduralConfig.BEAST
+                     "GHOST" -> com.projectatlas.animation.ProceduralConfig.GHOST
+                     "GOLEM" -> com.projectatlas.animation.ProceduralConfig.GOLEM
+                     else -> com.projectatlas.animation.ProceduralConfig.HUMANOID // Default
+                }
+                
+                plugin.animationSystem.configureProcedural(target, config)
+                player.sendMessage(Component.text("Applied procedural preset '$presetName' to target.", NamedTextColor.GREEN))
+            }
+            "recoil" -> {
+                 val target = player.getTargetEntity(10) as? org.bukkit.entity.LivingEntity
+                if (target == null) {
+                    player.sendMessage(Component.text("Look at an entity!", NamedTextColor.RED))
+                    return
+                }
+                
+                val dir = player.location.direction
+                plugin.animationSystem.triggerRecoil(target, dir, 1.5f)
+                player.sendMessage(Component.text("BOOM! Recoil triggered.", NamedTextColor.RED))
+            }
+            else -> player.sendMessage(Component.text("Unknown animation subcommand.", NamedTextColor.RED))
+        }
+    }
 
     // ============ TAB COMPLETION ============
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
@@ -1117,7 +1387,7 @@ class AtlasCommand(
                 "dungeon", "party", "bounty", "boss", "relic", "blueprint", "bp", "schem", "spawn",
                 "sort", "stats", "scoreboard", "sb", "damage", "dmg", "quickstack", "qs",
                 "atmosphere", "ambient", "shaders", "quest", "heal", "medkit", "skills", "skill", "tree",
-                "admin"
+                "admin", "anim", "animation"
             ).filter { it.startsWith(args[0].lowercase()) }
             
             2 -> when (args[0].lowercase()) {
@@ -1140,6 +1410,7 @@ class AtlasCommand(
                 "pay" -> org.bukkit.Bukkit.getOnlinePlayers().map { it.name }
                     .filter { it.lowercase().startsWith(args[1].lowercase()) }
                 "admin" -> if (sender.hasPermission("atlas.admin")) listOf("give", "reset", "xp").filter { it.startsWith(args[1].lowercase()) } else emptyList()
+                "anim", "animation" -> if (sender.hasPermission("atlas.admin")) listOf("spawn", "attach", "play", "stop", "detach", "list", "effect", "recoil", "proc").filter { it.startsWith(args[1].lowercase()) } else emptyList()
                 else -> emptyList()
             }
             
@@ -1189,6 +1460,20 @@ class AtlasCommand(
                         .filter { it.lowercase().startsWith(args[2].lowercase()) }
                     else -> emptyList()
                 }
+                
+                "anim", "animation" -> if (sender.hasPermission("atlas.admin")) {
+                    when (args[1].lowercase()) {
+                        "spawn", "attach" -> listOf("humanoid", "boss_golem", "floating_skull", "spider_boss", "crystal_guardian", "simple")
+                            .filter { it.startsWith(args[2].lowercase()) }
+                        "play", "effect" -> listOf("idle", "walk", "attack", "hurt", "death", "spawn", "celebrate", "charge", "fly", "cast", "roar", "sleep", "spin", "slam", "dodge")
+                            .filter { it.startsWith(args[2].lowercase()) }
+                        "list" -> listOf("models", "anims", "both")
+                            .filter { it.startsWith(args[2].lowercase()) }
+                        "proc", "procedural" -> listOf("HUMANOID", "FLOATING", "FLYING", "BEAST", "GHOST", "GOLEM")
+                            .filter { it.startsWith(args[2].lowercase()) }
+                        else -> emptyList()
+                    }
+                } else emptyList()
                 
                 else -> emptyList()
             }
@@ -1277,6 +1562,37 @@ class AtlasCommand(
     private fun handleDialogue(player: Player, args: Array<out String>) {
         val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
         plugin.dialogueManager.handleDialogueCommand(player, args)
+    }
+    private fun handleSiege(player: Player, args: Array<out String>) {
+        if (!player.hasPermission("atlas.admin")) {
+            player.sendMessage(Component.text("No permission.", NamedTextColor.RED))
+            return
+        }
+        
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        if (args.size < 3 || !args[1].equals("start", ignoreCase = true)) {
+            player.sendMessage(Component.text("Usage: /atlas siege start <city_name>", NamedTextColor.RED))
+            return
+        }
+        
+        val cityName = args.slice(2 until args.size).joinToString(" ")
+        // Find city by name (inefficient linear search, but okay for admin command)
+        val city = plugin.cityManager.getAllCities().find { it.name.equals(cityName, ignoreCase = true) }
+        
+        if (city == null) {
+             player.sendMessage(Component.text("City '$cityName' not found.", NamedTextColor.RED))
+             return
+        }
+        
+        // Pick a start location (Player's location or City center)
+        val startLoc = player.location
+        
+        if (plugin.siegeManager.startSiege(city, startLoc)) {
+            player.sendMessage(Component.text("Siege started against ${city.name}!", NamedTextColor.GREEN))
+        } else {
+            player.sendMessage(Component.text("Failed to start siege (Cooldown active? City already under siege?).", NamedTextColor.RED))
+        }
     }
 }
 

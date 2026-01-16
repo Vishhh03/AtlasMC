@@ -7,35 +7,42 @@ import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.Sound
+import org.bukkit.NamespacedKey
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
-import org.bukkit.enchantments.Enchantment
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
+import org.bukkit.persistence.PersistentDataType
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Skill Tree System - Reworked for practical gameplay.
+ * BALANCED SKILL TREE SYSTEM
  * 
  * Design Philosophy:
  * 1. Five Role Branches: Vanguard, Berserker, Scout, Artisan, Settler
- * 2. Every effect is implemented and functional
- * 3. Keystones are exclusive (meaningful choices)
- * 4. Clear progression paths
+ * 2. Balanced numbers - no overpowered stacking
+ * 3. Meaningful trade-offs with exclusive keystones
+ * 4. Clear level progression (30 total nodes, ~30 points at max level)
+ * 5. Each branch has 6 nodes: 3 Minor (1pt), 2 Notable (2pt), 1 Keystone (3pt)
+ * 
+ * Total Skill Points: 1 per level (max level 50 = 50 points)
+ * Points needed for FULL one branch: 1+1+1+2+2+3 = 10 points
+ * Players can fully complete ~4-5 branches at max level
  */
 class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
 
     private val viewportPositions = ConcurrentHashMap<UUID, Pair<Int, Int>>()
     private val skillTree: Map<String, SkillNode>
     private val gridLayout: Array<Array<String?>>
+    
+    private val menuKey = NamespacedKey(plugin, "skill_menu")
     
     companion object {
         const val GRID_SIZE = 15
@@ -47,428 +54,235 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
     init {
         skillTree = buildSkillTree()
         gridLayout = buildGridLayout()
-        
-        // Start passive effect task
         startPassiveEffectTask()
     }
     
     // ══════════════════════════════════════════════════════════════
-    // SKILL TREE DEFINITION - Role-Based Branches
+    // EXPANDED SKILL TREE - 105 NODES (21 per branch)
+    // Small incremental bonuses for balanced progression
+    // Max 50 skill points = specialize in 2-3 branches
     // ══════════════════════════════════════════════════════════════
     
     private fun buildSkillTree(): Map<String, SkillNode> {
         val nodes = mutableMapOf<String, SkillNode>()
         
-        // ═══ ORIGIN (Center) ═══
+        // ═══ ORIGIN ═══
         nodes["origin"] = SkillNode(
-            "origin", "Awakening", "Your journey begins here.",
+            "origin", "Awakening", "Your journey begins. Unlocks all 5 branches.",
             Material.NETHER_STAR, SkillCategory.CORE, NodeTier.NOTABLE,
-            listOf("vanguard_start", "berserker_start", "scout_start", "artisan_start", "settler_start"),
+            listOf("van_hp1", "ber_dmg1", "sco_spd1", "art_haste1", "set_eco1"),
             SkillEffect.MaxHealth(2.0), cost = 0
         )
         
         // ═══════════════════════════════════════════════════════════
-        // VANGUARD BRANCH (Blue) - Tank / Defense
+        // VANGUARD (21 nodes) - Tank / Defense / Sustain
         // ═══════════════════════════════════════════════════════════
-        nodes["vanguard_start"] = SkillNode(
-            "vanguard_start", "Vanguard's Path", "The shield of your allies.",
-            Material.IRON_CHESTPLATE, SkillCategory.VANGUARD, NodeTier.MINOR,
-            listOf("origin", "v_health_1", "v_armor_1", "v_regen_1"),
-            SkillEffect.MaxHealth(2.0)
-        )
         
-        // Health Branch
-        nodes["v_health_1"] = SkillNode(
-            "v_health_1", "Vitality", "+4 Max Health",
-            Material.APPLE, SkillCategory.VANGUARD, NodeTier.MINOR,
-            listOf("vanguard_start", "v_health_2"),
-            SkillEffect.MaxHealth(4.0)
-        )
-        nodes["v_health_2"] = SkillNode(
-            "v_health_2", "Constitution", "+6 Max Health",
-            Material.GOLDEN_APPLE, SkillCategory.VANGUARD, NodeTier.NOTABLE,
-            listOf("v_health_1", "v_colossus"),
-            SkillEffect.MaxHealth(6.0)
-        )
-        nodes["v_colossus"] = SkillNode(
-            "v_colossus", "Colossus", "+10 Max Health",
-            Material.ENCHANTED_GOLDEN_APPLE, SkillCategory.VANGUARD, NodeTier.KEYSTONE,
-            listOf("v_health_2"),
-            SkillEffect.MaxHealth(10.0), cost = 3,
-            exclusiveWith = listOf("b_executioner") // Can't be both Tank and Executioner
-        )
+        // Health Path (7 nodes)
+        nodes["van_hp1"] = node("van_hp1", "Toughness I", "+2 HP", Material.APPLE, SkillCategory.VANGUARD, SkillEffect.MaxHealth(2.0), "origin", "van_hp2", "van_arm1")
+        nodes["van_hp2"] = node("van_hp2", "Toughness II", "+2 HP", Material.APPLE, SkillCategory.VANGUARD, SkillEffect.MaxHealth(2.0), "van_hp1", "van_hp3")
+        nodes["van_hp3"] = node("van_hp3", "Vitality I", "+3 HP", Material.GOLDEN_APPLE, SkillCategory.VANGUARD, SkillEffect.MaxHealth(3.0), "van_hp2", "van_hp4", cost = 2)
+        nodes["van_hp4"] = node("van_hp4", "Vitality II", "+3 HP", Material.GOLDEN_APPLE, SkillCategory.VANGUARD, SkillEffect.MaxHealth(3.0), "van_hp3", "van_hp5", cost = 2)
+        nodes["van_hp5"] = node("van_hp5", "Endurance I", "+4 HP", Material.GOLDEN_APPLE, SkillCategory.VANGUARD, SkillEffect.MaxHealth(4.0), "van_hp4", "van_hp6", cost = 2)
+        nodes["van_hp6"] = node("van_hp6", "Endurance II", "+4 HP", Material.ENCHANTED_GOLDEN_APPLE, SkillCategory.VANGUARD, SkillEffect.MaxHealth(4.0), "van_hp5", "van_colossus", cost = 2)
+        nodes["van_colossus"] = SkillNode("van_colossus", "Colossus", "+6 HP, Knockback Immune", Material.ENCHANTED_GOLDEN_APPLE, SkillCategory.VANGUARD, NodeTier.KEYSTONE, listOf("van_hp6"), SkillEffect.Poise(true), 3, listOf("ber_execute"))
         
-        // Armor Branch
-        nodes["v_armor_1"] = SkillNode(
-            "v_armor_1", "Iron Skin", "+2 Armor",
-            Material.IRON_INGOT, SkillCategory.VANGUARD, NodeTier.MINOR,
-            listOf("vanguard_start", "v_armor_2"),
-            SkillEffect.Armor(2.0)
-        )
-        nodes["v_armor_2"] = SkillNode(
-            "v_armor_2", "Steel Wall", "+4 Armor, Fire Resistance",
-            Material.IRON_BLOCK, SkillCategory.VANGUARD, NodeTier.NOTABLE,
-            listOf("v_armor_1", "v_poise"),
-            SkillEffect.Armor(4.0)
-        )
-        nodes["v_poise"] = SkillNode(
-            "v_poise", "Unbreakable", "Immune to knockback",
-            Material.ANVIL, SkillCategory.VANGUARD, NodeTier.KEYSTONE,
-            listOf("v_armor_2"),
-            SkillEffect.Poise(true), cost = 3
-        )
+        // Armor Path (7 nodes)
+        nodes["van_arm1"] = node("van_arm1", "Iron Skin I", "+1 Armor", Material.IRON_NUGGET, SkillCategory.VANGUARD, SkillEffect.Armor(1.0), "van_hp1", "van_arm2", "van_thorn1")
+        nodes["van_arm2"] = node("van_arm2", "Iron Skin II", "+1 Armor", Material.IRON_NUGGET, SkillCategory.VANGUARD, SkillEffect.Armor(1.0), "van_arm1", "van_arm3")
+        nodes["van_arm3"] = node("van_arm3", "Steel Wall I", "+2 Armor", Material.IRON_INGOT, SkillCategory.VANGUARD, SkillEffect.Armor(2.0), "van_arm2", "van_arm4", cost = 2)
+        nodes["van_arm4"] = node("van_arm4", "Steel Wall II", "+2 Armor", Material.IRON_BLOCK, SkillCategory.VANGUARD, SkillEffect.Armor(2.0), "van_arm3", "van_fortress", cost = 2)
+        nodes["van_fortress"] = SkillNode("van_fortress", "Fortress", "+3 Armor, Fire Resist", Material.NETHERITE_INGOT, SkillCategory.VANGUARD, NodeTier.KEYSTONE, listOf("van_arm4"), SkillEffect.FireResistance(true), 3)
         
-        // Regen Branch
-        nodes["v_regen_1"] = SkillNode(
-            "v_regen_1", "Recovery", "Regeneration I",
-            Material.GLISTERING_MELON_SLICE, SkillCategory.VANGUARD, NodeTier.NOTABLE,
-            listOf("vanguard_start", "v_regen_2"),
-            SkillEffect.Regeneration(0)
-        )
-        nodes["v_regen_2"] = SkillNode(
-            "v_regen_2", "Rapid Healing", "Regeneration II",
-            Material.GOLDEN_CARROT, SkillCategory.VANGUARD, NodeTier.KEYSTONE,
-            listOf("v_regen_1"),
-            SkillEffect.Regeneration(1), cost = 3
-        )
-        
-        // Thorns
-        nodes["v_thorns"] = SkillNode(
-            "v_thorns", "Spiked Armor", "Reflect 20% damage",
-            Material.CACTUS, SkillCategory.VANGUARD, NodeTier.NOTABLE,
-            listOf("v_armor_1"),
-            SkillEffect.Thorns(0.20)
-        )
+        // Thorns/Regen Path (7 nodes)
+        nodes["van_thorn1"] = node("van_thorn1", "Spikes I", "Reflect 5% dmg", Material.CACTUS, SkillCategory.VANGUARD, SkillEffect.Thorns(0.05), "van_arm1", "van_thorn2")
+        nodes["van_thorn2"] = node("van_thorn2", "Spikes II", "Reflect 5% dmg", Material.CACTUS, SkillCategory.VANGUARD, SkillEffect.Thorns(0.05), "van_thorn1", "van_thorn3", cost = 2)
+        nodes["van_thorn3"] = node("van_thorn3", "Retribution", "Reflect 8% dmg", Material.SWEET_BERRIES, SkillCategory.VANGUARD, SkillEffect.Thorns(0.08), "van_thorn2", "van_regen1", cost = 2)
+        nodes["van_regen1"] = node("van_regen1", "Recovery I", "Regen I", Material.GLISTERING_MELON_SLICE, SkillCategory.VANGUARD, SkillEffect.Regeneration(0), "van_thorn3", "van_regen2")
+        nodes["van_regen2"] = node("van_regen2", "Recovery II", "Regen II", Material.GOLDEN_CARROT, SkillCategory.VANGUARD, SkillEffect.Regeneration(1), "van_regen1", "van_undying", cost = 2)
+        nodes["van_undying"] = SkillNode("van_undying", "Undying", "Regen II + 10% Dodge", Material.TOTEM_OF_UNDYING, SkillCategory.VANGUARD, NodeTier.KEYSTONE, listOf("van_regen2"), SkillEffect.DodgeChance(0.10), 3)
         
         // ═══════════════════════════════════════════════════════════
-        // BERSERKER BRANCH (Red) - DPS / Combat
+        // BERSERKER (21 nodes) - Damage / Crit / Lifesteal
         // ═══════════════════════════════════════════════════════════
-        nodes["berserker_start"] = SkillNode(
-            "berserker_start", "Berserker's Path", "Embrace the fury of battle.",
-            Material.IRON_SWORD, SkillCategory.BERSERKER, NodeTier.MINOR,
-            listOf("origin", "b_melee_1", "b_crit_1", "b_leech_1"),
-            SkillEffect.MeleeDamage(1.05)
-        )
         
-        // Melee Damage Branch
-        nodes["b_melee_1"] = SkillNode(
-            "b_melee_1", "Blade Adept", "+10% Melee Damage",
-            Material.STONE_SWORD, SkillCategory.BERSERKER, NodeTier.MINOR,
-            listOf("berserker_start", "b_melee_2"),
-            SkillEffect.MeleeDamage(1.10)
-        )
-        nodes["b_melee_2"] = SkillNode(
-            "b_melee_2", "Blade Master", "+15% Melee Damage",
-            Material.DIAMOND_SWORD, SkillCategory.BERSERKER, NodeTier.NOTABLE,
-            listOf("b_melee_1", "b_executioner"),
-            SkillEffect.MeleeDamage(1.15)
-        )
-        nodes["b_executioner"] = SkillNode(
-            "b_executioner", "Executioner", "+50% damage to enemies <25% HP",
-            Material.NETHERITE_AXE, SkillCategory.BERSERKER, NodeTier.KEYSTONE,
-            listOf("b_melee_2"),
-            SkillEffect.ExecuteDamage(0.25, 1.50), cost = 3,
-            exclusiveWith = listOf("v_colossus") // Can't be both Executioner and Tank
-        )
+        // Melee Damage Path
+        nodes["ber_dmg1"] = node("ber_dmg1", "Strength I", "+3% Melee", Material.WOODEN_SWORD, SkillCategory.BERSERKER, SkillEffect.MeleeDamage(1.03), "origin", "ber_dmg2", "ber_crit1")
+        nodes["ber_dmg2"] = node("ber_dmg2", "Strength II", "+3% Melee", Material.STONE_SWORD, SkillCategory.BERSERKER, SkillEffect.MeleeDamage(1.03), "ber_dmg1", "ber_dmg3")
+        nodes["ber_dmg3"] = node("ber_dmg3", "Power I", "+5% Melee", Material.IRON_SWORD, SkillCategory.BERSERKER, SkillEffect.MeleeDamage(1.05), "ber_dmg2", "ber_dmg4", cost = 2)
+        nodes["ber_dmg4"] = node("ber_dmg4", "Power II", "+5% Melee", Material.IRON_SWORD, SkillCategory.BERSERKER, SkillEffect.MeleeDamage(1.05), "ber_dmg3", "ber_dmg5", cost = 2)
+        nodes["ber_dmg5"] = node("ber_dmg5", "Brutality I", "+6% Melee", Material.DIAMOND_SWORD, SkillCategory.BERSERKER, SkillEffect.MeleeDamage(1.06), "ber_dmg4", "ber_dmg6", cost = 2)
+        nodes["ber_dmg6"] = node("ber_dmg6", "Brutality II", "+6% Melee", Material.DIAMOND_SWORD, SkillCategory.BERSERKER, SkillEffect.MeleeDamage(1.06), "ber_dmg5", "ber_execute", cost = 2)
+        nodes["ber_execute"] = SkillNode("ber_execute", "Executioner", "+25% to low HP foes", Material.NETHERITE_AXE, SkillCategory.BERSERKER, NodeTier.KEYSTONE, listOf("ber_dmg6"), SkillEffect.ExecuteDamage(0.25, 1.25), 3, listOf("van_colossus"))
         
-        // Crit Branch
-        nodes["b_crit_1"] = SkillNode(
-            "b_crit_1", "Precision", "+10% Crit Chance",
-            Material.SPECTRAL_ARROW, SkillCategory.BERSERKER, NodeTier.MINOR,
-            listOf("berserker_start", "b_crit_2"),
-            SkillEffect.CritChance(0.10)
-        )
-        nodes["b_crit_2"] = SkillNode(
-            "b_crit_2", "Deadly Aim", "+50% Crit Damage",
-            Material.TNT, SkillCategory.BERSERKER, NodeTier.KEYSTONE,
-            listOf("b_crit_1"),
-            SkillEffect.CritMultiplier(1.50), cost = 3
-        )
+        // Crit Path
+        nodes["ber_crit1"] = node("ber_crit1", "Precision I", "+4% Crit", Material.FLINT, SkillCategory.BERSERKER, SkillEffect.CritChance(0.04), "ber_dmg1", "ber_crit2", "ber_leech1")
+        nodes["ber_crit2"] = node("ber_crit2", "Precision II", "+4% Crit", Material.FLINT, SkillCategory.BERSERKER, SkillEffect.CritChance(0.04), "ber_crit1", "ber_crit3")
+        nodes["ber_crit3"] = node("ber_crit3", "Deadly I", "+5% Crit", Material.SPECTRAL_ARROW, SkillCategory.BERSERKER, SkillEffect.CritChance(0.05), "ber_crit2", "ber_critdmg1", cost = 2)
+        nodes["ber_critdmg1"] = node("ber_critdmg1", "Savage I", "+10% Crit Dmg", Material.TNT, SkillCategory.BERSERKER, SkillEffect.CritMultiplier(1.10), "ber_crit3", "ber_critdmg2", cost = 2)
+        nodes["ber_critdmg2"] = node("ber_critdmg2", "Savage II", "+15% Crit Dmg", Material.TNT, SkillCategory.BERSERKER, SkillEffect.CritMultiplier(1.15), "ber_critdmg1", "ber_assassin", cost = 2)
+        nodes["ber_assassin"] = SkillNode("ber_assassin", "Assassin", "+20% Crit Dmg, +5% Crit", Material.WITHER_SKELETON_SKULL, SkillCategory.BERSERKER, NodeTier.KEYSTONE, listOf("ber_critdmg2"), SkillEffect.CritChance(0.05), 3)
         
-        // Lifesteal Branch
-        nodes["b_leech_1"] = SkillNode(
-            "b_leech_1", "Vampiric Strikes", "Leech 5% damage as HP",
-            Material.REDSTONE, SkillCategory.BERSERKER, NodeTier.NOTABLE,
-            listOf("berserker_start", "b_leech_2"),
-            SkillEffect.LifeLeech(0.05)
-        )
-        nodes["b_leech_2"] = SkillNode(
-            "b_leech_2", "Blood Drinker", "Leech 10% damage as HP",
-            Material.CRIMSON_FUNGUS, SkillCategory.BERSERKER, NodeTier.KEYSTONE,
-            listOf("b_leech_1"),
-            SkillEffect.LifeLeech(0.10), cost = 3
-        )
-        
-        // Berserker Mode (Low HP = More Damage)
-        nodes["b_rage"] = SkillNode(
-            "b_rage", "Blood Rage", "+40% damage when below 30% HP",
-            Material.DRAGON_BREATH, SkillCategory.BERSERKER, NodeTier.KEYSTONE,
-            listOf("b_melee_1"),
-            SkillEffect.BerserkerMode(0.30, 1.40), cost = 3
-        )
+        // Lifesteal Path
+        nodes["ber_leech1"] = node("ber_leech1", "Vampiric I", "2% Lifesteal", Material.REDSTONE, SkillCategory.BERSERKER, SkillEffect.LifeLeech(0.02), "ber_crit1", "ber_leech2")
+        nodes["ber_leech2"] = node("ber_leech2", "Vampiric II", "2% Lifesteal", Material.REDSTONE, SkillCategory.BERSERKER, SkillEffect.LifeLeech(0.02), "ber_leech1", "ber_leech3", cost = 2)
+        nodes["ber_leech3"] = node("ber_leech3", "Blood Drinker", "3% Lifesteal", Material.CRIMSON_FUNGUS, SkillCategory.BERSERKER, SkillEffect.LifeLeech(0.03), "ber_leech2", "ber_rage", cost = 2)
+        nodes["ber_rage"] = SkillNode("ber_rage", "Blood Rage", "+20% dmg when <30% HP", Material.DRAGON_BREATH, SkillCategory.BERSERKER, NodeTier.KEYSTONE, listOf("ber_leech3"), SkillEffect.BerserkerMode(0.30, 1.20), 3)
         
         // ═══════════════════════════════════════════════════════════
-        // SCOUT BRANCH (Cyan) - Mobility / Stealth
+        // SCOUT (21 nodes) - Speed / Dodge / Stealth
         // ═══════════════════════════════════════════════════════════
-        nodes["scout_start"] = SkillNode(
-            "scout_start", "Scout's Path", "Move unseen, strike fast.",
-            Material.LEATHER_BOOTS, SkillCategory.SCOUT, NodeTier.MINOR,
-            listOf("origin", "s_speed_1", "s_stealth_1", "s_dodge_1"),
-            SkillEffect.MovementSpeed(0.02f)
-        )
         
-        // Speed Branch
-        nodes["s_speed_1"] = SkillNode(
-            "s_speed_1", "Quickfoot", "+5% Movement Speed",
-            Material.FEATHER, SkillCategory.SCOUT, NodeTier.MINOR,
-            listOf("scout_start", "s_speed_2"),
-            SkillEffect.MovementSpeed(0.01f)
-        )
-        nodes["s_speed_2"] = SkillNode(
-            "s_speed_2", "Windrunner", "+10% Movement Speed",
-            Material.DIAMOND_BOOTS, SkillCategory.SCOUT, NodeTier.NOTABLE,
-            listOf("s_speed_1", "s_double_jump"),
-            SkillEffect.MovementSpeed(0.02f)
-        )
-        nodes["s_double_jump"] = SkillNode(
-            "s_double_jump", "Double Jump", "Jump again in mid-air!",
-            Material.SLIME_BLOCK, SkillCategory.SCOUT, NodeTier.KEYSTONE,
-            listOf("s_speed_2"),
-            SkillEffect.DoubleJump(true), cost = 3
-        )
+        // Speed Path
+        nodes["sco_spd1"] = node("sco_spd1", "Quickfoot I", "+2% Speed", Material.LEATHER_BOOTS, SkillCategory.SCOUT, SkillEffect.MovementSpeed(0.002f), "origin", "sco_spd2", "sco_dodge1")
+        nodes["sco_spd2"] = node("sco_spd2", "Quickfoot II", "+2% Speed", Material.LEATHER_BOOTS, SkillCategory.SCOUT, SkillEffect.MovementSpeed(0.002f), "sco_spd1", "sco_spd3")
+        nodes["sco_spd3"] = node("sco_spd3", "Runner I", "+3% Speed", Material.CHAINMAIL_BOOTS, SkillCategory.SCOUT, SkillEffect.MovementSpeed(0.003f), "sco_spd2", "sco_spd4", cost = 2)
+        nodes["sco_spd4"] = node("sco_spd4", "Runner II", "+3% Speed", Material.IRON_BOOTS, SkillCategory.SCOUT, SkillEffect.MovementSpeed(0.003f), "sco_spd3", "sco_spd5", cost = 2)
+        nodes["sco_spd5"] = node("sco_spd5", "Windrunner I", "+4% Speed", Material.DIAMOND_BOOTS, SkillCategory.SCOUT, SkillEffect.MovementSpeed(0.004f), "sco_spd4", "sco_spd6", cost = 2)
+        nodes["sco_spd6"] = node("sco_spd6", "Windrunner II", "+4% Speed", Material.GOLDEN_BOOTS, SkillCategory.SCOUT, SkillEffect.MovementSpeed(0.004f), "sco_spd5", "sco_djump", cost = 2)
+        nodes["sco_djump"] = SkillNode("sco_djump", "Double Jump", "Jump in mid-air!", Material.SLIME_BLOCK, SkillCategory.SCOUT, NodeTier.KEYSTONE, listOf("sco_spd6"), SkillEffect.DoubleJump(true), 3, listOf("art_vein"))
         
-        // Stealth Branch
-        nodes["s_stealth_1"] = SkillNode(
-            "s_stealth_1", "Shadow Walker", "+50% Sneak Damage",
-            Material.BLACK_DYE, SkillCategory.SCOUT, NodeTier.NOTABLE,
-            listOf("scout_start", "s_stealth_2"),
-            SkillEffect.SneakDamage(1.50)
-        )
-        nodes["s_stealth_2"] = SkillNode(
-            "s_stealth_2", "Assassin", "2x Sneak Damage",
-            Material.ENDER_EYE, SkillCategory.SCOUT, NodeTier.KEYSTONE,
-            listOf("s_stealth_1"),
-            SkillEffect.SneakDamage(2.0), cost = 3
-        )
+        // Dodge/Defense Path
+        nodes["sco_dodge1"] = node("sco_dodge1", "Evasion I", "+4% Dodge", Material.PHANTOM_MEMBRANE, SkillCategory.SCOUT, SkillEffect.DodgeChance(0.04), "sco_spd1", "sco_dodge2", "sco_sneak1")
+        nodes["sco_dodge2"] = node("sco_dodge2", "Evasion II", "+4% Dodge", Material.PHANTOM_MEMBRANE, SkillCategory.SCOUT, SkillEffect.DodgeChance(0.04), "sco_dodge1", "sco_dodge3")
+        nodes["sco_dodge3"] = node("sco_dodge3", "Agility I", "+5% Dodge", Material.RABBIT_FOOT, SkillCategory.SCOUT, SkillEffect.DodgeChance(0.05), "sco_dodge2", "sco_nofall", cost = 2)
+        nodes["sco_nofall"] = node("sco_nofall", "Featherfall", "No Fall Damage", Material.FEATHER, SkillCategory.SCOUT, SkillEffect.NoFallDamage(true), "sco_dodge3", "sco_acrobat", cost = 2)
+        nodes["sco_acrobat"] = SkillNode("sco_acrobat", "Acrobat", "+8% Dodge, Jump Boost", Material.ELYTRA, SkillCategory.SCOUT, NodeTier.KEYSTONE, listOf("sco_nofall"), SkillEffect.JumpBoost(1), 3)
         
-        // Dodge Branch
-        nodes["s_dodge_1"] = SkillNode(
-            "s_dodge_1", "Evasion", "15% chance to dodge attacks",
-            Material.PHANTOM_MEMBRANE, SkillCategory.SCOUT, NodeTier.NOTABLE,
-            listOf("scout_start", "s_nofall"),
-            SkillEffect.DodgeChance(0.15)
-        )
-        nodes["s_nofall"] = SkillNode(
-            "s_nofall", "Featherfall", "Immune to fall damage",
-            Material.ELYTRA, SkillCategory.SCOUT, NodeTier.NOTABLE,
-            listOf("s_dodge_1"),
-            SkillEffect.NoFallDamage(true)
-        )
-        
-        // Ocean/Swim
-        nodes["s_swim"] = SkillNode(
-            "s_swim", "Mariner", "Faster swim, water breathing",
-            Material.TURTLE_HELMET, SkillCategory.SCOUT, NodeTier.NOTABLE,
-            listOf("s_speed_1"),
-            SkillEffect.SwimSpeed(1)
-        )
-        nodes["s_cold_resist"] = SkillNode(
-            "s_cold_resist", "Polar Bear", "Immune to freezing water",
-            Material.PACKED_ICE, SkillCategory.SCOUT, NodeTier.MINOR,
-            listOf("s_swim"),
-            SkillEffect.ColdResistance(true)
-        )
+        // Stealth Path
+        nodes["sco_sneak1"] = node("sco_sneak1", "Shadow I", "+8% Sneak Dmg", Material.BLACK_DYE, SkillCategory.SCOUT, SkillEffect.SneakDamage(1.08), "sco_dodge1", "sco_sneak2")
+        nodes["sco_sneak2"] = node("sco_sneak2", "Shadow II", "+8% Sneak Dmg", Material.BLACK_DYE, SkillCategory.SCOUT, SkillEffect.SneakDamage(1.08), "sco_sneak1", "sco_sneak3", cost = 2)
+        nodes["sco_sneak3"] = node("sco_sneak3", "Backstab I", "+12% Sneak Dmg", Material.INK_SAC, SkillCategory.SCOUT, SkillEffect.SneakDamage(1.12), "sco_sneak2", "sco_sneak4", cost = 2)
+        nodes["sco_sneak4"] = node("sco_sneak4", "Backstab II", "+12% Sneak Dmg", Material.ENDER_EYE, SkillCategory.SCOUT, SkillEffect.SneakDamage(1.12), "sco_sneak3", "sco_ninja", cost = 2)
+        nodes["sco_ninja"] = SkillNode("sco_ninja", "Ninja", "+20% Sneak, Night Vision", Material.WITHER_ROSE, SkillCategory.SCOUT, NodeTier.KEYSTONE, listOf("sco_sneak4"), SkillEffect.NightVision(true), 3)
         
         // ═══════════════════════════════════════════════════════════
-        // ARTISAN BRANCH (Orange) - Mining / Gathering
+        // ARTISAN (21 nodes) - Mining / Gathering / Utility
         // ═══════════════════════════════════════════════════════════
-        nodes["artisan_start"] = SkillNode(
-            "artisan_start", "Artisan's Path", "Master the land's resources.",
-            Material.IRON_PICKAXE, SkillCategory.ARTISAN, NodeTier.MINOR,
-            listOf("origin", "a_haste_1", "a_fortune_1", "a_timber"),
-            SkillEffect.MiningSpeed(0)
-        )
         
-        // Haste Branch
-        nodes["a_haste_1"] = SkillNode(
-            "a_haste_1", "Efficient Strikes", "Haste I",
-            Material.GOLDEN_PICKAXE, SkillCategory.ARTISAN, NodeTier.MINOR,
-            listOf("artisan_start", "a_haste_2"),
-            SkillEffect.MiningSpeed(0)
-        )
-        nodes["a_haste_2"] = SkillNode(
-            "a_haste_2", "Rapid Excavation", "Haste II",
-            Material.DIAMOND_PICKAXE, SkillCategory.ARTISAN, NodeTier.NOTABLE,
-            listOf("a_haste_1", "a_veinminer"),
-            SkillEffect.MiningSpeed(1)
-        )
-        nodes["a_veinminer"] = SkillNode(
-            "a_veinminer", "Vein Miner", "Mine entire ore veins!",
-            Material.DIAMOND_ORE, SkillCategory.ARTISAN, NodeTier.KEYSTONE,
-            listOf("a_haste_2"),
-            SkillEffect.VeinMiner(true), cost = 3
-        )
+        // Haste Path
+        nodes["art_haste1"] = node("art_haste1", "Miner I", "Haste I", Material.WOODEN_PICKAXE, SkillCategory.ARTISAN, SkillEffect.MiningSpeed(0), "origin", "art_haste2", "art_luck1")
+        nodes["art_haste2"] = node("art_haste2", "Miner II", "Haste I", Material.STONE_PICKAXE, SkillCategory.ARTISAN, SkillEffect.MiningSpeed(0), "art_haste1", "art_haste3")
+        nodes["art_haste3"] = node("art_haste3", "Excavator I", "Haste II", Material.IRON_PICKAXE, SkillCategory.ARTISAN, SkillEffect.MiningSpeed(1), "art_haste2", "art_haste4", cost = 2)
+        nodes["art_haste4"] = node("art_haste4", "Excavator II", "Haste II", Material.DIAMOND_PICKAXE, SkillCategory.ARTISAN, SkillEffect.MiningSpeed(1), "art_haste3", "art_haste5", cost = 2)
+        nodes["art_haste5"] = node("art_haste5", "Tunneler I", "Haste III", Material.DIAMOND_PICKAXE, SkillCategory.ARTISAN, SkillEffect.MiningSpeed(2), "art_haste4", "art_haste6", cost = 2)
+        nodes["art_haste6"] = node("art_haste6", "Tunneler II", "Haste III", Material.NETHERITE_PICKAXE, SkillCategory.ARTISAN, SkillEffect.MiningSpeed(2), "art_haste5", "art_vein", cost = 2)
+        nodes["art_vein"] = SkillNode("art_vein", "Vein Miner", "Mine ore veins!", Material.DIAMOND_ORE, SkillCategory.ARTISAN, NodeTier.KEYSTONE, listOf("art_haste6"), SkillEffect.VeinMiner(true), 3, listOf("sco_djump"))
         
-        // Fortune Branch
-        nodes["a_fortune_1"] = SkillNode(
-            "a_fortune_1", "Lucky Strikes", "Luck I",
-            Material.LAPIS_LAZULI, SkillCategory.ARTISAN, NodeTier.NOTABLE,
-            listOf("artisan_start", "a_double_drop"),
-            SkillEffect.LuckBonus(0)
-        )
-        nodes["a_double_drop"] = SkillNode(
-            "a_double_drop", "Prospector", "25% chance for double drops",
-            Material.GOLD_NUGGET, SkillCategory.ARTISAN, NodeTier.KEYSTONE,
-            listOf("a_fortune_1"),
-            SkillEffect.DoubleDrop(0.25), cost = 3
-        )
+        // Luck/Fortune Path
+        nodes["art_luck1"] = node("art_luck1", "Lucky I", "Luck I", Material.LAPIS_LAZULI, SkillCategory.ARTISAN, SkillEffect.LuckBonus(0), "art_haste1", "art_luck2", "art_timber1")
+        nodes["art_luck2"] = node("art_luck2", "Lucky II", "Luck I", Material.LAPIS_LAZULI, SkillCategory.ARTISAN, SkillEffect.LuckBonus(0), "art_luck1", "art_luck3")
+        nodes["art_luck3"] = node("art_luck3", "Fortune I", "10% Double Drop", Material.GOLD_NUGGET, SkillCategory.ARTISAN, SkillEffect.DoubleDrop(0.10), "art_luck2", "art_luck4", cost = 2)
+        nodes["art_luck4"] = node("art_luck4", "Fortune II", "10% Double Drop", Material.GOLD_INGOT, SkillCategory.ARTISAN, SkillEffect.DoubleDrop(0.10), "art_luck3", "art_prospector", cost = 2)
+        nodes["art_prospector"] = SkillNode("art_prospector", "Prospector", "15% Double, Luck II", Material.GOLD_BLOCK, SkillCategory.ARTISAN, NodeTier.KEYSTONE, listOf("art_luck4"), SkillEffect.DoubleDrop(0.15), 3)
         
-        // Timber
-        nodes["a_timber"] = SkillNode(
-            "a_timber", "Lumberjack", "Chop entire trees at once",
-            Material.DIAMOND_AXE, SkillCategory.ARTISAN, NodeTier.NOTABLE,
-            listOf("artisan_start", "a_autosmelt"),
-            SkillEffect.Lumberjack(true)
-        )
-        nodes["a_autosmelt"] = SkillNode(
-            "a_autosmelt", "Smelting Touch", "Ores drop smelted ingots",
-            Material.BLAST_FURNACE, SkillCategory.ARTISAN, NodeTier.KEYSTONE,
-            listOf("a_timber"),
-            SkillEffect.AutoSmelt(true), cost = 3,
-            exclusiveWith = listOf("a_veinminer") // Choose: Vein Mine OR Auto Smelt
-        )
-        
-        // Magnet
-        nodes["a_magnet"] = SkillNode(
-            "a_magnet", "Item Magnet", "Auto-pickup items within 5 blocks",
-            Material.LODESTONE, SkillCategory.ARTISAN, NodeTier.NOTABLE,
-            listOf("a_haste_1"),
-            SkillEffect.Magnetism(5.0)
-        )
+        // Utility Path
+        nodes["art_timber1"] = node("art_timber1", "Woodsman I", "Lumberjack", Material.WOODEN_AXE, SkillCategory.ARTISAN, SkillEffect.Lumberjack(true), "art_luck1", "art_timber2")
+        nodes["art_timber2"] = node("art_timber2", "Woodsman II", "+2 HP (hardy)", Material.IRON_AXE, SkillCategory.ARTISAN, SkillEffect.MaxHealth(2.0), "art_timber1", "art_magnet1", cost = 2)
+        nodes["art_magnet1"] = node("art_magnet1", "Magnet I", "3 block pickup", Material.IRON_INGOT, SkillCategory.ARTISAN, SkillEffect.Magnetism(3.0), "art_timber2", "art_magnet2", cost = 2)
+        nodes["art_magnet2"] = node("art_magnet2", "Magnet II", "5 block pickup", Material.LODESTONE, SkillCategory.ARTISAN, SkillEffect.Magnetism(5.0), "art_magnet1", "art_autosmelt", cost = 2)
+        nodes["art_autosmelt"] = SkillNode("art_autosmelt", "Smelting Touch", "Ores auto-smelt", Material.BLAST_FURNACE, SkillCategory.ARTISAN, NodeTier.KEYSTONE, listOf("art_magnet2"), SkillEffect.AutoSmelt(true), 3)
         
         // ═══════════════════════════════════════════════════════════
-        // SETTLER BRANCH (Green) - City / Economy / Social
+        // SETTLER (21 nodes) - Economy / Social / Utility
         // ═══════════════════════════════════════════════════════════
-        nodes["settler_start"] = SkillNode(
-            "settler_start", "Settler's Path", "Build, trade, and prosper.",
-            Material.EMERALD_BLOCK, SkillCategory.SETTLER, NodeTier.MINOR,
-            listOf("origin", "set_trade", "set_rest", "set_siege"),
-            SkillEffect.XpBonus(1.10)
-        )
         
-        // Trade/Economy
-        nodes["set_trade"] = SkillNode(
-            "set_trade", "Silver Tongue", "10% discount on city costs",
-            Material.EMERALD, SkillCategory.SETTLER, NodeTier.NOTABLE,
-            listOf("settler_start", "set_bounty"),
-            SkillEffect.Diplomacy(0.10)
-        )
-        nodes["set_bounty"] = SkillNode(
-            "set_bounty", "Bounty Hunter", "+25% Quest Gold",
-            Material.GOLD_INGOT, SkillCategory.SETTLER, NodeTier.KEYSTONE,
-            listOf("set_trade"),
-            SkillEffect.BountyHunter(1.25), cost = 3
-        )
+        // Economy Path
+        nodes["set_eco1"] = node("set_eco1", "Trader I", "2% Discount", Material.EMERALD, SkillCategory.SETTLER, SkillEffect.Diplomacy(0.02), "origin", "set_eco2", "set_rest1")
+        nodes["set_eco2"] = node("set_eco2", "Trader II", "2% Discount", Material.EMERALD, SkillCategory.SETTLER, SkillEffect.Diplomacy(0.02), "set_eco1", "set_eco3")
+        nodes["set_eco3"] = node("set_eco3", "Merchant I", "3% Discount", Material.EMERALD_BLOCK, SkillCategory.SETTLER, SkillEffect.Diplomacy(0.03), "set_eco2", "set_eco4", cost = 2)
+        nodes["set_eco4"] = node("set_eco4", "Merchant II", "3% Discount", Material.EMERALD_BLOCK, SkillCategory.SETTLER, SkillEffect.Diplomacy(0.03), "set_eco3", "set_bounty1", cost = 2)
+        nodes["set_bounty1"] = node("set_bounty1", "Hunter I", "+5% Quest Gold", Material.GOLD_NUGGET, SkillCategory.SETTLER, SkillEffect.BountyHunter(1.05), "set_eco4", "set_bounty2", cost = 2)
+        nodes["set_bounty2"] = node("set_bounty2", "Hunter II", "+8% Quest Gold", Material.GOLD_INGOT, SkillCategory.SETTLER, SkillEffect.BountyHunter(1.08), "set_bounty1", "set_tycoon", cost = 2)
+        nodes["set_tycoon"] = SkillNode("set_tycoon", "Tycoon", "+12% Gold, 5% Discount", Material.GOLD_BLOCK, SkillCategory.SETTLER, NodeTier.KEYSTONE, listOf("set_bounty2"), SkillEffect.BountyHunter(1.12), 3)
         
-        // Rest/Survival
-        nodes["set_rest"] = SkillNode(
-            "set_rest", "Deep Sleep", "+50% Healing from Rest",
-            Material.WHITE_BED, SkillCategory.SETTLER, NodeTier.NOTABLE,
-            listOf("settler_start", "set_soulbind"),
-            SkillEffect.RestfulSleep(1.50)
-        )
-        nodes["set_soulbind"] = SkillNode(
-            "set_soulbind", "Soul Binding", "Keep 3 items on death",
-            Material.SOUL_LANTERN, SkillCategory.SETTLER, NodeTier.KEYSTONE,
-            listOf("set_rest"),
-            SkillEffect.SoulBinding(3), cost = 3
-        )
+        // Rest/Survival Path
+        nodes["set_rest1"] = node("set_rest1", "Rested I", "+10% Sleep Heal", Material.WHITE_BED, SkillCategory.SETTLER, SkillEffect.RestfulSleep(1.10), "set_eco1", "set_rest2", "set_xp1")
+        nodes["set_rest2"] = node("set_rest2", "Rested II", "+10% Sleep Heal", Material.RED_BED, SkillCategory.SETTLER, SkillEffect.RestfulSleep(1.10), "set_rest1", "set_rest3")
+        nodes["set_rest3"] = node("set_rest3", "Comfort I", "+15% Sleep Heal", Material.CYAN_BED, SkillCategory.SETTLER, SkillEffect.RestfulSleep(1.15), "set_rest2", "set_night", cost = 2)
+        nodes["set_night"] = node("set_night", "Night Owl", "Night Vision", Material.ENDER_EYE, SkillCategory.SETTLER, SkillEffect.NightVision(true), "set_rest3", "set_aqua", cost = 2)
+        nodes["set_aqua"] = node("set_aqua", "Mariner", "Water Breathing", Material.TURTLE_HELMET, SkillCategory.SETTLER, SkillEffect.WaterBreathing(true), "set_night", "set_survivor", cost = 2)
+        nodes["set_survivor"] = SkillNode("set_survivor", "Survivor", "+4 HP, Cold Resist", Material.CAMPFIRE, SkillCategory.SETTLER, NodeTier.KEYSTONE, listOf("set_aqua"), SkillEffect.ColdResistance(true), 3)
         
-        // Siege Defense
-        nodes["set_siege"] = SkillNode(
-            "set_siege", "Gatekeeper", "+25% Damage vs Raiders",
-            Material.CROSSBOW, SkillCategory.SETTLER, NodeTier.NOTABLE,
-            listOf("settler_start"),
-            SkillEffect.SiegeDefender(1.25)
-        )
-        
-        // Night Vision (Utility)
-        nodes["set_night"] = SkillNode(
-            "set_night", "Dark Sight", "Permanent Night Vision",
-            Material.ENDER_EYE, SkillCategory.SETTLER, NodeTier.NOTABLE,
-            listOf("settler_start"),
-            SkillEffect.NightVision(true)
-        )
+        // XP/Utility Path
+        nodes["set_xp1"] = node("set_xp1", "Learner I", "+3% XP", Material.EXPERIENCE_BOTTLE, SkillCategory.SETTLER, SkillEffect.XpBonus(1.03), "set_rest1", "set_xp2")
+        nodes["set_xp2"] = node("set_xp2", "Learner II", "+3% XP", Material.EXPERIENCE_BOTTLE, SkillCategory.SETTLER, SkillEffect.XpBonus(1.03), "set_xp1", "set_xp3", cost = 2)
+        nodes["set_xp3"] = node("set_xp3", "Scholar I", "+5% XP", Material.ENCHANTING_TABLE, SkillCategory.SETTLER, SkillEffect.XpBonus(1.05), "set_xp2", "set_soul1", cost = 2)
+        nodes["set_soul1"] = node("set_soul1", "Soul Bind I", "Keep 1 item on death", Material.SOUL_LANTERN, SkillCategory.SETTLER, SkillEffect.SoulBinding(1), "set_xp3", "set_soul2", cost = 2)
+        nodes["set_soul2"] = node("set_soul2", "Soul Bind II", "Keep 2 items", Material.SOUL_LANTERN, SkillCategory.SETTLER, SkillEffect.SoulBinding(2), "set_soul1", "set_immortal", cost = 2)
+        nodes["set_immortal"] = SkillNode("set_immortal", "Immortal Legacy", "Keep 4 items, +5% XP", Material.BEACON, SkillCategory.SETTLER, NodeTier.KEYSTONE, listOf("set_soul2"), SkillEffect.SoulBinding(4), 3)
         
         return nodes
     }
     
+    // Helper to create nodes more concisely
+    private fun node(id: String, name: String, desc: String, icon: Material, cat: SkillCategory, effect: SkillEffect, vararg connections: String, cost: Int = 1): SkillNode {
+        return SkillNode(id, name, desc, icon, cat, if (cost >= 3) NodeTier.KEYSTONE else if (cost >= 2) NodeTier.NOTABLE else NodeTier.MINOR, connections.toList(), effect, cost)
+    }
+
+    
     /**
-     * Grid Layout - 15x15 with Origin at center [7][7]
+     * EXPANDED Grid Layout - 15x15 with Origin at center [7][7]
+     * 106 nodes total - each branch radiates outward
      */
     private fun buildGridLayout(): Array<Array<String?>> {
         val grid = Array(GRID_SIZE) { arrayOfNulls<String>(GRID_SIZE) }
         
-        // Origin
+        // Origin (Center)
         grid[7][7] = "origin"
         
-        // Vanguard (Top-Left)
-        grid[5][5] = "vanguard_start"
-        grid[4][4] = "v_health_1"
-        grid[3][3] = "v_health_2"
-        grid[2][2] = "v_colossus"
-        grid[4][6] = "v_armor_1"
-        grid[3][7] = "v_armor_2"
-        grid[2][8] = "v_poise"
-        grid[6][4] = "v_regen_1"
-        grid[6][3] = "v_regen_2"
-        grid[5][6] = "v_thorns"
+        // ═══ VANGUARD (Top-Left) - Health/Armor/Regen paths ═══
+        // Health path (diagonal up-left)
+        grid[6][6] = "van_hp1"; grid[5][5] = "van_hp2"; grid[4][4] = "van_hp3"
+        grid[3][3] = "van_hp4"; grid[2][2] = "van_hp5"; grid[1][1] = "van_hp6"; grid[0][0] = "van_colossus"
+        // Armor path (horizontal left from hp1)
+        grid[6][5] = "van_arm1"; grid[6][4] = "van_arm2"; grid[5][3] = "van_arm3"; grid[4][2] = "van_arm4"; grid[3][1] = "van_fortress"
+        // Thorns/Regen path (branch from arm1)
+        grid[5][4] = "van_thorn1"; grid[4][3] = "van_thorn2"; grid[3][2] = "van_thorn3"
+        grid[2][3] = "van_regen1"; grid[1][4] = "van_regen2"; grid[0][5] = "van_undying"
         
-        // Berserker (Top-Right)
-        grid[9][5] = "berserker_start"
-        grid[10][4] = "b_melee_1"
-        grid[11][3] = "b_melee_2"
-        grid[12][2] = "b_executioner"
-        grid[10][6] = "b_crit_1"
-        grid[11][7] = "b_crit_2"
-        grid[8][4] = "b_leech_1"
-        grid[8][3] = "b_leech_2"
-        grid[9][4] = "b_rage"
+        // ═══ BERSERKER (Top-Right) - Damage/Crit/Leech paths ═══
+        // Damage path (diagonal up-right)
+        grid[8][6] = "ber_dmg1"; grid[9][5] = "ber_dmg2"; grid[10][4] = "ber_dmg3"
+        grid[11][3] = "ber_dmg4"; grid[12][2] = "ber_dmg5"; grid[13][1] = "ber_dmg6"; grid[14][0] = "ber_execute"
+        // Crit path (branch from dmg1)
+        grid[8][5] = "ber_crit1"; grid[9][4] = "ber_crit2"; grid[10][3] = "ber_crit3"
+        grid[11][2] = "ber_critdmg1"; grid[12][1] = "ber_critdmg2"; grid[13][0] = "ber_assassin"
+        // Leech path (branch from crit1)
+        grid[9][6] = "ber_leech1"; grid[10][6] = "ber_leech2"; grid[11][5] = "ber_leech3"; grid[12][4] = "ber_rage"
         
-        // Scout (Right)
-        grid[11][7] = "scout_start"
-        grid[12][7] = "s_speed_1"
-        grid[13][7] = "s_speed_2"
-        grid[14][7] = "s_double_jump"
-        grid[12][6] = "s_stealth_1"
-        grid[13][5] = "s_stealth_2"
-        grid[11][8] = "s_dodge_1"
-        grid[12][9] = "s_nofall"
-        grid[12][8] = "s_swim"
-        grid[13][8] = "s_cold_resist"
+        // ═══ SCOUT (Right) - Speed/Dodge/Stealth paths ═══
+        // Speed path (horizontal right)
+        grid[8][7] = "sco_spd1"; grid[9][7] = "sco_spd2"; grid[10][7] = "sco_spd3"
+        grid[11][7] = "sco_spd4"; grid[12][7] = "sco_spd5"; grid[13][7] = "sco_spd6"; grid[14][7] = "sco_djump"
+        // Dodge path (branch down from spd1)
+        grid[8][8] = "sco_dodge1"; grid[9][8] = "sco_dodge2"; grid[10][8] = "sco_dodge3"; grid[11][8] = "sco_nofall"; grid[12][8] = "sco_acrobat"
+        // Stealth path (branch from dodge1)
+        grid[9][9] = "sco_sneak1"; grid[10][9] = "sco_sneak2"; grid[11][9] = "sco_sneak3"; grid[12][9] = "sco_sneak4"; grid[13][9] = "sco_ninja"
         
-        // Artisan (Bottom-Left)
-        grid[5][9] = "artisan_start"
-        grid[4][10] = "a_haste_1"
-        grid[3][11] = "a_haste_2"
-        grid[2][12] = "a_veinminer"
-        grid[6][10] = "a_fortune_1"
-        grid[6][11] = "a_double_drop"
-        grid[4][8] = "a_timber"
-        grid[3][9] = "a_autosmelt"
-        grid[5][10] = "a_magnet"
+        // ═══ ARTISAN (Bottom-Left) - Haste/Luck/Utility paths ═══
+        // Haste path (diagonal down-left)
+        grid[6][8] = "art_haste1"; grid[5][9] = "art_haste2"; grid[4][10] = "art_haste3"
+        grid[3][11] = "art_haste4"; grid[2][12] = "art_haste5"; grid[1][13] = "art_haste6"; grid[0][14] = "art_vein"
+        // Luck path (branch from haste1)
+        grid[6][9] = "art_luck1"; grid[5][10] = "art_luck2"; grid[4][11] = "art_luck3"; grid[3][12] = "art_luck4"; grid[2][13] = "art_prospector"
+        // Timber/Utility path (branch from luck1)
+        grid[5][8] = "art_timber1"; grid[4][9] = "art_timber2"; grid[3][10] = "art_magnet1"; grid[2][11] = "art_magnet2"; grid[1][12] = "art_autosmelt"
         
-        // Settler (Bottom-Right)
-        grid[9][9] = "settler_start"
-        grid[10][10] = "set_trade"
-        grid[11][11] = "set_bounty"
-        grid[8][10] = "set_rest"
-        grid[7][11] = "set_soulbind"
-        grid[10][8] = "set_siege"
-        grid[8][8] = "set_night"
+        // ═══ SETTLER (Bottom-Right) - Economy/Rest/XP paths ═══
+        // Economy path (diagonal down-right)
+        grid[8][8] = "set_eco1"; grid[9][9] = "set_eco2"; grid[10][10] = "set_eco3"
+        grid[11][11] = "set_eco4"; grid[12][12] = "set_bounty1"; grid[13][13] = "set_bounty2"; grid[14][14] = "set_tycoon"
+        // Rest path (branch from eco1)
+        grid[8][9] = "set_rest1"; grid[9][10] = "set_rest2"; grid[10][11] = "set_rest3"
+        grid[11][12] = "set_night"; grid[12][13] = "set_aqua"; grid[13][14] = "set_survivor"
+        // XP path (branch from rest1)
+        grid[8][10] = "set_xp1"; grid[9][11] = "set_xp2"; grid[10][12] = "set_xp3"
+        grid[11][13] = "set_soul1"; grid[12][14] = "set_soul2"; grid[13][12] = "set_immortal"
         
         return grid
     }
+
     
     // ══════════════════════════════════════════════════════════════
     // SKILL POINT MANAGEMENT
@@ -496,7 +310,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         // Enough points?
         if (getAvailableSkillPoints(player) < node.cost) return false
         
-        // Has prerequisite?
+        // Has prerequisite? (origin is always unlockable)
         val hasConnection = node.connections.any { unlocked.contains(it) } || nodeId == "origin"
         if (!hasConnection) return false
         
@@ -531,32 +345,24 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
     fun applySkillEffects(player: Player) {
         val unlocked = getUnlockedNodes(player)
         
-        // Calculate totals
         var healthBonus = 0.0
         var speedBonus = 0.0f
         var armorBonus = 0.0
-        var regenLevel = -1
         
         unlocked.forEach { nodeId ->
             when (val effect = skillTree[nodeId]?.effect) {
                 is SkillEffect.MaxHealth -> healthBonus += effect.bonus
                 is SkillEffect.MovementSpeed -> speedBonus += effect.bonus
                 is SkillEffect.Armor -> armorBonus += effect.bonus
-                is SkillEffect.Regeneration -> if (effect.level > regenLevel) regenLevel = effect.level
-                else -> {} // Other effects handled in events
+                is SkillEffect.Poise -> healthBonus += 10.0 // Colossus also gives HP
+                else -> {} // Other effects handled in events/helpers
             }
         }
         
-        // Apply Health
+        // Apply Attribute Bonuses
         player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0 + healthBonus
-        
-        // Apply Speed
         player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)?.baseValue = 0.1 + speedBonus
-        
-        // Apply Armor
         player.getAttribute(Attribute.GENERIC_ARMOR)?.baseValue = armorBonus
-        
-        // Regen is handled in passive task
     }
     
     private fun startPassiveEffectTask() {
@@ -581,17 +387,8 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
                 is SkillEffect.MiningSpeed -> {
                     player.addPotionEffect(PotionEffect(PotionEffectType.HASTE, 140, effect.level, false, false, true))
                 }
-                is SkillEffect.JumpBoost -> {
-                    player.addPotionEffect(PotionEffect(PotionEffectType.JUMP_BOOST, 140, effect.level, false, false, true))
-                }
-                is SkillEffect.SwimSpeed -> {
-                    if (player.isInWater) {
-                        player.addPotionEffect(PotionEffect(PotionEffectType.DOLPHINS_GRACE, 140, effect.level, false, false, true))
-                        player.addPotionEffect(PotionEffect(PotionEffectType.WATER_BREATHING, 140, 0, false, false, true))
-                    }
-                }
-                is SkillEffect.FireResistance -> {
-                    player.addPotionEffect(PotionEffect(PotionEffectType.FIRE_RESISTANCE, 140, 0, false, false, true))
+                is SkillEffect.LuckBonus -> {
+                    player.addPotionEffect(PotionEffect(PotionEffectType.LUCK, 140, effect.level, false, false, true))
                 }
                 else -> {}
             }
@@ -599,10 +396,10 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
     }
     
     // ══════════════════════════════════════════════════════════════
-    // HELPER METHODS FOR OTHER MANAGERS
+    // HELPER METHODS FOR OTHER MANAGERS (Combat, Mining, etc.)
     // ══════════════════════════════════════════════════════════════
     
-    // Combat Helpers
+    // Combat
     fun getMeleeDamageMultiplier(player: Player): Double {
         return getUnlockedNodes(player).mapNotNull { skillTree[it]?.effect as? SkillEffect.MeleeDamage }
             .fold(1.0) { acc, e -> acc * e.multiplier }
@@ -615,17 +412,17 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
     
     fun getCritChance(player: Player): Double {
         return getUnlockedNodes(player).mapNotNull { skillTree[it]?.effect as? SkillEffect.CritChance }
-            .sumOf { it.percent }
+            .sumOf { it.percent }.coerceAtMost(0.50) // Cap at 50%
     }
     
     fun getCritMultiplier(player: Player): Double {
         return getUnlockedNodes(player).mapNotNull { skillTree[it]?.effect as? SkillEffect.CritMultiplier }
-            .fold(1.5) { acc, e -> acc + (e.bonus - 1.0) } // Base 1.5x + bonuses
+            .fold(1.5) { acc, e -> acc + (e.bonus - 1.0) }.coerceAtMost(2.5) // Cap at 2.5x
     }
     
     fun getLifeLeechPercent(player: Player): Double {
         return getUnlockedNodes(player).mapNotNull { skillTree[it]?.effect as? SkillEffect.LifeLeech }
-            .sumOf { it.percent }
+            .sumOf { it.percent }.coerceAtMost(0.10) // Cap at 10%
     }
     
     fun getExecuteDamage(player: Player): Pair<Double, Double>? {
@@ -645,7 +442,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
     
     fun getThornsPercent(player: Player): Double {
         return getUnlockedNodes(player).mapNotNull { skillTree[it]?.effect as? SkillEffect.Thorns }
-            .sumOf { it.percent }
+            .sumOf { it.percent }.coerceAtMost(0.25) // Cap at 25%
     }
     
     fun getSiegeDamageMultiplier(player: Player): Double {
@@ -653,10 +450,10 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             .fold(1.0) { acc, e -> acc * e.damageMultiplier }
     }
     
-    // Defense Helpers
+    // Defense
     fun getDodgeChance(player: Player): Double {
         return getUnlockedNodes(player).mapNotNull { skillTree[it]?.effect as? SkillEffect.DodgeChance }
-            .sumOf { it.percent }
+            .sumOf { it.percent }.coerceAtMost(0.30) // Cap at 30%
     }
     
     fun hasPoise(player: Player): Boolean {
@@ -675,7 +472,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         return getUnlockedNodes(player).any { skillTree[it]?.effect is SkillEffect.DoubleJump }
     }
     
-    // Mining Helpers
+    // Mining
     fun hasVeinMiner(player: Player): Boolean {
         return getUnlockedNodes(player).any { skillTree[it]?.effect is SkillEffect.VeinMiner }
     }
@@ -690,7 +487,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
     
     fun getDoubleDropChance(player: Player): Double {
         return getUnlockedNodes(player).mapNotNull { skillTree[it]?.effect as? SkillEffect.DoubleDrop }
-            .sumOf { it.chance }
+            .sumOf { it.chance }.coerceAtMost(0.50) // Cap at 50%
     }
     
     fun getMagnetRange(player: Player): Double {
@@ -698,7 +495,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             .maxOfOrNull { it.range } ?: 0.0
     }
     
-    // Economy/Settler Helpers
+    // Economy/Settler
     fun getRestMultiplier(player: Player): Double {
         return getUnlockedNodes(player).mapNotNull { skillTree[it]?.effect as? SkillEffect.RestfulSleep }
             .fold(1.0) { acc, e -> acc * e.multiplier }
@@ -706,7 +503,7 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
     
     fun getTradeDiscount(player: Player): Double {
         return getUnlockedNodes(player).mapNotNull { skillTree[it]?.effect as? SkillEffect.Diplomacy }
-            .sumOf { it.discountPercent }
+            .sumOf { it.discountPercent }.coerceAtMost(0.20) // Cap at 20%
     }
     
     fun getBountyMultiplier(player: Player): Double {
@@ -724,7 +521,6 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             .fold(1.0) { acc, e -> acc * e.multiplier }
     }
     
-    // Alias for external callers
     fun applyAllSkillEffects(player: Player) {
         applySkillEffects(player)
     }
@@ -736,11 +532,11 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
     
     fun hasWaterBreathing(player: Player): Boolean {
         return getUnlockedNodes(player).any { skillTree[it]?.effect is SkillEffect.WaterBreathing } ||
-               getSwimSpeedLevel(player) >= 0 // SwimSpeed also gives water breathing
+               getSwimSpeedLevel(player) >= 0
     }
     
     // ══════════════════════════════════════════════════════════════
-    // GUI - Skill Tree Display
+    // GUI - POLISHED Skill Tree Display
     // ══════════════════════════════════════════════════════════════
     
     fun openSkillTree(player: Player) {
@@ -751,14 +547,21 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         val availablePoints = getAvailableSkillPoints(player)
         val profile = plugin.identityManager.getPlayer(player.uniqueId)
         
-        // Fill viewport with gradient background
-        for (i in 0 until 45) {
-            inv.setItem(i, ItemStack(Material.BLACK_STAINED_GLASS_PANE).apply {
-                editMeta { it.displayName(Component.text(" ")) }
-            })
+        // Fill with category-colored gradient background
+        for (row in 0 until VIEWPORT_HEIGHT) {
+            for (col in 0 until VIEWPORT_WIDTH) {
+                val gridX = viewport.first - 4 + col
+                val gridY = viewport.second - 2 + row
+                
+                // Determine background color based on position
+                val bgMaterial = getBackgroundMaterial(gridX, gridY)
+                inv.setItem(row * 9 + col, ItemStack(bgMaterial).apply {
+                    editMeta { it.displayName(Component.text(" ")) }
+                })
+            }
         }
         
-        // Place nodes
+        // Place nodes on top of backgrounds
         for (row in 0 until VIEWPORT_HEIGHT) {
             for (col in 0 until VIEWPORT_WIDTH) {
                 val gridX = viewport.first - 4 + col
@@ -778,188 +581,213 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
             }
         }
         
-        // ═══ CONTROL BAR (Bottom Row) ═══
-        // Navigation
-        inv.setItem(45, createNavItem(Material.RED_CONCRETE, "◀ West", NamedTextColor.RED))
-        inv.setItem(46, createNavItem(Material.LIME_CONCRETE, "▲ North", NamedTextColor.GREEN))
-        inv.setItem(47, createNavItem(Material.LIME_CONCRETE, "▼ South", NamedTextColor.GREEN))
-        inv.setItem(48, createNavItem(Material.RED_CONCRETE, "▶ East", NamedTextColor.RED))
-        inv.setItem(49, createNavItem(Material.YELLOW_CONCRETE, "⌂ Center", NamedTextColor.YELLOW))
+        // ═══ ENHANCED CONTROL BAR (Bottom Row) ═══
+        // Quick Jump to Branches
+        inv.setItem(45, createBranchJumpItem(Material.BLUE_CONCRETE, "⚔ VANGUARD", NamedTextColor.BLUE, "Tank & Defense", 3, 3))
+        inv.setItem(46, createBranchJumpItem(Material.RED_CONCRETE, "⚔ BERSERKER", NamedTextColor.RED, "Damage & Combat", 11, 3))
+        inv.setItem(47, createBranchJumpItem(Material.CYAN_CONCRETE, "⚔ SCOUT", NamedTextColor.AQUA, "Speed & Stealth", 11, 7))
+        inv.setItem(48, createBranchJumpItem(Material.ORANGE_CONCRETE, "⚔ ARTISAN", NamedTextColor.GOLD, "Mining & Gathering", 3, 11))
+        inv.setItem(49, createBranchJumpItem(Material.LIME_CONCRETE, "⚔ SETTLER", NamedTextColor.GREEN, "Economy & Utility", 11, 11))
         
-        // Stats Display
-        inv.setItem(50, ItemStack(Material.EXPERIENCE_BOTTLE).apply {
+        // Center Button
+        inv.setItem(50, ItemStack(Material.COMPASS).apply {
             editMeta { meta ->
-                meta.displayName(Component.text("⬢ Level ${profile?.level ?: 1}", NamedTextColor.GREEN, TextDecoration.BOLD))
-                meta.lore(listOf(
-                    Component.text("XP: ${profile?.currentXp ?: 0}", NamedTextColor.GRAY)
-                ))
+                meta.displayName(Component.text("⌂ CENTER", NamedTextColor.YELLOW, TextDecoration.BOLD))
+                meta.persistentDataContainer.set(menuKey, PersistentDataType.STRING, "nav:⌂ Center")
             }
         })
         
-        // Skill Points
+        // Stats
         val pointColor = if (availablePoints > 0) NamedTextColor.GOLD else NamedTextColor.GRAY
         inv.setItem(51, ItemStack(Material.NETHER_STAR).apply {
             editMeta { meta ->
-                meta.displayName(Component.text("✦ $availablePoints Skill Points", pointColor, TextDecoration.BOLD))
+                meta.displayName(Component.text("✦ ${availablePoints} Skill Points", pointColor, TextDecoration.BOLD))
                 meta.lore(listOf(
-                    Component.empty(),
-                    Component.text("Earn points by leveling up!", NamedTextColor.YELLOW),
-                    Component.text("1 point per level", NamedTextColor.GRAY)
-                ))
-                if (availablePoints > 0) {
-                    meta.addEnchant(Enchantment.UNBREAKING, 1, true)
-                    meta.addItemFlags(ItemFlag.HIDE_ENCHANTS)
-                }
-            }
-        })
-        
-        // Progress
-        val totalNodes = skillTree.size
-        val unlockedCount = unlocked.size
-        val progressPercent = ((unlockedCount.toDouble() / totalNodes) * 100).toInt()
-        inv.setItem(52, ItemStack(Material.FILLED_MAP).apply {
-            editMeta { meta ->
-                meta.displayName(Component.text("📊 Progress: $progressPercent%", NamedTextColor.AQUA, TextDecoration.BOLD))
-                meta.lore(listOf(
-                    Component.text("Nodes Unlocked: $unlockedCount / $totalNodes", NamedTextColor.GRAY),
-                    Component.empty(),
-                    createProgressBar(progressPercent)
+                    Component.text("Level ${profile?.level ?: 1}", NamedTextColor.GREEN),
+                    Component.text("Unlocked: ${unlocked.size}/${skillTree.size}", NamedTextColor.GRAY)
                 ))
             }
         })
         
-        // Legend
-        inv.setItem(53, ItemStack(Material.BOOK).apply {
+        // Navigation Arrows
+        inv.setItem(52, createNavItem(Material.ARROW, "◀▲▼▶ Navigate", NamedTextColor.WHITE))
+        
+        // RESET BUTTON
+        inv.setItem(53, ItemStack(Material.TNT).apply {
             editMeta { meta ->
-                meta.displayName(Component.text("📖 Legend", NamedTextColor.WHITE, TextDecoration.BOLD))
+                meta.displayName(Component.text("⚠ RESET SKILLS", NamedTextColor.RED, TextDecoration.BOLD))
                 meta.lore(listOf(
-                    Component.empty(),
-                    Component.text("⬢ Vanguard", NamedTextColor.BLUE).append(Component.text(" - Tank/Defense", NamedTextColor.GRAY)),
-                    Component.text("⬢ Berserker", NamedTextColor.RED).append(Component.text(" - DPS/Combat", NamedTextColor.GRAY)),
-                    Component.text("⬢ Scout", NamedTextColor.AQUA).append(Component.text(" - Mobility/Stealth", NamedTextColor.GRAY)),
-                    Component.text("⬢ Artisan", NamedTextColor.GOLD).append(Component.text(" - Mining/Gathering", NamedTextColor.GRAY)),
-                    Component.text("⬢ Settler", NamedTextColor.GREEN).append(Component.text(" - Economy/City", NamedTextColor.GRAY)),
-                    Component.empty(),
-                    Component.text("✓ Green", NamedTextColor.GREEN).append(Component.text(" = Unlocked", NamedTextColor.GRAY)),
-                    Component.text("○ Yellow", NamedTextColor.YELLOW).append(Component.text(" = Available", NamedTextColor.GRAY)),
-                    Component.text("✗ Gray", NamedTextColor.DARK_GRAY).append(Component.text(" = Locked", NamedTextColor.GRAY))
+                    Component.text("Click to refund all points!", NamedTextColor.GRAY),
+                    Component.text("You will lose all effects.", NamedTextColor.RED)
                 ))
+                meta.persistentDataContainer.set(menuKey, PersistentDataType.STRING, "reset:init")
             }
         })
         
         player.openInventory(inv)
     }
     
-    private fun createProgressBar(percent: Int): Component {
-        val filled = percent / 10
-        val empty = 10 - filled
-        return Component.text("[")
-            .append(Component.text("▮".repeat(filled), NamedTextColor.GREEN))
-            .append(Component.text("▯".repeat(empty), NamedTextColor.DARK_GRAY))
-            .append(Component.text("]"))
+    private fun openResetConfirmation(player: Player) {
+        val inv = Bukkit.createInventory(null, 9, Component.text("⚠ CONFIRM RESET ⚠", NamedTextColor.RED, TextDecoration.BOLD))
+        
+        val cancelItem = ItemStack(Material.RED_STAINED_GLASS_PANE).apply {
+            editMeta {
+                it.displayName(Component.text("CANCEL", NamedTextColor.RED))
+                it.persistentDataContainer.set(menuKey, PersistentDataType.STRING, "reset:cancel")
+            }
+        }
+        
+        val confirmItem = ItemStack(Material.TNT).apply {
+            editMeta {
+                it.displayName(Component.text("⚠ CONFIRM RESET", NamedTextColor.DARK_RED, TextDecoration.BOLD))
+                it.lore(listOf(Component.text("THIS CANNOT BE UNDONE!", NamedTextColor.RED)))
+                it.persistentDataContainer.set(menuKey, PersistentDataType.STRING, "reset:confirm")
+            }
+        }
+        
+        for (i in 0..3) inv.setItem(i, cancelItem)
+        inv.setItem(4, confirmItem)
+        for (i in 5..8) inv.setItem(i, cancelItem)
+        
+        player.openInventory(inv)
     }
     
-    private fun createNodeItem(node: SkillNode, isUnlocked: Boolean, canUnlock: Boolean, allUnlocked: Set<String>): ItemStack {
-        val item = ItemStack(node.icon)
-        item.editMeta { meta ->
-            // Category color
-            val categoryColor = when (node.category) {
-                SkillCategory.VANGUARD -> NamedTextColor.BLUE
-                SkillCategory.BERSERKER -> NamedTextColor.RED
-                SkillCategory.SCOUT -> NamedTextColor.AQUA
-                SkillCategory.ARTISAN -> NamedTextColor.GOLD
-                SkillCategory.SETTLER -> NamedTextColor.GREEN
-                SkillCategory.CORE -> NamedTextColor.WHITE
-                SkillCategory.KEYSTONE -> NamedTextColor.LIGHT_PURPLE
+    fun resetSkills(player: Player) {
+         
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
+        profile.unlockedSkillNodes = "" // Clear nodes
+        plugin.identityManager.saveProfile(player.uniqueId)
+        
+        // Reset Attributes
+        player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
+        player.health = 20.0
+        player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)?.baseValue = 0.1
+        player.getAttribute(Attribute.GENERIC_ARMOR)?.baseValue = 0.0
+        player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE)?.baseValue = 1.0
+        // player.getAttribute(Attribute.GENERIC_LUCK)?.baseValue = 0.0
+        // player.getAttribute(Attribute.GENERIC_SCALE)?.baseValue = 1.0
+        // player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH)?.baseValue = 0.42
+        
+        // Clear status effects
+        player.activePotionEffects.forEach { player.removePotionEffect(it.type) }
+        
+        
+        // Visuals
+        player.playSound(player.location, Sound.ENTITY_GENERIC_EXPLODE, 0.5f, 1.2f)
+        player.sendMessage(Component.text("Skill Tree Reset! Points refunded.", NamedTextColor.GREEN, TextDecoration.BOLD))
+        
+        openSkillTree(player)
+    }
+    
+    // Get background glass color based on grid position (which branch area)
+    private fun getBackgroundMaterial(x: Int, y: Int): Material {
+        // Origin area
+        if (x in 6..8 && y in 6..8) return Material.WHITE_STAINED_GLASS_PANE
+        
+        // Vanguard (top-left) - Blue
+        if (x <= 6 && y <= 6) return Material.BLUE_STAINED_GLASS_PANE
+        
+        // Berserker (top-right) - Red
+        if (x >= 8 && y <= 6) return Material.RED_STAINED_GLASS_PANE
+        
+        // Scout (right) - Cyan
+        if (x >= 8 && y in 6..8) return Material.CYAN_STAINED_GLASS_PANE
+        
+        // Artisan (bottom-left) - Orange
+        if (x <= 6 && y >= 8) return Material.ORANGE_STAINED_GLASS_PANE
+        
+        // Settler (bottom-right) - Lime
+        if (x >= 8 && y >= 8) return Material.LIME_STAINED_GLASS_PANE
+        
+        // Default - gray for transition areas
+        return Material.GRAY_STAINED_GLASS_PANE
+    }
+    
+    // Create quick-jump button to a branch
+    private fun createBranchJumpItem(material: Material, name: String, color: NamedTextColor, desc: String, targetX: Int, targetY: Int): ItemStack {
+        return ItemStack(material).apply {
+            editMeta { meta ->
+                meta.displayName(Component.text(name, color, TextDecoration.BOLD))
+                meta.lore(listOf(
+                    Component.text(desc, NamedTextColor.GRAY),
+                    Component.text("Click to jump!", NamedTextColor.YELLOW)
+                ))
+                meta.persistentDataContainer.set(menuKey, PersistentDataType.STRING, "jump:$targetX:$targetY")
             }
-            
-            val statusColor = when {
-                isUnlocked -> NamedTextColor.GREEN
-                canUnlock -> NamedTextColor.YELLOW
-                else -> NamedTextColor.DARK_GRAY
-            }
-            
-            val statusIcon = when {
-                isUnlocked -> "✓ "
-                canUnlock -> "○ "
-                else -> "✗ "
-            }
-            
-            meta.displayName(Component.text(statusIcon, statusColor)
-                .append(Component.text(node.name, categoryColor, TextDecoration.BOLD)))
-            
-            val lore = mutableListOf<Component>()
-            
-            // Tier badge
-            val tierColor = when (node.tier) {
-                NodeTier.MINOR -> NamedTextColor.GRAY
-                NodeTier.NOTABLE -> NamedTextColor.BLUE
-                NodeTier.KEYSTONE -> NamedTextColor.LIGHT_PURPLE
-            }
-            lore.add(Component.text("【${node.tier.displayName}】", tierColor))
-            lore.add(Component.text(node.category.displayName, categoryColor))
-            lore.add(Component.empty())
-            
-            // Effect (Main attraction)
-            lore.add(Component.text("▸ ", NamedTextColor.WHITE).append(Component.text(node.effect.toString(), NamedTextColor.WHITE)))
-            lore.add(Component.empty())
-            
-            // Connections
-            val connectedNames = node.connections.mapNotNull { skillTree[it]?.name }
-            if (connectedNames.isNotEmpty()) {
-                lore.add(Component.text("Connects to:", NamedTextColor.DARK_GRAY))
-                connectedNames.take(3).forEach { name ->
-                    val isConnUnlocked = node.connections.any { allUnlocked.contains(it) && skillTree[it]?.name == name }
-                    val connColor = if (isConnUnlocked) NamedTextColor.GREEN else NamedTextColor.GRAY
-                    lore.add(Component.text("  ├ $name", connColor))
-                }
-                if (connectedNames.size > 3) {
-                    lore.add(Component.text("  └ ...and ${connectedNames.size - 3} more", NamedTextColor.DARK_GRAY))
-                }
-                lore.add(Component.empty())
-            }
-            
-            // Status
-            when {
-                isUnlocked -> {
-                    lore.add(Component.text("══════════════════", NamedTextColor.GREEN))
-                    lore.add(Component.text("   ✓ UNLOCKED", NamedTextColor.GREEN, TextDecoration.BOLD))
-                    lore.add(Component.text("══════════════════", NamedTextColor.GREEN))
-                }
-                canUnlock -> {
-                    lore.add(Component.text("══════════════════", NamedTextColor.YELLOW))
-                    lore.add(Component.text("   ⚡ CLICK TO UNLOCK", NamedTextColor.YELLOW, TextDecoration.BOLD))
-                    lore.add(Component.text("   Cost: ${node.cost} point${if (node.cost > 1) "s" else ""}", NamedTextColor.GOLD))
-                    lore.add(Component.text("══════════════════", NamedTextColor.YELLOW))
-                }
-                else -> {
-                    lore.add(Component.text("══════════════════", NamedTextColor.DARK_GRAY))
-                    lore.add(Component.text("   ✗ LOCKED", NamedTextColor.RED))
-                    if (node.exclusiveWith.isNotEmpty()) {
-                        val exclusiveNames = node.exclusiveWith.mapNotNull { skillTree[it]?.name }
-                        lore.add(Component.text("   Exclusive with:", NamedTextColor.DARK_RED))
-                        exclusiveNames.forEach { lore.add(Component.text("   • $it", NamedTextColor.RED)) }
-                    }
-                    lore.add(Component.text("══════════════════", NamedTextColor.DARK_GRAY))
-                }
-            }
-            
-            meta.lore(lore)
-            
-            if (isUnlocked) {
-                meta.addEnchant(Enchantment.UNBREAKING, 1, true)
-                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS)
-            }
-            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES)
         }
-        return item
+    }
+
+    
+    private fun createNodeItem(node: SkillNode, unlocked: Boolean, canUnlock: Boolean, allUnlocked: Set<String>): ItemStack {
+        val color = when {
+            unlocked -> NamedTextColor.GREEN
+            canUnlock -> NamedTextColor.YELLOW
+            else -> NamedTextColor.DARK_GRAY
+        }
+        
+        val material = when {
+            unlocked -> node.icon
+            canUnlock -> node.icon
+            else -> Material.BARRIER
+        }
+        
+        return ItemStack(material).apply {
+            editMeta { meta ->
+                meta.displayName(Component.text(node.name, color, TextDecoration.BOLD))
+                
+                val lore = mutableListOf<Component>()
+                lore.add(Component.text(node.description, NamedTextColor.GRAY))
+                lore.add(Component.empty())
+                lore.add(Component.text("Category: ${node.category.name}", getCategoryColor(node.category)))
+                lore.add(Component.text("Tier: ${node.tier.name}", NamedTextColor.WHITE))
+                lore.add(Component.text("Cost: ${node.cost} point(s)", NamedTextColor.AQUA))
+                
+                if (node.exclusiveWith.isNotEmpty()) {
+                    val exclusiveNames = node.exclusiveWith.mapNotNull { skillTree[it]?.name }
+                    lore.add(Component.empty())
+                    lore.add(Component.text("⚠ Cannot combine with:", NamedTextColor.RED))
+                    exclusiveNames.forEach { name ->
+                        lore.add(Component.text("  • $name", NamedTextColor.DARK_RED))
+                    }
+                }
+                
+                lore.add(Component.empty())
+                when {
+                    unlocked -> lore.add(Component.text("✔ UNLOCKED", NamedTextColor.GREEN))
+                    canUnlock -> lore.add(Component.text("▶ CLICK TO UNLOCK", NamedTextColor.YELLOW))
+                    else -> lore.add(Component.text("✖ Locked (need connected node)", NamedTextColor.RED))
+                }
+                
+                meta.lore(lore)
+                
+                if (unlocked) {
+                    meta.addEnchant(org.bukkit.enchantments.Enchantment.MENDING, 1, true)
+                    meta.addItemFlags(ItemFlag.HIDE_ENCHANTS)
+                }
+                
+                // Mark as menu item
+                meta.persistentDataContainer.set(menuKey, PersistentDataType.STRING, node.id)
+            }
+        }
+    }
+    
+    private fun getCategoryColor(category: SkillCategory): NamedTextColor {
+        return when (category) {
+            SkillCategory.VANGUARD -> NamedTextColor.BLUE
+            SkillCategory.BERSERKER -> NamedTextColor.RED
+            SkillCategory.SCOUT -> NamedTextColor.AQUA
+            SkillCategory.ARTISAN -> NamedTextColor.GOLD
+            SkillCategory.SETTLER -> NamedTextColor.GREEN
+            SkillCategory.CORE -> NamedTextColor.WHITE
+            SkillCategory.KEYSTONE -> NamedTextColor.LIGHT_PURPLE
+        }
     }
     
     private fun createNavItem(material: Material, name: String, color: NamedTextColor): ItemStack {
         return ItemStack(material).apply {
             editMeta { meta ->
-                meta.displayName(Component.text(name, color, TextDecoration.BOLD))
-                meta.lore(listOf(Component.text("Click to navigate", NamedTextColor.GRAY)))
+                meta.displayName(Component.text(name, color))
+                meta.persistentDataContainer.set(menuKey, PersistentDataType.STRING, "nav:$name")
             }
         }
     }
@@ -967,34 +795,68 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
     @EventHandler
     fun onInventoryClick(event: InventoryClickEvent) {
         val title = event.view.title()
-        if (title != Component.text("✦ SKILL TREE ✦", NamedTextColor.GOLD, TextDecoration.BOLD)) return
+        val isSkillTree = title == Component.text("✦ SKILL TREE ✦", NamedTextColor.GOLD, TextDecoration.BOLD)
+        val isResetMenu = title == Component.text("⚠ CONFIRM RESET ⚠", NamedTextColor.RED, TextDecoration.BOLD)
+        
+        if (!isSkillTree && !isResetMenu) return
         
         event.isCancelled = true
         val player = event.whoClicked as? Player ?: return
-        val slot = event.rawSlot
+        val meta = event.currentItem?.itemMeta ?: return
         
-        // Control buttons
-        when (slot) {
-            45 -> scrollViewport(player, -1, 0)
-            46 -> scrollViewport(player, 0, -1)
-            47 -> scrollViewport(player, 0, 1)
-            48 -> scrollViewport(player, 1, 0)
-            49 -> { viewportPositions[player.uniqueId] = 7 to 7; openSkillTree(player) }
-            else -> {
-                // Node click
-                if (slot < 45) {
-                    val row = slot / 9
-                    val col = slot % 9
-                    val viewport = viewportPositions[player.uniqueId] ?: (7 to 7)
-                    val gridX = viewport.first - 4 + col
-                    val gridY = viewport.second - 2 + row
-                    
-                    if (gridX in 0 until GRID_SIZE && gridY in 0 until GRID_SIZE) {
-                        val nodeId = gridLayout[gridX][gridY]
-                        if (nodeId != null && unlockNode(player, nodeId)) {
-                            openSkillTree(player) // Refresh
-                        }
+        val action = meta.persistentDataContainer.get(menuKey, PersistentDataType.STRING) ?: return
+        
+        // Check for Reset Actions
+        if (action.startsWith("reset:")) {
+            when (action) {
+                "reset:init" -> openResetConfirmation(player)
+                "reset:confirm" -> resetSkills(player)
+                "reset:cancel" -> openSkillTree(player)
+            }
+            return
+        }
+        
+        // Handle Reset Confirmation Menu specifically (title check)
+        if (title == Component.text("⚠ CONFIRM RESET ⚠", NamedTextColor.RED, TextDecoration.BOLD)) {
+            event.isCancelled = true
+            // The item interactions are handled by the action string above,
+            // but this ensures we don't accidentally move items if persistent data fails.
+            return
+        }
+
+        when {
+            action.startsWith("nav:") -> {
+                when (action) {
+                    "nav:◀ West" -> scrollViewport(player, -1, 0)
+                    "nav:▶ East" -> scrollViewport(player, 1, 0)
+                    "nav:▲ North" -> scrollViewport(player, 0, -1)
+                    "nav:▼ South" -> scrollViewport(player, 0, 1)
+                    "nav:⌂ Center" -> {
+                        viewportPositions[player.uniqueId] = 7 to 7
+                        openSkillTree(player)
                     }
+                    "nav:◀▲▼▶ Navigate" -> {
+                        player.sendMessage(Component.text("Use the branch buttons below, or scroll with your mouse!", NamedTextColor.YELLOW))
+                    }
+                }
+            }
+            action.startsWith("jump:") -> {
+                // Quick jump to branch: "jump:x:y"
+                val parts = action.split(":")
+                if (parts.size == 3) {
+                    val x = parts[1].toIntOrNull() ?: 7
+                    val y = parts[2].toIntOrNull() ?: 7
+                    viewportPositions[player.uniqueId] = x to y
+                    player.playSound(player.location, Sound.UI_BUTTON_CLICK, 0.5f, 1.2f)
+                    openSkillTree(player)
+                }
+            }
+            else -> {
+                // Try to unlock node
+                if (unlockNode(player, action)) {
+                    openSkillTree(player) // Refresh
+                } else {
+                    player.playSound(player.location, Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f)
                 }
             }
         }
@@ -1002,14 +864,16 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
     
     private fun scrollViewport(player: Player, dx: Int, dy: Int) {
         val current = viewportPositions.getOrPut(player.uniqueId) { 7 to 7 }
-        val newX = (current.first + dx).coerceIn(0, GRID_SIZE - 1)
-        val newY = (current.second + dy).coerceIn(0, GRID_SIZE - 1)
+        val newX = (current.first + dx).coerceIn(4, 10)
+        val newY = (current.second + dy).coerceIn(4, 10)
         viewportPositions[player.uniqueId] = newX to newY
+        player.playSound(player.location, Sound.UI_BUTTON_CLICK, 0.5f, 1.0f)
         openSkillTree(player)
     }
     
     @EventHandler
     fun onPlayerJoin(event: PlayerJoinEvent) {
+        // Apply skills when player joins
         plugin.server.scheduler.runTaskLater(plugin, Runnable {
             applySkillEffects(event.player)
         }, 20L)

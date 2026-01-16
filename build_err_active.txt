@@ -1,0 +1,19 @@
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/dialogue/DialogueManager.kt:52:24 'when' expression must be exhaustive. Add the 'GUARD', 'ARCHER' branches or an 'else' branch.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/npc/NPCManager.kt:50:35 'when' expression must be exhaustive. Add the 'GUARD', 'ARCHER' branches or an 'else' branch.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/npc/NPCManager.kt:207:39 'when' expression must be exhaustive. Add the 'GUARD', 'ARCHER' branches or an 'else' branch.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/structures/StructureBehaviorTask.kt:102:64 Unresolved reference 'VILLAGER_HAPPY'.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 22s

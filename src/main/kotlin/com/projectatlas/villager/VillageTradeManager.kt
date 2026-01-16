@@ -111,45 +111,63 @@ class VillageTradeManager(private val plugin: AtlasPlugin) : Listener {
     }
 
     private fun updateVillagerTrades(villager: Villager) {
-        val newTrades = ArrayList<MerchantRecipe>()
-        val profession = villager.profession
+        val currentRecipes = villager.recipes
+        val modifiedRecipes = ArrayList<MerchantRecipe>()
         
-        val level = villager.villagerLevel
-        
-        // ECONOMY STANDARD:
-        // 1 Emerald = 5 Gold Nuggets
-        // All "Buy" trades (Item -> Emerald) become (Item -> Gold Nugget)
-        // All "Sell" trades (Emerald -> Item) become (Gold Nugget -> Item)
-
-        when (profession) {
-            Villager.Profession.FARMER -> {
-                // Buy Crops
-                newTrades.add(createTrade(ItemStack(Material.WHEAT, 20), ItemStack(Material.GOLD_NUGGET, 1)))
-                newTrades.add(createTrade(ItemStack(Material.POTATO, 15), ItemStack(Material.GOLD_NUGGET, 1)))
-                newTrades.add(createTrade(ItemStack(Material.CARROT, 15), ItemStack(Material.GOLD_NUGGET, 1)))
-                // Sell Food
-                newTrades.add(createTrade(ItemStack(Material.GOLD_NUGGET, 3), ItemStack(Material.BREAD, 6)))
-                newTrades.add(createTrade(ItemStack(Material.GOLD_NUGGET, 5), ItemStack(Material.PUMPKIN_PIE, 4)))
-            }
-            Villager.Profession.LIBRARIAN -> {
-                newTrades.add(createTrade(ItemStack(Material.PAPER, 24), ItemStack(Material.GOLD_NUGGET, 1)))
-                newTrades.add(createTrade(ItemStack(Material.GOLD_INGOT, 5), ItemStack(Material.EXPERIENCE_BOTTLE, 1)))
-                // TODO: Custom Enchanted Books here later
-            }
-            Villager.Profession.ARMORER -> {
-                newTrades.add(createTrade(ItemStack(Material.COAL, 15), ItemStack(Material.GOLD_NUGGET, 1)))
-                newTrades.add(createTrade(ItemStack(Material.GOLD_INGOT, 10), ItemStack(Material.IRON_CHESTPLATE, 1)))
-                newTrades.add(createTrade(ItemStack(Material.GOLD_BLOCK, 8), ItemStack(Material.DIAMOND_CHESTPLATE, 1)))
-            }
-            // Add other professions as needed...
-            else -> {
-                // Default fallback: Buy generic items for gold
-                newTrades.add(createTrade(ItemStack(Material.ROTTEN_FLESH, 32), ItemStack(Material.GOLD_NUGGET, 1)))
-            }
+        for (recipe in currentRecipes) {
+            modifiedRecipes.add(convertRecipe(recipe))
         }
-
-        villager.recipes = newTrades
+        
+        // Inject Healing Item (30% chance per villager)
+        // Only if not already present (check by logic or tag? checking item type is enough for now)
+        if (Math.random() < 0.3) {
+             val healingTrade = createHealingTrade()
+             if (healingTrade != null) modifiedRecipes.add(healingTrade)
+        }
+        
+        villager.recipes = modifiedRecipes
         villager.addScoreboardTag(updatedTag)
+    }
+    
+    @EventHandler
+    fun onTradeAcquire(event: VillagerAcquireTradeEvent) {
+        // Intercept new trades being generated and convert them
+        event.recipe = convertRecipe(event.recipe)
+    }
+
+    private fun convertRecipe(recipe: MerchantRecipe): MerchantRecipe {
+        val newResult = convertItem(recipe.result)
+        val newRecipe = MerchantRecipe(newResult, recipe.uses, recipe.maxUses, recipe.hasExperienceReward(), recipe.villagerExperience, recipe.priceMultiplier)
+        
+        recipe.ingredients.forEach { ingredient ->
+            newRecipe.addIngredient(convertItem(ingredient))
+        }
+        return newRecipe
+    }
+
+    private fun convertItem(item: ItemStack): ItemStack {
+        if (item.type == Material.EMERALD) {
+            // CRITICAL ECONOMY CHANGE: 1 Emerald = 5 Gold Nuggets
+            val amount = (item.amount * 5).coerceAtMost(64)
+            return ItemStack(Material.GOLD_NUGGET, amount)
+        }
+        return item
+    }
+
+    private fun createHealingTrade(): MerchantRecipe? {
+        // Randomly pick a Tier 1 or 2 healing item
+        val itemType = if (Math.random() < 0.6) {
+            com.projectatlas.survival.SurvivalManager.HealingItem.BANDAGE
+        } else {
+            com.projectatlas.survival.SurvivalManager.HealingItem.HERBAL_POULTICE
+        }
+        
+        val healingItem = plugin.survivalManager.createHealingItem(itemType, 1)
+        val price = if (itemType == com.projectatlas.survival.SurvivalManager.HealingItem.BANDAGE) 8 else 12 // Nuggets
+        
+        val recipe = MerchantRecipe(healingItem, 10) // 10 uses max
+        recipe.addIngredient(ItemStack(Material.GOLD_NUGGET, price))
+        return recipe
     }
     
     private fun createTrade(input: ItemStack, result: ItemStack, maxUses: Int = 3): MerchantRecipe {

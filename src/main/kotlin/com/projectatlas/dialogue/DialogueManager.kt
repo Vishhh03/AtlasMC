@@ -78,6 +78,13 @@ class DialogueManager(private val plugin: AtlasPlugin) : Listener {
                     )
                 }
             }
+            NPCType.GUARD, NPCType.ARCHER -> Dialogue(
+                npc.name,
+                "Move along, citizen. I am on duty.",
+                listOf(
+                    DialogueOption("Goodbye", "/atlas dialogue close ${npc.id}", NamedTextColor.GRAY, "Leave")
+                )
+            )
         }
         openDialogue(player, dialogue)
     }

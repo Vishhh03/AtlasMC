@@ -58,6 +58,14 @@ object CustomItemManager {
         const val SHADOW_CLOAK = 9005
         const val SUNFIRE_AMULET = 9006
         const val NATURES_BLESSING = 9007
+        
+        // Consumables & Utility (6000-6999)
+        const val HEALING_SALVE = 6001
+        const val GREATER_HEALING_POTION = 6002
+        const val MANA_ELIXIR = 6003
+        const val SPIRIT_TOTEM = 6004
+        const val UNDYING_TOTEM = 6005
+        const val EXPLOSIVE_VIAL = 6006
 
         // GUI Icons (10000-10999)
         const val GUI_LOCKED = 10001
@@ -73,6 +81,11 @@ object CustomItemManager {
         const val CITY_WALL_PIECE = 11002
         const val CITY_TURRET = 11003
         const val CITY_BANNER = 11004
+
+        // Blueprints (10100-10199)
+        const val BLUEPRINT_GENERIC = 10100
+        const val BLUEPRINT_BARRACKS = 10101
+        const val BLUEPRINT_TURRET = 10102
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -199,6 +212,37 @@ object CustomItemManager {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // CONSUMABLES & UTILITY
+    // ═══════════════════════════════════════════════════════════════
+    
+    fun createHealingSalve(): ItemStack {
+        return createCustomItem(
+            material = Material.HONEY_BOTTLE,
+            modelData = ModelData.HEALING_SALVE,
+            name = "Healing Salve",
+            nameColor = NamedTextColor.GREEN,
+            lore = listOf(
+                Component.text("Restores a small amount of health", NamedTextColor.GRAY),
+                Component.text("Use: Right-click", NamedTextColor.YELLOW)
+            )
+        )
+    }
+    
+    fun createSpiritTotem(): ItemStack {
+        return createCustomItem(
+            material = Material.TOTEM_OF_UNDYING,
+            modelData = ModelData.SPIRIT_TOTEM,
+            name = "Spirit Totem",
+            nameColor = NamedTextColor.AQUA,
+            lore = listOf(
+                Component.text("Prevents death and grants regeneration", NamedTextColor.GRAY),
+                Component.text("One-time use", NamedTextColor.RED)
+            ),
+            glowing = true
+        )
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
     // GUI ITEMS
     // ═══════════════════════════════════════════════════════════════
 
@@ -227,6 +271,48 @@ object CustomItemManager {
                 meta.setCustomModelData(ModelData.GUI_GOLD_COIN)
             }
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // BLUEPRINTS
+    // ═══════════════════════════════════════════════════════════════
+
+    fun createBlueprintBarracks(): ItemStack {
+        return createCustomItem(
+            material = Material.PAPER,
+            modelData = ModelData.BLUEPRINT_BARRACKS,
+            name = "Blueprint: Barracks",
+            nameColor = NamedTextColor.BLUE,
+            lore = listOf(
+                Component.text("Construction Plans", NamedTextColor.GRAY),
+                Component.text("Right-click ground to build", NamedTextColor.YELLOW)
+            )
+        )
+    }
+
+    fun createBlueprintTurret(): ItemStack {
+        return createCustomItem(
+            material = Material.PAPER,
+            modelData = ModelData.BLUEPRINT_TURRET,
+            name = "Blueprint: Defense Turret",
+            nameColor = NamedTextColor.BLUE,
+            lore = listOf(
+                Component.text("Construction Plans", NamedTextColor.GRAY),
+                Component.text("Right-click ground to build", NamedTextColor.YELLOW)
+            )
+        )
+    }
+
+    fun createBlueprintGeneric(): ItemStack {
+        return createCustomItem(
+            material = Material.PAPER,
+            modelData = ModelData.BLUEPRINT_GENERIC,
+            name = "Blueprint: Structure",
+            nameColor = NamedTextColor.BLUE,
+            lore = listOf(
+                Component.text("Generic Plans", NamedTextColor.GRAY)
+            )
+        )
     }
 
     // ═══════════════════════════════════════════════════════════════

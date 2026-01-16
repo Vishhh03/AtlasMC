@@ -10,6 +10,8 @@ data class CityInfrastructure(
     var barracksLevel: Int = 0,    // 0-3, spawns defender NPCs during siege
     var marketLevel: Int = 0,      // 0-3, increases tax/trade revenue
     var clinicLevel: Int = 0,      // 0-3, passive regen for members
+    var armoryLevel: Int = 0,      // 0-3, repairs armor
+    var forgeLevel: Int = 0,       // 0-3, repairs weapons
     var coreHealth: Int = 100      // City Core HP - if destroyed, city falls
 ) {
     companion object {
@@ -20,6 +22,8 @@ data class CityInfrastructure(
         val BARRACKS_COSTS = listOf(0, 2000, 4000, 8000)
         val MARKET_COSTS = listOf(0, 1500, 3000, 6000)
         val CLINIC_COSTS = listOf(0, 1500, 3000, 6000)
+        val ARMORY_COSTS = listOf(0, 2000, 4000, 8000)
+        val FORGE_COSTS = listOf(0, 2500, 5000, 10000)
     }
     
     fun getWallUpgradeCost(): Int? = WALL_COSTS.getOrNull(wallLevel + 1)
@@ -27,6 +31,8 @@ data class CityInfrastructure(
     fun getBarracksUpgradeCost(): Int? = BARRACKS_COSTS.getOrNull(barracksLevel + 1)
     fun getMarketUpgradeCost(): Int? = MARKET_COSTS.getOrNull(marketLevel + 1)
     fun getClinicUpgradeCost(): Int? = CLINIC_COSTS.getOrNull(clinicLevel + 1)
+    fun getArmoryUpgradeCost(): Int? = ARMORY_COSTS.getOrNull(armoryLevel + 1)
+    fun getForgeUpgradeCost(): Int? = FORGE_COSTS.getOrNull(forgeLevel + 1)
     
     fun getWallDamageReduction(): Double = wallLevel * 0.1 // 10% per level, max 50%
     fun getPassiveIncome(): Double = generatorLevel * 25.0 // 25g per level per cycle

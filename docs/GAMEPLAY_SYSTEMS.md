@@ -4,6 +4,47 @@ This document tracks all custom gameplay systems implemented in Project Atlas.
 
 ---
 
+## 🎮 HOW TO PLAY - GUI-First Design
+
+**Project Atlas is designed to be played primarily through interactive GUIs, NOT chat commands.**
+
+### Opening the Atlas Menu
+| Method | Command |
+|--------|---------|
+| **Primary** | `/atlas` (no arguments) |
+| **Alias** | `/menu` |
+
+### Main Menu Categories
+The Atlas Menu provides access to all core features:
+
+| Category | Features |
+|----------|----------|
+| **👤 Profile** | View stats, level, XP, balance, class |
+| **🏰 City** | Create, manage, claim territory, treasury |
+| **🎯 Quest** | Browse active quests, objectives |
+| **⚔️ Party** | Create, invite, manage party |
+| **📘 Blueprint** | Get wand, browse marketplace, your blueprints |
+| **💰 Bounty** | View active bounties, place new bounty |
+| **🌀 Dungeon** | Enter dungeons (requires Era 2+) |
+| **⚙️ Settings** | Toggle scoreboard, sort inventory |
+
+### Design Philosophy
+- **Minimal Typing**: Most actions are 1-2 clicks away
+- **Clear Navigation**: Breadcrumb back buttons on every screen
+- **Visual Feedback**: Icons, colors, and lore text guide you
+- **Smart Prompts**: For text input (names, amounts), the GUI tells you the exact command
+
+### When You Need Commands
+Only a few actions require typing in chat:
+- Creating cities/parties (need to name them)
+- Inviting specific players
+- Depositing specific amounts
+- Advanced blueprint operations
+
+**Tip**: The GUI will always tell you exactly what to type when text input is needed.
+
+---
+
 ## ⚔️ PROGRESSION SYSTEM (City-Based Competition)
 
 ### Philosophy
@@ -340,66 +381,126 @@ Located in `world_the_end`
 
 ## 🏰 City System
 
-### Creating a City
-- `/atlas city create <name>` - Found a new city (costs currency)
-- First member becomes **Mayor**
+### Overview
+Cities are the core of the progression system. All members of a city share the same **Era**, creating competition between rival cities.
 
-### City Roles
+### Opening the City Menu
+- **Via Main Menu**: `/atlas` → Click "🏰 City Management"
+- **Direct Access**: `/atlas city` (opens GUI)
+
+---
+
+### Creating a City
+
+**From GUI**:
+1. Open `/atlas` → "🏰 City Management"
+2. Click "Create City"
+3. Follow the prompt: `/atlas city create <name>`
+4. Costs configurable gold (default: 1000g)
+
+**Requirements**:
+- Not already in a city
+- Sufficient personal balance
+- Unique city name
+
+--- **City Roles**
 | Role | Permissions |
 |------|-------------|
 | **Mayor** | Full control, disband, promote/demote, manage territory |
 | **Officer** | Invite, kick members, manage claims |
 | **Member** | Build in territory, access city features |
 
+---
+
+### City GUI Features
+
+**Information Display** (all members):
+- City name and member count
+- Treasury balance
+- Tax rate
+- Core health (siege system)
+
+**Basic Actions** (all members):
+- **Claim Chunk**: Expand territory (costs treasury gold)
+- **Deposit**: Add personal gold to city treasury
+
+**Mayor-Only Actions**:
+- **Set Tax Rate**: Change the tax percentage
+- **Invite Player**: Send city invitations
+- **Kick Player**: Remove members
+- **Infrastructure**: Build and upgrade defenses
+- **Structure Shop**: Purchase city blueprints (Barracks, Nexus, etc.)
+- **Leave City**: Exit current city with confirmation
+
+---
+
 ### Territory Claims
-- `/atlas city claim` - Claim current chunk for your city
-- `/atlas city unclaim` - Remove claim from current chunk
-- Territory provides **protection** from outsiders
-- Natural structures won't spawn in claimed territory
+
+**How to Claim**:
+1. Stand in the chunk you want to claim
+2. Open City Menu → Click "Claim Chunk"
+3. Cost scales with city size (from treasury)
+
+**Benefits**:
+- Prevents outsiders from building/breaking blocks
+- Prevents natural structure spawns
+- Provides passive buffs (see City Buffs)
+- Required for city infrastructure placement
+
+**Unclaiming**:
+- Use `/atlas city unclaim` (command only)
+
+---
+
+### City Treasury
+
+**Funding Source Deposits**:
+- Mayor/Officers deposit personal gold via GUI
+- Tax collection (automatic on quest rewards)
+
+**Spending**:
+- **Chunk Claims**: Territory expansion
+- **Infrastructure**: Defensive buildings
+- **Upgrades**: Improve existing structures
+
+**Viewing Balance**:
+- Always visible in City GUI
+- Use `/atlas city info` for detailed breakdown
+
+---
 
 ### City Buffs
 Cities provide passive buffs to members in territory:
-- Regeneration (based on city level)
-- Speed boost near city center
-- Protection from some environmental hazards
+- **Regeneration** (based on city level)
+- **Speed boost** near city center
+- **Protection** from some environmental hazards
 
-### City Management
-- `/atlas city invite <player>` - Invite player to city
-- `/atlas city kick <player>` - Remove member from city
-- `/atlas city promote <player>` - Promote to Officer
-- `/atlas city demote <player>` - Demote to Member
-- `/atlas city leave` - Leave your city
-- `/atlas city disband` - Destroy the city (Mayor only)
-
-### City Info
-- `/atlas city` - Show city info
-- `/atlas city list` - List all cities
-- `/atlas city members` - Show city roster
+---
 
 ### City Defense & Siege System
 
-**Triggering a Siege:**
-- Certain actions or events can trigger a siege on your city
+**Triggering a Siege**:
+- Certain events trigger sieges on your city
 - Boss bar appears showing siege progress
 
-**Siege Waves:**
+**Siege Waves**:
 | Wave | Enemy Types |
 |------|-------------|
 | Early Waves | Grunts (zombies) |
 | Mid Waves | Breachers (with armor) |
 | Late Waves | Snipers (skeletons with bows) |
 
-**Siege Victory:**
+**Siege Victory**:
 - Kill all enemies in each wave
 - Survive all waves to win
 - Victory grants rewards and reputation
 
-**Siege Defeat:**
-- If defenders fail, city takes damage
+**Siege Defeat**:
+- City core takes damage
 - Resources may be lost
 - Cooldown before next siege
 
-**Defense Tips:**
+**Defense Tips**:
 - Build walls around territory
 - Set up chokepoints
 - Stock healing items before defense events
@@ -407,34 +508,107 @@ Cities provide passive buffs to members in territory:
 
 ---
 
+### City Commands (Reference)
+
+Most city actions are available through the GUI. Commands are provided for reference:
+
+- **Creation & Joining**:
+  - `/atlas city create <name>` - Found a new city
+  - `/atlas city join` - Accept pending invitation
+  
+- **Territory**:
+  - `/atlas city claim` - Claim current chunk
+  - `/atlas city unclaim` - Remove claim from current chunk
+  
+- **Management** (Mayor/Officer):
+  - `/atlas city invite <player>` - Invite player to city
+  - `/atlas city kick <player>` - Remove member from city
+  - `/atlas city promote <player>` - Promote to Officer
+  - `/atlas city demote <player>` - Demote to Member
+  - `/atlas city tax <percentage>` - Set tax rate
+
+- **Treasury**:
+  - `/atlas city deposit <amount>` - Add gold to treasury
+  
+- **Infrastructure**:
+  - `/atlas city build <module>` - Build infrastructure
+  - Modules: Wall, Generator, Barracks, Market, Clinic
+  
+- **Information**:
+  - `/atlas city` - Open City GUI
+  - `/atlas city info` - Show detailed city info
+  - `/atlas city list` - List all cities
+  - `/atlas city members` - Show city roster
+
+- **Leaving**:
+  - `/atlas city leave` - Leave your city
+  - `/atlas city disband` - Destroy the city (Mayor only)
+
+---
+
 ## 👥 Party System
 
+### Overview
+Parties allow players to team up for quests, dungeons, and shared XP.
+
+### Opening the Party Menu
+- **Via Main Menu**: `/atlas` → Click "⚔️ Party Management"
+- **Direct Access**: `/atlas party` (opens GUI)
+
+---
+
 ### Creating a Party
-- `/atlas party create` - Create a new party
-- `/atlas party invite <player>` - Invite player to party
-- `/atlas party accept` - Accept pending invitation
+
+**From GUI**:
+1. Open `/atlas` → "⚔️ Party Management"
+2. Click "Create Party"
+3. Party is created instantly (no name needed)
+
+---
+
+### Party GUI Features
+
+**Information Display**:
+- Party members list with online status
+- Party leader indicator
+
+**Actions**:
+- **Invite Player**: Send invitation (prompts for command)
+- **Leave Party**: Exit current party with confirmation
+- **Disband Party**: Destroy party (leader only)
+
+---
 
 ### Party Benefits
 | Feature | Benefit |
 |---------|---------|
+| **Shared XP** | XP from mob kills is distributed among party members |
 | **Shared Quest Progress** | Some quests progress for entire party |
-| **Buff Sharing** | Certain buffs affect all nearby members |
-| **Communication** | Party chat channel |
+| **Communication** | Party chat channel (`/pc <message>`) |
 | **Map Visibility** | See party members on local map |
 
-### Party Management
-- `/atlas party kick <player>` - Kick member (leader only)
-- `/atlas party leave` - Leave the party
-- `/atlas party disband` - Disband party (leader only)
-- `/atlas party promote <player>` - Transfer leadership
+---
 
-### Party Chat
-- `/atlas party chat <message>` - Send message to party
-- Or use `/pc <message>` shortcut
+### Party Commands (Reference)
 
-### Party Info
-- `/atlas party` - Show party info and members
-- `/atlas party list` - List online party members
+Most party actions are available through the GUI:
+
+- **Creation & Management**:
+  - `/atlas party create` - Create a new party
+  - `/atlas party invite <player>` - Invite player to party
+  - `/atlas party accept` - Accept pending invitation
+  - `/atlas party kick <player>` - Kick member (leader only)
+  - `/atlas party leave` - Leave the party
+  - `/atlas party disband` - Disband party (leader only)
+  - `/atlas party promote <player>` - Transfer leadership
+
+- **Communication**:
+  - `/atlas party chat <message>` - Send message to party
+  - `/pc <message>` - Shortcut for party chat
+
+- **Information**:
+  - `/atlas party` - Open Party GUI
+  - `/atlas party list` - List online party members
 
 ---
 

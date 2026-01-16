@@ -23,28 +23,32 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
     // ========== MAIN MENU ==========
     fun openMainMenu(player: Player) {
         val inv = Bukkit.createInventory(null, 54, Component.text("✦ Project Atlas Menu ✦", NamedTextColor.DARK_BLUE))
+        val profile = plugin.identityManager.getPlayer(player.uniqueId)
+        val balance = profile?.balance ?: 0.0
+        val threat = plugin.globalThreatManager.threatLevel
         
         // Row 1: Core Features
-        inv.setItem(10, createGuiItem(Material.PLAYER_HEAD, "Your Profile", "action:profile", "View your stats"))
+        inv.setItem(10, createGuiItem(Material.PLAYER_HEAD, "My Profile", "action:profile", "Level, Era, & Stats", "Solo & City Progression"))
         inv.setItem(12, createGuiItem(Material.COMPARATOR, "Settings", "action:settings_menu", "Adjust client preferences", "Visuals, Scoreboard, etc."))
-        inv.setItem(14, createGuiItem(Material.BEACON, "City Management", "action:city_menu", "Manage your city"))
-        inv.setItem(16, createGuiItem(Material.GOLD_INGOT, "Economy", "action:economy_menu", "Manage your finances"))
+        inv.setItem(14, createGuiItem(Material.BEACON, "City Management", "action:city_menu", "Manage your city", "Territory & Infrastructure"))
+        inv.setItem(16, createGuiItem(Material.GOLD_INGOT, "Economy", "action:economy_menu", "Your Gold: ${String.format("%.0f", balance)}g", "Villager Trading & Shop"))
         
         // Row 2: Activities
         inv.setItem(19, createGuiItem(Material.WRITABLE_BOOK, "Quest Board", "action:quest_menu", "Take on challenges for gold"))
         inv.setItem(21, createGuiItem(Material.END_PORTAL_FRAME, "Dungeons", "action:dungeon_menu", "Enter instanced challenges"))
         inv.setItem(23, createGuiItem(Material.SKELETON_SKULL, "Bounties", "action:bounty_menu", "Hunt wanted players"))
-        inv.setItem(25, createGuiItem(Material.DRAGON_HEAD, "World Bosses", "action:boss_info", "View boss event info"))
+        inv.setItem(25, createGuiItem(Material.DRAGON_HEAD, "World Bosses", "action:boss_info", "View boss event info", "Threat Level: ${String.format("%.0f", threat)}%"))
         
-        // Row 3: Social & Marketplace
-        inv.setItem(28, createGuiItem(Material.TOTEM_OF_UNDYING, "Party", "action:party_menu", "Manage your party"))
-        inv.setItem(30, createGuiItem(Material.CRAFTING_TABLE, "Blueprint Shop", "action:blueprint_menu", "Buy & sell building designs"))
+        // Row 3: Social & Systems
+        inv.setItem(28, createGuiItem(Material.TOTEM_OF_UNDYING, "Party Management", "action:party_menu", "Manage your party", "Share XP & Loot"))
+        inv.setItem(30, createGuiItem(Material.CRAFTING_TABLE, "Blueprint Market", "action:blueprint_menu", "Buy & sell building designs", "Get Wand & Build"))
         inv.setItem(32, createGuiItem(Material.ENDER_EYE, "Relics", "action:relic_info", "Ancient artifacts info"))
         inv.setItem(34, createGuiItem(Material.NETHER_STAR, "Achievements", "action:achievement_menu", "Track your progress"))
         
-        // Row 4: Progression
+        // Row 4: Progression & Survival
         inv.setItem(40, createGuiItem(Material.ENCHANTED_BOOK, "Skill Tree", "action:skill_tree", "Unlock passive abilities", "Spend Skill Points"))
-        
+        inv.setItem(42, createGuiItem(Material.GOLDEN_APPLE, "Survival Guide", "action:guide_survival", "Healing & Mechanics", "Mobs drop Bandages (2%)", "Natural Regen Disabled"))
+
         // Bottom row: Guide
         inv.setItem(49, createGuiItem(Material.KNOWLEDGE_BOOK, "Game Guide / Wiki", "action:guide_menu", "Start here! Learn how to play.", "Eras, Cities, Economy, & more."))
 
@@ -168,7 +172,7 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
 
     // ========== INFRASTRUCTURE MENU ==========
     fun openInfrastructureMenu(player: Player) {
-        val inv = Bukkit.createInventory(null, 45, Component.text("City Infrastructure", NamedTextColor.DARK_GRAY))
+        val inv = Bukkit.createInventory(null, 54, Component.text("City Infrastructure", NamedTextColor.DARK_GRAY))
         
         val profile = plugin.identityManager.getPlayer(player.uniqueId)
         val city = profile?.cityId?.let { plugin.cityManager.getCity(it) } ?: return
@@ -177,45 +181,71 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         // Treasury display
         inv.setItem(4, createInfoItem(Material.GOLD_BLOCK, "Treasury", "${city.treasury}g"))
         
-        // Walls (damage reduction)
-        // Walls (damage reduction)
-        val wallCost = getUpgradeCost(plugin.configManager.wallCosts, infra.wallLevel)
-        val reduction = infra.wallLevel * plugin.configManager.wallDamageReductionPerLevel
+        // Row 2: Defense & Utils
+        // Walls
+        val wallCost = infra.getWallUpgradeCost()
+        val reduction = infra.wallLevel * 10 
         inv.setItem(19, createGuiItem(Material.STONE_BRICKS, "Walls Lv.${infra.wallLevel}", "action:upgrade_wall",
-            "Damage reduction: ${(reduction * 100).toInt()}%",
+            "Damage reduction: ${reduction}%",
             if (wallCost != null) "Upgrade: ${wallCost}g" else "MAX LEVEL"))
         
-        // Turrets (auto-attack during siege)
-        val turretCost = plugin.configManager.turretCost
-        inv.setItem(21, createGuiItem(Material.DISPENSER, "Turrets: ${infra.turretCount}/4", "action:upgrade_turret",
+        // Turrets
+        val turretCost = com.projectatlas.city.CityInfrastructure.TURRET_COST
+        inv.setItem(20, createGuiItem(Material.DISPENSER, "Turrets: ${infra.turretCount}/4", "action:upgrade_turret",
             "Auto-attack invaders during siege",
             if (infra.canAddTurret()) "Add: ${turretCost}g" else "MAX TURRETS"))
         
-        // Generator (passive income)
-        val genCost = getUpgradeCost(plugin.configManager.generatorCosts, infra.generatorLevel)
-        val income = infra.generatorLevel * plugin.configManager.generatorIncomePerLevel
-        inv.setItem(23, createGuiItem(Material.REDSTONE_BLOCK, "Generator Lv.${infra.generatorLevel}", "action:upgrade_generator",
+        // Generator
+        val genCost = infra.getGeneratorUpgradeCost()
+        val income = infra.generatorLevel * 25
+        inv.setItem(21, createGuiItem(Material.REDSTONE_BLOCK, "Generator Lv.${infra.generatorLevel}", "action:upgrade_generator",
             "Passive income: ${income}g/cycle",
             if (genCost != null) "Upgrade: ${genCost}g" else "MAX LEVEL"))
         
-        // Barracks (defender NPCs)
-        val barracksCost = getUpgradeCost(plugin.configManager.barracksCosts, infra.barracksLevel)
-        val defenders = infra.barracksLevel * plugin.configManager.barracksDefendersPerLevel
-        inv.setItem(25, createGuiItem(Material.IRON_CHESTPLATE, "Barracks Lv.${infra.barracksLevel}", "action:upgrade_barracks",
+        // Barracks
+        val barracksCost = infra.getBarracksUpgradeCost()
+        val defenders = infra.barracksLevel * 2
+        inv.setItem(22, createGuiItem(Material.IRON_CHESTPLATE, "Barracks Lv.${infra.barracksLevel}", "action:upgrade_barracks",
             "Defenders during siege: ${defenders}",
             if (barracksCost != null) "Upgrade: ${barracksCost}g" else "MAX LEVEL"))
-        
+
+        // Row 3: Services
+        // Market
+        val marketCost = infra.getMarketUpgradeCost()
+        val taxBonus = infra.marketLevel * 5
+        inv.setItem(28, createGuiItem(Material.EMERALD, "Market Lv.${infra.marketLevel}", "action:upgrade_market", 
+            "Tax Bonus: +${taxBonus}%", "Unlocks Farmer Job",
+            if (marketCost != null) "Upgrade: ${marketCost}g" else "MAX LEVEL"))
+
+        // Clinic
+        val clinicCost = infra.getClinicUpgradeCost()
+        inv.setItem(29, createGuiItem(Material.POTION, "Clinic Lv.${infra.clinicLevel}", "action:upgrade_clinic", 
+            "Unlocks Healer Job", 
+            if (clinicCost != null) "Upgrade: ${clinicCost}g" else "MAX LEVEL"))
+
+        // Armory
+        val armoryCost = infra.getArmoryUpgradeCost()
+        inv.setItem(30, createGuiItem(Material.ANVIL, "Armory Lv.${infra.armoryLevel}", "action:upgrade_armory", 
+            "Unlocks Armorer Job", 
+            if (armoryCost != null) "Upgrade: ${armoryCost}g" else "MAX LEVEL"))
+
+        // Forge
+        val forgeCost = infra.getForgeUpgradeCost()
+        inv.setItem(31, createGuiItem(Material.GRINDSTONE, "Forge Lv.${infra.forgeLevel}", "action:upgrade_forge", 
+            "Unlocks Weaponsmith Job", 
+            if (forgeCost != null) "Upgrade: ${forgeCost}g" else "MAX LEVEL"))
+
         // Core repair
         if (infra.coreHealth < 100) {
             val repairCost = (100 - infra.coreHealth) * 10 // 10g per HP
-            inv.setItem(31, createGuiItem(Material.NETHER_STAR, "Repair Core", "action:repair_core",
+            inv.setItem(40, createGuiItem(Material.NETHER_STAR, "Repair Core", "action:repair_core",
                 "Current: ${infra.coreHealth}/100 HP",
                 "Cost: ${repairCost}g"))
         } else {
-            inv.setItem(31, createInfoItem(Material.NETHER_STAR, "Core Status", "100/100 HP (Healthy)"))
+            inv.setItem(40, createInfoItem(Material.NETHER_STAR, "Core Status", "100/100 HP (Healthy)"))
         }
         
-        inv.setItem(40, createGuiItem(Material.ARROW, "Back", "action:city_menu", "Return to City Menu"))
+        inv.setItem(49, createGuiItem(Material.ARROW, "Back", "action:city_menu", "Return to City Menu"))
         player.openInventory(inv)
     }
 
@@ -259,7 +289,7 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
 
     // ========== SETTINGS MENU ==========
     fun openSettingsMenu(player: Player) {
-        val inv = Bukkit.createInventory(null, 27, Component.text("Settings", NamedTextColor.DARK_GRAY))
+        val inv = Bukkit.createInventory(null, 27, Component.text("Settings & QoL", NamedTextColor.DARK_GRAY))
         val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
         
         // Atmosphere
@@ -280,6 +310,92 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         inv.setItem(14, createGuiItem(Material.REDSTONE, "Damage Numbers", "settings:toggle_dmg", 
             "Current: ${if(dmg) "ON" else "OFF"}", "Status: $dmgColor${if(dmg) "ENABLED" else "DISABLED"}", "Toggle floating damage"))
 
+        // Sort Inventory
+        inv.setItem(16, createGuiItem(Material.HOPPER, "Sort Inventory", "action:sort_inventory", "Organize your items instantly"))
+
+        inv.setItem(22, createGuiItem(Material.ARROW, "Back", "action:main_menu", "Return"))
+        player.openInventory(inv)
+    }
+
+    // ========== PARTY MENU ==========
+    fun openPartyMenu(player: Player) {
+        val inv = Bukkit.createInventory(null, 36, Component.text("Party Management", NamedTextColor.LIGHT_PURPLE))
+        
+        val party = plugin.partyManager.getParty(player)
+        
+        if (party == null) {
+            inv.setItem(13, createGuiItem(Material.BEACON, "Create Party", "action:party_create", "Form a new party"))
+            inv.setItem(15, createInfoItem(Material.PAPER, "Join Party", "Ask for an invite!"))
+        } else {
+            val isLeader = party.leader == player.uniqueId
+            
+            inv.setItem(4, createInfoItem(Material.BEACON, "Party Info", "Leader: ${Bukkit.getOfflinePlayer(party.leader).name}"))
+            
+            // Members
+            party.members.forEachIndexed { index, uuid ->
+                val name = Bukkit.getOfflinePlayer(uuid).name ?: "Unknown"
+                val head = createInfoItem(Material.PLAYER_HEAD, name, if (uuid == party.leader) "Leader" else "Member")
+                inv.setItem(19 + index, head)
+            }
+            
+            inv.setItem(11, createGuiItem(Material.WRITABLE_BOOK, "Invite Player", "action:party_invite", "Add someone to party"))
+            inv.setItem(12, createDangerItem(Material.RED_BED, "Leave Party", "action:party_leave", "Exit this party"))
+            
+            if (isLeader) {
+                 inv.setItem(13, createDangerItem(Material.TNT, "Disband Party", "action:party_disband", "Delete the party"))
+            }
+        }
+        
+        inv.setItem(31, createGuiItem(Material.ARROW, "Back", "action:main_menu", "Return"))
+        player.openInventory(inv)
+    }
+
+    // ========== BLUEPRINT MENU ==========
+    fun openBlueprintMenu(player: Player) {
+        val inv = Bukkit.createInventory(null, 27, Component.text("Blueprint Center", NamedTextColor.BLUE))
+        
+        inv.setItem(11, createGuiItem(Material.GOLDEN_AXE, "Get Wand", "action:bp_wand", "Get the selection tool", "Used to capture builds"))
+        inv.setItem(13, createGuiItem(Material.BOOKSHELF, "Marketplace", "action:bp_market", "Browse player creations", "Buy & Build"))
+        inv.setItem(15, createGuiItem(Material.CHEST, "My Blueprints", "action:bp_mine", "View your uploads", "Check sales revenue"))
+        
+        inv.setItem(22, createGuiItem(Material.ARROW, "Back", "action:main_menu", "Return"))
+        player.openInventory(inv)
+    }
+    
+    // ========== BOUNTY MENU ==========
+    fun openBountyMenu(player: Player) {
+         val inv = Bukkit.createInventory(null, 45, Component.text("Bounty Board", NamedTextColor.DARK_RED))
+         
+         val bounties = plugin.bountyManager.listAllBounties().sortedByDescending { it.amount }.take(20)
+         
+         bounties.forEachIndexed { index, bounty ->
+             if (index < 36) {
+                 inv.setItem(index, createGuiItem(Material.SKELETON_SKULL, "Wanted: ${bounty.targetName}", "action:noop", 
+                     "Reward: ${bounty.amount}g", "Reason: ${bounty.reason}"))
+             }
+         }
+         
+         inv.setItem(40, createGuiItem(Material.GOLD_INGOT, "Place Bounty", "action:bounty_place", "Set a bounty on a player"))
+         inv.setItem(44, createGuiItem(Material.ARROW, "Back", "action:main_menu", "Return"))
+         
+         player.openInventory(inv)
+    }
+    
+    // ========== DUNGEON MENU ==========
+    fun openDungeonMenu(player: Player) {
+        val inv = Bukkit.createInventory(null, 27, Component.text("Dungeon Gate", NamedTextColor.DARK_PURPLE))
+        
+        if (!plugin.progressionManager.canAccessDungeons(player)) {
+             inv.setItem(13, createInfoItem(Material.BARRIER, "LOCKED", "Requires Era 2 (Expedition)"))
+             inv.setItem(22, createGuiItem(Material.ARROW, "Back", "action:main_menu", "Return"))
+             player.openInventory(inv)
+             return
+        }
+
+        inv.setItem(11, createGuiItem(Material.MOSSY_COBBLESTONE, "Crypt of the Forgotten", "action:dungeon_enter_crypt", "Difficulty: ★☆☆☆☆", "Level 10+ Recommended"))
+        inv.setItem(13, createGuiItem(Material.OBSIDIAN, "Shadow Hold", "action:dungeon_enter_hold", "Difficulty: ★★★☆☆", "Level 25+ Recommended"))
+        inv.setItem(15, createGuiItem(Material.NETHER_BRICK, "Infernal Spire", "action:dungeon_enter_spire", "Difficulty: ★★★★★", "Level 40+ Recommended"))
+        
         inv.setItem(22, createGuiItem(Material.ARROW, "Back", "action:main_menu", "Return"))
         player.openInventory(inv)
     }
@@ -420,21 +536,60 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
             }
             
             // New Features
-            "action:dungeon_menu" -> {
+            "action:dungeon_menu" -> openDungeonMenu(player)
+            "action:dungeon_enter_crypt" -> {
+                player.performCommand("atlas dungeon enter Crypt_of_the_Forgotten")
                 player.closeInventory()
-                player.performCommand("atlas dungeon")
             }
-            "action:party_menu" -> {
+            "action:dungeon_enter_hold" -> {
+                player.performCommand("atlas dungeon enter Shadow_Hold")
                 player.closeInventory()
-                player.performCommand("atlas party")
             }
-            "action:bounty_menu" -> {
+            "action:dungeon_enter_spire" -> {
+                player.performCommand("atlas dungeon enter Infernal_Spire")
                 player.closeInventory()
-                player.performCommand("atlas bounty")
             }
-            "action:blueprint_menu" -> {
+            
+            "action:party_menu" -> openPartyMenu(player)
+            "action:party_create" -> {
+                player.performCommand("atlas party create")
+                openPartyMenu(player)
+            }
+            "action:party_invite" -> {
                 player.closeInventory()
+                player.sendMessage(Component.text("Type /atlas party invite <player>", NamedTextColor.YELLOW))
+            }
+            "action:party_leave" -> {
+                player.performCommand("atlas party leave")
+                openPartyMenu(player)
+            }
+            "action:party_disband" -> {
+                player.performCommand("atlas party disband")
+                openPartyMenu(player)
+            }
+            
+            "action:bounty_menu" -> openBountyMenu(player)
+            "action:bounty_place" -> {
+                player.closeInventory()
+                player.sendMessage(Component.text("Type /atlas bounty place <player> <amount> [reason]", NamedTextColor.YELLOW))
+            }
+            
+            "action:blueprint_menu" -> openBlueprintMenu(player)
+            "action:bp_wand" -> {
+                player.performCommand("atlas bp wand")
+                player.closeInventory()
+            }
+            "action:bp_market" -> {
                 player.performCommand("atlas bp list")
+                player.closeInventory()
+            }
+            "action:bp_mine" -> {
+                player.performCommand("atlas bp mine")
+                player.closeInventory()
+            }
+            "action:sort_inventory" -> {
+                player.performCommand("atlas sort")
+                player.closeInventory()
             }
             "action:relic_info" -> {
                 player.closeInventory()
@@ -616,9 +771,29 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
                 if (canUpgrade) { city.treasury -= cost!!; infra.generatorLevel++ }
             }
             "barracks" -> {
-                cost = getUpgradeCost(plugin.configManager.barracksCosts, infra.barracksLevel)
+                cost = infra.getBarracksUpgradeCost()
                 canUpgrade = cost != null && city.treasury >= cost
                 if (canUpgrade) { city.treasury -= cost!!; infra.barracksLevel++ }
+            }
+            "market" -> {
+                cost = infra.getMarketUpgradeCost()
+                canUpgrade = cost != null && city.treasury >= cost
+                if (canUpgrade) { city.treasury -= cost!!; infra.marketLevel++ }
+            }
+            "clinic" -> {
+                cost = infra.getClinicUpgradeCost()
+                canUpgrade = cost != null && city.treasury >= cost
+                if (canUpgrade) { city.treasury -= cost!!; infra.clinicLevel++ }
+            }
+            "armory" -> {
+                cost = infra.getArmoryUpgradeCost()
+                canUpgrade = cost != null && city.treasury >= cost
+                if (canUpgrade) { city.treasury -= cost!!; infra.armoryLevel++ }
+            }
+            "forge" -> {
+                cost = infra.getForgeUpgradeCost()
+                canUpgrade = cost != null && city.treasury >= cost
+                if (canUpgrade) { city.treasury -= cost!!; infra.forgeLevel++ }
             }
             "core" -> {
                 cost = (100 - infra.coreHealth) * 10

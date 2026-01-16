@@ -198,6 +198,66 @@ class ProceduralDungeon(
                              this@ProceduralDungeon.bossEntity = mob
                              plugin.packetManager.updateBossHealthBar(mob, "☠ ${theme.name} Boss ☠", 1.0)
                          }
+                         
+                         // ══════════════════════════════════════════════════════════════
+                         // ANIMATION INTEGRATION
+                         // ══════════════════════════════════════════════════════════════
+                         
+                         var modelName: String? = null
+                         var procConfig = com.projectatlas.animation.ProceduralConfig.HUMANOID
+                         
+                         when (mob.type) {
+                             org.bukkit.entity.EntityType.ZOMBIE,
+                             org.bukkit.entity.EntityType.SKELETON,
+                             org.bukkit.entity.EntityType.STRAY,
+                             org.bukkit.entity.EntityType.HUSK,
+                             org.bukkit.entity.EntityType.WITHER_SKELETON,
+                             org.bukkit.entity.EntityType.ZOMBIFIED_PIGLIN -> {
+                                 modelName = "humanoid"
+                                 procConfig = com.projectatlas.animation.ProceduralConfig.HUMANOID
+                             }
+                             org.bukkit.entity.EntityType.IRON_GOLEM -> {
+                                 modelName = "boss_golem"
+                                 procConfig = com.projectatlas.animation.ProceduralConfig.GOLEM
+                             }
+                             org.bukkit.entity.EntityType.SPIDER,
+                             org.bukkit.entity.EntityType.CAVE_SPIDER -> {
+                                 modelName = "spider_boss"
+                                 procConfig = com.projectatlas.animation.ProceduralConfig.BEAST
+                             }
+                             org.bukkit.entity.EntityType.BLAZE,
+                             org.bukkit.entity.EntityType.GHAST,
+                             org.bukkit.entity.EntityType.PHANTOM -> {
+                                 modelName = "floating_skull" // Placeholder for flying mobs
+                                 procConfig = com.projectatlas.animation.ProceduralConfig.FLOATING
+                             }
+                             else -> {
+                                // Default or no model
+                                if (theme == DungeonTheme.CRYPT) modelName = "humanoid" // Fallback
+                             }
+                         }
+                         
+                         if (modelName != null) {
+                             // Restore Armor stats via Attributes (since physical armor is stripped by attachModel)
+                             val armorAttr = mob.getAttribute(org.bukkit.attribute.Attribute.GENERIC_ARMOR)
+                             if (isBoss) {
+                                 armorAttr?.baseValue = 12.0 // Approx Diamond Helm + Chest
+                             } else {
+                                 if (difficulty >= 3) {
+                                     armorAttr?.baseValue = 6.0 // Iron Chest
+                                 } else {
+                                     armorAttr?.baseValue = 3.0 // Leather Chest
+                                 }
+                             }
+                             
+                             plugin.animationSystem.attachModel(mob, modelName)
+                             plugin.animationSystem.configureProcedural(mob, procConfig)
+                             
+                             // Initial animation
+                             plugin.animationSystem.playAnimation(mob, "spawn", loop = false)
+                             
+                             // Queue idle/walk logic (handled by AnimationListener automatically)
+                         }
                      }
                      
                      aliveMobs.add(mob.uniqueId)

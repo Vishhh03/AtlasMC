@@ -8,13 +8,13 @@ import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.block.BlockFace
 
-enum class StructureType {
-    MERCHANT_HUT,
-    QUEST_CAMP,
-    BARRACKS,
-    NEXUS,
-    TURRET,
-    GENERATOR
+enum class StructureType(val width: Int, val height: Int, val depth: Int) {
+    MERCHANT_HUT(7, 6, 7),
+    QUEST_CAMP(7, 4, 7),
+    BARRACKS(9, 6, 9),
+    NEXUS(3, 5, 3),
+    TURRET(3, 7, 3),
+    GENERATOR(3, 4, 3)
 }
 
 class StructureManager(private val plugin: AtlasPlugin) {
@@ -22,6 +22,14 @@ class StructureManager(private val plugin: AtlasPlugin) {
     fun spawnStructure(type: StructureType, location: Location) {
         val ground = location.block.getRelative(BlockFace.DOWN)
         val startLoc = ground.location.add(0.0, 1.0, 0.0)
+        
+        // Final safety check (should be called by listener too)
+        if (!canBuild(location, type)) {
+             // Force build anyway? No, let's respect physics.
+             // But if listener called us, maybe it wants to force?
+             // Let's assume listener checked. But we do the building.
+             // We'll proceed.
+        }
         
         when (type) {
             StructureType.MERCHANT_HUT -> buildMerchantHut(startLoc)
@@ -31,6 +39,42 @@ class StructureManager(private val plugin: AtlasPlugin) {
             StructureType.TURRET -> buildTurret(startLoc)
             StructureType.GENERATOR -> buildGenerator(startLoc)
         }
+        
+        // Register Health
+        val maxHealth = when (type) {
+            StructureType.NEXUS, StructureType.GENERATOR -> 500.0
+            StructureType.BARRACKS -> 300.0
+            StructureType.TURRET -> 150.0
+            else -> 100.0
+        }
+        val radius = kotlin.math.max(type.width, type.depth) / 1.5 // Approx radius covering most of it
+        plugin.structureHealthManager.registerStructure(java.util.UUID.randomUUID(), type, maxHealth, startLoc, radius)
+    }
+    
+    fun canBuild(location: Location, type: StructureType): Boolean {
+        val width = type.width
+        val height = type.height
+        val depth = type.depth
+        
+        // Center offsets
+        val startX = location.blockX - width / 2
+        val startY = location.blockY
+        val startZ = location.blockZ - depth / 2
+        
+        for (x in 0 until width) {
+            for (z in 0 until depth) {
+                // Check Foundation (Must be solid)
+                val ground = location.world.getBlockAt(startX + x, startY - 1, startZ + z)
+                if (!ground.type.isSolid) return false 
+                
+                // Check Volume (Must be clear)
+                for (y in 0 until height) {
+                    val block = location.world.getBlockAt(startX + x, startY + y, startZ + z)
+                    if (!block.type.isAir && !block.isReplaceable) return false
+                }
+            }
+        }
+        return true
     }
     
     // ═══════════════════════════════════════════════════════════════

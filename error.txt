@@ -1,0 +1,183 @@
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+
+> Task :compileKotlin FAILED
+gradle : e: file:///C:/Us
+ers/visha/Desktop/Mc_Plug
+in/src/main/kotlin/com/pr
+ojectatlas/dungeon/Dungeo
+nManager.kt:39:18 
+Unresolved reference 
+'BukkitRunnable'.
+At line:1 char:1
++ gradle compileKotlin 
+2>&1 | Out-File 
+-Encoding ascii error.txt
++ 
+~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo       
+       : NotSpecified:   
+  (e: file:///C:/U...u   
+ kkitRunnable'.:Strin    
+g) [], RemoteExcepti    
+on
+    + FullyQualifiedErro 
+   rId : NativeCommandE  
+  rror
+ 
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/dungeon/DungeonManager.
+kt:40:13 'run' overrides 
+nothing.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/dungeon/DungeonManager.
+kt:52:11 Unresolved 
+reference 'runTaskTimer'.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/dungeon/DungeonManager.
+kt:188:105 Unresolved 
+reference 
+'TextDecoration'.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/gui/GuiManager.kt:324:4
+1 Unresolved reference 
+'getPartyForPlayer'.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/gui/GuiManager.kt:330:3
+4 Unresolved reference 
+'leader'.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/gui/GuiManager.kt:332:1
+15 Unresolved reference 
+'leader'.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/gui/GuiManager.kt:332:1
+23 Unresolved reference 
+'name'.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/gui/GuiManager.kt:335:1
+9 Unresolved reference 
+'members'.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/gui/GuiManager.kt:335:4
+4 Cannot infer type for 
+this parameter. Please 
+specify it explicitly.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/gui/GuiManager.kt:335:5
+1 Cannot infer type for 
+this parameter. Please 
+specify it explicitly.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/gui/GuiManager.kt:336:5
+8 Unresolved reference 
+'name'.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/gui/GuiManager.kt:337:8
+9 Unresolved reference 
+'leader'.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/mobs/MobCustomizer.kt:3
+39:72 Unresolved 
+reference 
+'INCREASE_DAMAGE'.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/mobs/MobCustomizer.kt:3
+46:68 Unresolved 
+reference 
+'INCREASE_DAMAGE'.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/mobs/MobCustomizer.kt:3
+57:68 Unresolved 
+reference 
+'INCREASE_DAMAGE'.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/mobs/MobCustomizer.kt:4
+15:25 Function 
+invocation 
+'canBreakDoors()' 
+expected.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/mobs/MobCustomizer.kt:4
+15:25 Variable expected.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/survival/SurvivalManage
+r.kt:716:58 Unresolved 
+reference 
+'BLOCK_SHOVEL_HIT'.
+e: file:///C:/Users/visha
+/Desktop/Mc_Plugin/src/ma
+in/kotlin/com/projectatla
+s/villager/VillageTradeMa
+nager.kt:140:87 Cannot 
+access 'field 
+experienceReward: 
+Boolean': it is private 
+in 'org/bukkit/inventory/
+MerchantRecipe'.
+
+FAILURE: Build failed 
+with an exception.
+
+* What went wrong:
+Execution failed for 
+task ':compileKotlin'.
+> A failure occurred 
+while executing org.jetbr
+ains.kotlin.compilerRunne
+r.GradleCompilerRunnerWit
+hWorkers$GradleKotlinComp
+ilerWorkAction
+   > Compilation error. 
+See log for more details
+
+* Try:
+> Run with --stacktrace 
+option to get the stack 
+trace.
+> Run with --info or 
+--debug option to get 
+more log output.
+> Run with --scan to 
+generate a Build Scan 
+(powered by Develocity).
+> Get more help at 
+https://help.gradle.org.
+
+BUILD FAILED in 3s
+1 actionable task: 1 executed

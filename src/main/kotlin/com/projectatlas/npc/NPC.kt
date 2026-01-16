@@ -30,5 +30,7 @@ data class NPC(
 
 enum class NPCType {
     MERCHANT,      // Sells items for gold
-    QUEST_GIVER    // Offers quests
+    QUEST_GIVER,   // Offers quests
+    GUARD,         // Defends area (Melee)
+    ARCHER         // Defends area (Ranged)
 }

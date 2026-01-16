@@ -13,6 +13,7 @@ data class AtlasPlayer(
     var level: Int = 1,
     val titles: MutableList<String> = mutableListOf(),
     var unlockedSkillNodes: String? = "origin",
+    var completedMilestones: MutableSet<String> = mutableSetOf(),
     var settings: MutableMap<String, Boolean> = mutableMapOf(),
     var soloEra: Int = 0,
     var lastCityLeaveTime: Long = 0L,

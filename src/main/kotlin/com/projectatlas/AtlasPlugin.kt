@@ -37,6 +37,9 @@ import com.projectatlas.qol.QoLManager
 import com.projectatlas.visuals.AtmosphereManager
 import com.projectatlas.map.MapManager
 import com.projectatlas.progression.ProgressionManager
+import com.projectatlas.mobs.MobCustomizer
+import com.projectatlas.animation.AnimationSystem
+import com.projectatlas.animation.AnimationListener
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -78,8 +81,11 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var eraBossManager: com.projectatlas.progression.EraBossManager
     lateinit var milestoneListener: com.projectatlas.progression.MilestoneListener
     lateinit var resourcePackManager: com.projectatlas.visual.ResourcePackManager
+    lateinit var structureHealthManager: com.projectatlas.structures.StructureHealthManager
+    lateinit var mobCustomizer: MobCustomizer
     lateinit var packetManager: com.projectatlas.visual.PacketManager
     lateinit var globalThreatManager: com.projectatlas.threat.GlobalThreatManager
+    lateinit var animationSystem: AnimationSystem
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -132,8 +138,33 @@ class AtlasPlugin : JavaPlugin() {
         packetManager = com.projectatlas.visual.PacketManager(this)
         logger.info("PacketManager enabled with native Display Entities!")
         
+        // Initialize MobCustomizer
+        mobCustomizer = MobCustomizer(this)
+        logger.info("MobCustomizer enabled!")
+        
+        // Initialize Animation System (Display Entity-based custom mob animations)
+        animationSystem = AnimationSystem(this)
+        animationSystem = AnimationSystem(this)
+        server.pluginManager.registerEvents(AnimationListener(this), this)
+        server.pluginManager.registerEvents(com.projectatlas.gameplay.ItemEffectListener(this), this)
+        logger.info("Animation System enabled with ${animationSystem.getAnimationCount()} animations and ${animationSystem.getModelBlueprintCount()} model blueprints!")
+        
         val entityCleanupManager = com.projectatlas.util.EntityCleanupManager(this) // Auto-starts task
         globalThreatManager = com.projectatlas.threat.GlobalThreatManager(this) // Starts threat loop
+
+        // Gameplay Mechanics
+        structureHealthManager = com.projectatlas.structures.StructureHealthManager(this)
+        server.pluginManager.registerEvents(com.projectatlas.structures.BlueprintListener(this), this)
+        server.pluginManager.registerEvents(com.projectatlas.structures.StructureListener(this), this)
+        
+        // Active Behavior Task
+        com.projectatlas.structures.StructureBehaviorTask(this).runTaskTimer(this, 20L, 1L) // Run every tick, internal logic handles rate limiting
+        server.pluginManager.registerEvents(com.projectatlas.structures.BarracksListener(this), this)
+        
+        // Smart Siege AI
+        com.projectatlas.siege.SiegeMobBehavior(this).runTaskTimer(this, 30L, 20L) // Run every 1s
+
+        logger.info("AtlasPlugin enabled successfully!")
         
         // Initialize Integrations
         com.projectatlas.integration.TypewriterManager.init()
@@ -174,7 +205,9 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(progressionManager, this)
         server.pluginManager.registerEvents(eraBossManager, this)
         server.pluginManager.registerEvents(milestoneListener, this)
+        server.pluginManager.registerEvents(com.projectatlas.progression.SummoningAltarManager(this), this)
         server.pluginManager.registerEvents(com.projectatlas.villager.VillageTradeManager(this), this)
+        server.pluginManager.registerEvents(com.projectatlas.villager.VillageJobManager(this), this)
         
 
         

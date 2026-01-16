@@ -3,6 +3,7 @@ package com.projectatlas.dungeon
 import com.projectatlas.AtlasPlugin
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -16,8 +17,10 @@ import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerKickEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.EntityDeathEvent
+import org.bukkit.scheduler.BukkitRunnable
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+
 
 /**
  * Procedural Dungeon Manager
@@ -29,6 +32,28 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
     private val activeDungeons = ConcurrentHashMap<UUID, ProceduralDungeon>() // Player UUID -> Instance
     private val dungeonLog = ConcurrentHashMap<UUID, ProceduralDungeon>() // Instance ID -> Instance
     private val entryLocations = ConcurrentHashMap<UUID, Location>() // Track where players entered from
+    
+    // Disconnect Grace Period
+    private val disconnectedPlayers = ConcurrentHashMap<UUID, Long>()
+    private val GRACE_PERIOD_MS = 3 * 60 * 1000L // 3 Minutes
+
+    init {
+        // Cleanup expired disconnects
+        object : BukkitRunnable() {
+            override fun run() {
+                val now = System.currentTimeMillis()
+                disconnectedPlayers.entries.removeIf { (uuid, time) ->
+                    if (now - time > GRACE_PERIOD_MS) {
+                        // Grace period expired
+                        leaveDungeon(uuid)
+                        true
+                    } else {
+                        false
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 200L, 200L) // Check every 10 seconds
+    }
     
     // Mapping old types to new Themes
     enum class DungeonType(
@@ -102,24 +127,33 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
     }
     
     fun leaveDungeon(player: Player) {
-        val dungeon = activeDungeons[player.uniqueId] ?: return
+        leaveDungeon(player.uniqueId)
+    }
+
+    fun leaveDungeon(uuid: UUID) {
+        val dungeon = activeDungeons[uuid] ?: return
         
-        activeDungeons.remove(player.uniqueId)
-        dungeon.players.remove(player.uniqueId)
-        player.hideBossBar(dungeon.bossBar)
+        activeDungeons.remove(uuid)
+        dungeon.players.remove(uuid)
+        disconnectedPlayers.remove(uuid)
         
-        // Teleport back to entry location or spawn
-        val returnLoc = entryLocations.remove(player.uniqueId) ?: player.world.spawnLocation
-        player.teleport(returnLoc)
-        player.sendMessage(Component.text("Left the dungeon.", NamedTextColor.YELLOW))
+        val player = Bukkit.getPlayer(uuid)
+        if (player != null) {
+            player.hideBossBar(dungeon.bossBar)
+            val returnLoc = entryLocations.remove(uuid) ?: player.world.spawnLocation
+            player.teleport(returnLoc)
+            player.sendMessage(Component.text("Left the dungeon.", NamedTextColor.YELLOW))
+        } else {
+            // Offline player cleanup
+            entryLocations.remove(uuid)
+        }
         
         if (dungeon.players.isEmpty()) {
-            // Idempotency check with delay to prevent race conditions
             if (dungeon.active) {
                 plugin.server.scheduler.runTaskLater(plugin, Runnable {
-                    if (dungeon.active) {
+                    if (dungeon.active && dungeon.players.isEmpty()) {
                         dungeon.cleanup()
-                        dungeon.active = false // Mark inactive after cleanup
+                        dungeon.active = false
                         dungeonLog.remove(dungeon.id)
                     }
                 }, 60L) // 3-second delay
@@ -129,27 +163,46 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
 
     @EventHandler
     fun onQuit(event: PlayerQuitEvent) {
-        // If player quits mid-dungeon, remove them. 
-        // Logic: They "flee" or "disconnect". 
-        // To be safe and avoid getting stuck:
+        // Start grace period for dungeon players
         if (activeDungeons.containsKey(event.player.uniqueId)) {
-            leaveDungeon(event.player)
+            disconnectedPlayers[event.player.uniqueId] = System.currentTimeMillis()
+            // Do not remove from activeDungeons yet!
         }
     }
 
     @EventHandler
     fun onKick(event: PlayerKickEvent) {
         if (activeDungeons.containsKey(event.player.uniqueId)) {
-            leaveDungeon(event.player)
+            disconnectedPlayers[event.player.uniqueId] = System.currentTimeMillis()
         }
     }
 
     @EventHandler
     fun onJoin(event: PlayerJoinEvent) {
-        // Check if player is stranded in world_the_end without an active dungeon
-        if (event.player.world.name == "world_the_end" && !activeDungeons.containsKey(event.player.uniqueId)) {
-            event.player.teleport(event.player.world.spawnLocation)
-            event.player.sendMessage(Component.text("You were moved to spawn from a closed dungeon instance.", NamedTextColor.YELLOW))
+        val uuid = event.player.uniqueId
+        
+        // Check for grace period reconnection
+        if (disconnectedPlayers.containsKey(uuid)) {
+            disconnectedPlayers.remove(uuid)
+            val dungeon = activeDungeons[uuid]
+            
+            if (dungeon != null && dungeon.active) {
+                event.player.sendMessage(Component.empty())
+                event.player.sendMessage(Component.text("⚠ Connection Restored!", NamedTextColor.GREEN, TextDecoration.BOLD))
+                event.player.sendMessage(Component.text("Rejoining dungeon instance...", NamedTextColor.GRAY))
+                event.player.sendMessage(Component.empty())
+                
+                // Refresh boss bar
+                event.player.showBossBar(dungeon.bossBar)
+                return // Successfully rejoined
+            }
+        }
+    
+        // Fallback: Check if player is stranded in world_the_end without an active dungeon
+        if (event.player.world.name == "world_the_end" && !activeDungeons.containsKey(uuid)) {
+            val returnLoc = entryLocations.remove(uuid) ?: event.player.world.spawnLocation
+            event.player.teleport(returnLoc)
+            event.player.sendMessage(Component.text("You were moved to safety from a closed dungeon instance.", NamedTextColor.YELLOW))
         }
     }
 

@@ -1,90 +1,113 @@
 package com.projectatlas.structures
 
 import com.projectatlas.AtlasPlugin
+import com.projectatlas.structures.StructureHealthManager.DamagePhase
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import org.bukkit.GameMode
 import org.bukkit.Material
+import org.bukkit.Particle
 import org.bukkit.Sound
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.block.Action
-import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.event.block.BlockBreakEvent
+import org.bukkit.event.block.BlockExplodeEvent
+import org.bukkit.event.entity.EntityExplodeEvent
+import org.bukkit.scheduler.BukkitRunnable
+import java.util.UUID
 
 class StructureListener(private val plugin: AtlasPlugin) : Listener {
 
     @EventHandler
-    fun onRightClickInfo(event: PlayerInteractEvent) {
-        if (event.action != Action.RIGHT_CLICK_BLOCK) return
-        val item = event.item ?: return
-        val block = event.clickedBlock ?: return
+    fun onBlockBreak(event: BlockBreakEvent) {
+        val block = event.block
         val player = event.player
         
-        // simple check for blueprint
-        if (item.type != Material.PAPER || !item.hasItemMeta()) return
-        val displayName = item.itemMeta.displayName() ?: return
-        // Since Adventure returns Component, we might need to serialize or check differently.
-        // For simplicity in this project (and avoiding complex component parsing for now), 
-        // we'll use the plain text method if possible, or string contains.
-        // But Adventure components don't have a simple .text() in all versions.
-        // We assigned it as: Component.text("Blueprint: $name", NamedTextColor.AQUA)
+        // Creative mode bypass
+        if (player.gameMode == GameMode.CREATIVE) return
         
-        // Quick hack: Just check legacy text or string representation
-        // Ideally we should use persistent data container for ItemID, like we did for GUI icons.
-        // But for now let's try to match the name.
-        // Better: Use PersistentDataContainer checks if we can. 
-        // But the GuiManager just set display name.
+        val structureId = plugin.structureHealthManager.findStructureAt(block.location) ?: return
+        val health = plugin.structureHealthManager.getHealth(structureId) ?: return
+
+        // If ruined, allow breaking (cleanup)
+        if (health.isRuined) return
+
+        // Block belongs to a active structure -> Cancel break and deal damage
+        event.isCancelled = true
         
-        // Let's rely on checking the text content roughly.
-        // Note: Component.toString() is messy.
-        // We will assume standard Paper behavior where we can get plain text.
-        // Actually, let's just check if it contains "Blueprint".
-        // Or better yet, we can't easily rely on name.
-        // Let's assume the user hasn't renamed regular paper.
+        // Damage calculation (e.g. Pickaxe deals more?)
+        val tool = player.inventory.itemInMainHand
+        val damage = if (tool.type.name.contains("PICKAXE") || tool.type.name.contains("AXE")) 10.0 else 2.0
         
-        // REFACTOR: In GuiManager, I should have set a PersistentKey for "blueprint_type".
-        // I should go back and add that to GuiManager for robustness.
-        // BUT for now, to save steps, I will parse the name IF I can.
+        applyStructureDamage(structureId, damage, block.location)
+        player.sendActionBar(Component.text("Structure Health: ${(health.currentHealth/health.maxHealth * 100).toInt()}% (${health.getPhase()})", NamedTextColor.RED))
+    }
+
+    @EventHandler
+    fun onEntityExplode(event: EntityExplodeEvent) {
+        val blocks = event.blockList().toList()
+        if (blocks.isEmpty()) return
         
-        // Let's use PlainTextComponentSerializer to get the text.
-        val plainText = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(displayName)
-        if (!plainText.startsWith("Blueprint: ")) return
+        val hitStructures = mutableSetOf<UUID>()
         
-        val structureName = plainText.removePrefix("Blueprint: ").trim()
-        val type = when (structureName) {
-            "Barracks" -> StructureType.BARRACKS
-            "Nexus" -> StructureType.NEXUS
-            "Market" -> StructureType.MERCHANT_HUT
-            "Quest Camp" -> StructureType.QUEST_CAMP
-            "Turret" -> StructureType.TURRET
-            "Generator" -> StructureType.GENERATOR
-            else -> return
+        val iterator = event.blockList().iterator()
+        while (iterator.hasNext()) {
+            val block = iterator.next()
+            val structureId = plugin.structureHealthManager.findStructureAt(block.location)
+            
+            if (structureId != null) {
+                val health = plugin.structureHealthManager.getHealth(structureId)
+                if (health != null && !health.isRuined) {
+                    iterator.remove() // Don't break the block if active
+                    hitStructures.add(structureId)
+                }
+            }
         }
         
-        event.isCancelled = true // Prevent placing the paper or interactions
+        // Deal massive damage for explosions
+        hitStructures.forEach { id ->
+            applyStructureDamage(id, 50.0, event.location)
+        }
+    }
+    
+    private fun applyStructureDamage(id: UUID, amount: Double, location: org.bukkit.Location) {
+        val health = plugin.structureHealthManager.getHealth(id) ?: return
+        val existingRuined = health.isRuined
         
-        // Check Territory
-        val chunk = block.chunk
-        val city = plugin.cityManager.getCityAt(chunk)
+        val newPhase = plugin.structureHealthManager.damageStructure(id, amount) ?: return
         
-        if (city == null) {
-            player.sendMessage(Component.text("You can only build structures inside a City!", NamedTextColor.RED))
-            return
+        // Feedback
+        location.world.playSound(location, Sound.BLOCK_ANVIL_LAND, 0.5f, 0.5f)
+        location.world.spawnParticle(Particle.CRIT, location.add(0.5, 0.5, 0.5), 10)
+        
+        // Check if just ruined
+        if (newPhase == DamagePhase.RUINED && !existingRuined) {
+             location.world.playSound(location, Sound.ENTITY_IRON_GOLEM_DEATH, 1.0f, 0.5f)
+             location.world.spawnParticle(Particle.EXPLOSION_EMITTER, location, 1)
+             
+             // VISUAL DESTRUCTION
+             // Randomly set blocks in radius to AIR or COBBLESTONE to simulate ruin
+             val structLoc = plugin.structureHealthManager.findStructureLocation(id)
+             if (structLoc != null) {
+                val r = structLoc.radius.toInt()
+                val center = structLoc.center
+                for (x in -r..r) {
+                    for (y in 0..6) { // Height assumption
+                        for (z in -r..r) {
+                            val b = center.clone().add(x.toDouble(), y.toDouble(), z.toDouble()).block
+                            if (!b.type.isAir) {
+                                if (Math.random() < 0.3) b.type = Material.AIR // Destroy 30%
+                                else if (Math.random() < 0.3) b.type = Material.MOSSY_COBBLESTONE // Ruin 30%
+                            }
+                        }
+                    }
+                }
+             }
         }
         
-        // Check permissions (Member is fine for now, strictly Mayor/Officer later)
-        // Check if player is a member of this city
-        if (!city.members.contains(player.uniqueId)) {
-            player.sendMessage(Component.text("You are not a member of this city!", NamedTextColor.RED))
-            return
+        // Updates based on phase
+        if (newPhase == DamagePhase.CRITICAL) {
+             location.world.spawnParticle(Particle.LARGE_SMOKE, location, 5)
         }
-        
-        // BUILD IT
-        plugin.structureManager.spawnStructure(type, block.location.add(0.0, 1.0, 0.0))
-        
-        // Consume Item
-        item.amount = item.amount - 1
-        
-        player.playSound(player.location, Sound.BLOCK_ANVIL_USE, 1.0f, 1.0f)
-        player.sendMessage(Component.text("$structureName construction started!", NamedTextColor.GREEN))
     }
 }

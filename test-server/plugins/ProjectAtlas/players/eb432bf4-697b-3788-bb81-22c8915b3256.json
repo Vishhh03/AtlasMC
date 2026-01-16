@@ -3,12 +3,17 @@
   "name": "VishShaji",
   "reputation": 0,
   "alignment": 0,
-  "balance": 90.0,
-  "currentXp": 72,
-  "level": 2,
-  "titles": [],
-  "unlockedSkillNodes": "origin,berserker_start",
-  "settings": {},
+  "balance": 982470.0,
+  "cityId": "72757805-eac8-409e-8727-560b56f8e365",
+  "currentXp": 508,
+  "level": 9,
+  "titles": [
+    "achievement:quest_complete"
+  ],
+  "unlockedSkillNodes": "origin,ber_dmg1,sco_spd1,ber_crit1,ber_dmg2,ber_leech1,ber_leech2,ber_crit2",
+  "settings": {
+    "quest_count_1": true
+  },
   "soloEra": 0,
   "lastCityLeaveTime": 0
 }

@@ -138,7 +138,12 @@ class ProgressionManager(private val plugin: AtlasPlugin) : Listener {
      */
     fun getCompletedMilestones(player: Player): Set<String> {
         val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return emptySet()
-        val cityId = profile.cityId ?: return emptySet()
+        val cityId = profile.cityId
+        
+        if (cityId == null) {
+            return profile.completedMilestones.toSet()
+        }
+        
         val city = plugin.cityManager.getCity(cityId) ?: return emptySet()
         return city.completedMilestones.toSet()
     }
@@ -180,15 +185,80 @@ class ProgressionManager(private val plugin: AtlasPlugin) : Listener {
         // Check for city era advancement
         checkCityEraAdvancement(city)
         
+        // Check for boss spawn
+        plugin.eraBossManager.checkNaturalBossSpawn(player)
+        
         return true
     }
 
     private fun completeSoloMilestone(player: Player, milestone: Milestone): Boolean {
-        // For players without a city, track Era 0 milestones in their profile
-        // They cannot advance past Era 0 without a city
-        player.sendMessage(Component.text("✦ Solo Achievement: ${milestone.displayName}", NamedTextColor.GRAY))
-        player.sendMessage(Component.text("  Join a city to advance beyond Era 0!", NamedTextColor.YELLOW))
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return false
+
+        if (profile.completedMilestones.contains(milestone.id)) return false
+
+        profile.completedMilestones.add(milestone.id)
+        plugin.identityManager.saveProfile(player.uniqueId)
+
+        player.sendMessage(Component.empty())
+        player.sendMessage(Component.text("════════════════════════════════", milestone.era.color))
+        player.sendMessage(Component.text("  ✦ SOLO MILESTONE ✦", NamedTextColor.GOLD, TextDecoration.BOLD))
+        player.sendMessage(Component.text("  ${milestone.displayName}", milestone.era.color))
+        player.sendMessage(Component.text("════════════════════════════════", milestone.era.color))
+        player.sendMessage(Component.empty())
+        player.playSound(player.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f)
+
+        checkSoloEraAdvancement(player)
+        
+        // Check for boss spawn
+        plugin.eraBossManager.checkNaturalBossSpawn(player)
+        
         return true
+    }
+
+    private fun checkSoloEraAdvancement(player: Player) {
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
+        val currentEra = Era.entries.getOrNull(profile.soloEra) ?: Era.AWAKENING
+        val nextEra = currentEra.next() ?: return
+
+        val required = Milestone.forEra(currentEra)
+        
+        // Check if all milestones for current era are complete
+        val allComplete = required.all { profile.completedMilestones.contains(it.id) }
+        
+        if (allComplete) {
+            advanceSoloEra(player, nextEra)
+        }
+    }
+
+    private fun advanceSoloEra(player: Player, newEra: Era) {
+        val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return
+        
+        profile.soloEra = newEra.ordinal
+        val goldReward = when (newEra) {
+            Era.SETTLEMENT -> 500.0
+            Era.EXPEDITION -> 1000.0
+            Era.ASCENSION -> 2000.0
+            Era.LEGEND -> 5000.0
+            else -> 0.0
+        }
+        
+        profile.balance += goldReward
+        plugin.identityManager.saveProfile(player.uniqueId)
+        
+        player.showTitle(Title.title(
+            Component.text("ERA ${newEra.ordinal}", newEra.color, TextDecoration.BOLD),
+            Component.text("You entered ${newEra.displayName}!", NamedTextColor.WHITE),
+            Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(3), Duration.ofMillis(500))
+        ))
+        
+        player.sendMessage(Component.empty())
+        player.sendMessage(Component.text("ERA REWARDS:", NamedTextColor.GOLD, TextDecoration.BOLD))
+        player.sendMessage(Component.text("  + ${goldReward.toInt()} Gold", NamedTextColor.YELLOW))
+        
+        player.playSound(player.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 0.8f)
+        player.playSound(player.location, Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.2f)
+        
+        plugin.server.broadcast(Component.text("  ★ ${player.name} reached Era ${newEra.ordinal}: ${newEra.displayName}! ★", newEra.color))
     }
 
     fun checkCityEraAdvancement(city: com.projectatlas.city.City) {
@@ -413,12 +483,12 @@ class ProgressionManager(private val plugin: AtlasPlugin) : Listener {
         } else {
             inv.setItem(4, ItemStack(Material.BARRIER).apply {
                 editMeta { meta ->
-                    meta.displayName(Component.text("No City!", NamedTextColor.RED, TextDecoration.BOLD))
+                    meta.displayName(Component.text("Solo Nomad", NamedTextColor.YELLOW, TextDecoration.BOLD))
                     meta.lore(listOf(
-                        Component.text("You are stuck at Era 0", NamedTextColor.GRAY),
+                        Component.text("You are progressing independently.", NamedTextColor.GRAY),
                         Component.empty(),
-                        Component.text("Join or create a city to", NamedTextColor.YELLOW),
-                        Component.text("advance beyond Awakening!", NamedTextColor.YELLOW),
+                        Component.text("Tip: Cities share era progress!", NamedTextColor.GRAY),
+                        Component.text("But you can do it alone.", NamedTextColor.YELLOW),
                         Component.empty(),
                         Component.text("/atlas city create <name>", NamedTextColor.AQUA)
                     ))
@@ -503,7 +573,7 @@ class ProgressionManager(private val plugin: AtlasPlugin) : Listener {
                 )
                 if (city == null) {
                     lore.add(Component.empty())
-                    lore.add(Component.text("⚠ Join a city to progress!", NamedTextColor.RED))
+                    lore.add(Component.text("Progressing as Solo", NamedTextColor.YELLOW))
                 }
                 meta.lore(lore)
             }

@@ -22,6 +22,7 @@ import org.bukkit.scheduler.BukkitRunnable
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import io.papermc.paper.scoreboard.numbers.NumberFormat
 
 /**
  * Quality of Life Manager - Convenience features without making the game easier
@@ -348,17 +349,13 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
             val newCombo = (comboCounts[damager.uniqueId] ?: 0) + 1
             comboCounts[damager.uniqueId] = newCombo
             
-            // Show visual combo counter using TextDisplay (3D floating) + action bar
+            // Show visual combo counter using Action Bar only (removed floating text per user feedback)
             if (newCombo >= 2) {
-                plugin.packetManager.updateComboDisplay(damager, newCombo)
-            }
-            if (newCombo >= 3) {
                 damager.sendActionBar(Component.text("⚔ COMBO x$newCombo ⚔", NamedTextColor.GOLD))
             }
         } else {
             // Reset combo
             comboCounts[damager.uniqueId] = 1
-            plugin.packetManager.clearComboDisplay(damager)
         }
         
         comboTargets[damager.uniqueId] = target.uniqueId
@@ -537,18 +534,24 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
             
             var line = 15
             
+            fun addLine(text: String) {
+                val s = objective.getScore(text)
+                s.score = line--
+                s.numberFormat(NumberFormat.blank())
+            }
+            
             // Balance
-            objective.getScore("§6Balance: §f${String.format("%.1f", profile.balance)}g").score = line--
+            addLine("§6Balance: §f${String.format("%.1f", profile.balance)}g")
             
             // Reputation
-            objective.getScore("§bReputation: §f${profile.reputation}").score = line--
+            addLine("§bReputation: §f${profile.reputation}")
             
             // City
             val cityName = profile.cityId?.let { plugin.cityManager.getCity(it)?.name } ?: "Nomad"
-            objective.getScore("§aCity: §f$cityName").score = line--
+            addLine("§aCity: §f$cityName")
             
             // Blank line
-            objective.getScore("§r").score = line--
+            addLine("§r")
             
             // Active Quest
             val activeQuest = plugin.questManager.getActiveQuest(player)
@@ -566,22 +569,22 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
                     is com.projectatlas.quests.QuestObjective.TameAnimals -> obj.count
                     else -> 1
                 }
-                objective.getScore("§eQuest: §f$questName").score = line--
-                objective.getScore("§7Progress: $questProgress/$questTarget").score = line--
+                addLine("§eQuest: §f$questName")
+                addLine("§7Progress: $questProgress/$questTarget")
             }
             
             // Blank line
-            objective.getScore("§r§r").score = line--
+            addLine("§r§r")
             
             // PvP Stats
             val kills = pvpKills[player.uniqueId] ?: 0
             val deaths = pvpDeaths[player.uniqueId] ?: 0
-            objective.getScore("§cK/D: §f$kills/$deaths").score = line--
+            addLine("§cK/D: §f$kills/$deaths")
             
             // Bounty
             val bounty = plugin.bountyManager.getTotalBounty(player.uniqueId)
             if (bounty > 0) {
-                objective.getScore("§4Bounty: §c${bounty}g").score = line--
+                addLine("§4Bounty: §c${bounty}g")
             }
         }
     }

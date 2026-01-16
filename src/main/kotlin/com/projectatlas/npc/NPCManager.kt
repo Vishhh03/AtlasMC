@@ -50,6 +50,8 @@ class NPCManager(private val plugin: AtlasPlugin) : Listener {
             villager.profession = when (npc.type) {
                 NPCType.MERCHANT -> Villager.Profession.WEAPONSMITH
                 NPCType.QUEST_GIVER -> Villager.Profession.CLERIC
+                NPCType.GUARD -> Villager.Profession.ARMORER
+                NPCType.ARCHER -> Villager.Profession.FLETCHER
             }
             
             // Biome Aware Skin
@@ -207,6 +209,8 @@ class NPCManager(private val plugin: AtlasPlugin) : Listener {
                 villager.profession = when (npc.type) {
                     NPCType.MERCHANT -> Villager.Profession.WEAPONSMITH
                     NPCType.QUEST_GIVER -> Villager.Profession.CLERIC
+                    NPCType.GUARD -> Villager.Profession.ARMORER
+                    NPCType.ARCHER -> Villager.Profession.FLETCHER
                 }
                 
                 // Biome Aware Skin

@@ -1,0 +1,21 @@
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/structures/StructureListener.kt:86:52 Unresolved reference 'EXPLOSION_HUGE'.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/structures/StructureListener.kt:110:52 Unresolved reference 'SMOKE_LARGE'.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/visual/CustomItemManager.kt:82:19 Conflicting declarations:
+val CITY_TURRET: Int
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/visual/CustomItemManager.kt:83:19 Conflicting declarations:
+val CITY_TURRET: Int
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 22s

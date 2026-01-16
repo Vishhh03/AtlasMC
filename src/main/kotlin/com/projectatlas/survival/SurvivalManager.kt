@@ -14,6 +14,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityRegainHealthEvent
 import org.bukkit.event.entity.FoodLevelChangeEvent
+import org.bukkit.event.entity.EntityDeathEvent
 import org.bukkit.event.player.PlayerBedLeaveEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerItemConsumeEvent
@@ -224,6 +225,24 @@ class SurvivalManager(private val plugin: AtlasPlugin) : Listener {
             recipe.setIngredient('N', Material.NETHER_STAR)
             plugin.server.addRecipe(recipe)
         }
+
+        // ═══════════════════════════════════════════════════════════
+        // FARM PLOT - Harder Farming
+        // ═══════════════════════════════════════════════════════════
+        // Recipe: Dirt + Rotten Flesh = Rooted Dirt (Farm Plot)
+        val farmPlotKey = NamespacedKey(plugin, "recipe_farm_plot")
+        if (plugin.server.getRecipe(farmPlotKey) == null) {
+            val farmPlot = ItemStack(Material.ROOTED_DIRT)
+            val meta = farmPlot.itemMeta
+            meta.displayName(Component.text("Farm Plot", NamedTextColor.YELLOW))
+            meta.lore(listOf(Component.text("Place this to till soil for farming", NamedTextColor.GRAY)))
+            farmPlot.itemMeta = meta
+            
+            val recipe = org.bukkit.inventory.ShapelessRecipe(farmPlotKey, farmPlot)
+            recipe.addIngredient(Material.DIRT)
+            recipe.addIngredient(Material.ROTTEN_FLESH)
+            plugin.server.addRecipe(recipe)
+        }
     }
     
     private fun registerShapelessRecipe(name: String, item: HealingItem, vararg ingredients: Pair<Material, Int>) {
@@ -363,6 +382,14 @@ class SurvivalManager(private val plugin: AtlasPlugin) : Listener {
         val player = event.entity as? Player ?: return
         val newLevel = event.foodLevel
         
+        // SLOW DRAIN LOGIC: 50% chance to ignore hunger loss
+        if (newLevel < player.foodLevel) {
+            if (Math.random() < 0.5) {
+                event.isCancelled = true
+                return
+            }
+        }
+        
         // Apply penalties for low hunger
         if (newLevel <= 6) {
             // Very hungry - Slowness + Weakness
@@ -391,7 +418,8 @@ class SurvivalManager(private val plugin: AtlasPlugin) : Listener {
             attacker.saturation = (currentSat - 0.5f).coerceAtLeast(0f)
         } else if (currentFood > 0) {
             // Small chance to lose a hunger point on attack when saturation is empty
-            if (Math.random() < 0.1) {
+            // Reduced to 5% (was 10%)
+            if (Math.random() < 0.05) {
                 attacker.foodLevel = (currentFood - 1).coerceAtLeast(0)
             }
         }
@@ -650,5 +678,59 @@ class SurvivalManager(private val plugin: AtlasPlugin) : Listener {
         player.inventory.addItem(item)
         player.sendMessage(Component.text("Received $amount x ${type.displayName}", NamedTextColor.GREEN))
         return true
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // MOB DROPS
+    // ══════════════════════════════════════════════════════════════
+    
+    @EventHandler
+    fun onMobDeath(event: EntityDeathEvent) {
+        if (event.entity.killer == null) return
+        
+        // 10% Chance to drop a weak healing item (Bandage)
+        if (Math.random() < 0.10) {
+            val bandage = createHealingItem(HealingItem.BANDAGE, 1)
+            event.drops.add(bandage)
+        }
+    }
+    
+    // ══════════════════════════════════════════════════════════════
+    // HARDER FARMING - Require Farm Plots
+    // ══════════════════════════════════════════════════════════════
+    
+    @EventHandler
+    fun onTillSoil(event: PlayerInteractEvent) {
+        if (event.action != org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK) return
+        val block = event.clickedBlock ?: return
+        val item = event.item ?: return
+        
+        // Check if using a Hoe
+        if (!item.type.name.endsWith("_HOE")) return
+        
+        // Block interaction check
+        if (block.type == Material.GRASS_BLOCK || block.type == Material.DIRT || block.type == Material.DIRT_PATH) {
+            // Prevent tilling regular dirt
+            event.isCancelled = true
+            event.player.sendMessage(Component.text("The soil is too tough! Craft a Farm Plot (Dirt + Rotten Flesh).", NamedTextColor.RED))
+            event.player.playSound(block.location, Sound.ITEM_HOE_TILL, 1.0f, 0.5f)
+        } else if (block.type == Material.ROOTED_DIRT) {
+            // Allow Farm Plot -> Farmland
+            // Manually handle it because vanilla hoe on rooted dirt creates hanging roots logic usually?
+            // Or turns to dirt. We want Farmland.
+            event.isCancelled = true // Cancel vanilla behavior
+            block.type = Material.FARMLAND
+            
+            event.player.playSound(block.location, Sound.ITEM_HOE_TILL, 1.0f, 1.0f)
+            
+            // Dura damage
+            val meta = item.itemMeta as? org.bukkit.inventory.meta.Damageable
+            if (meta != null) {
+                // meta.damage += 1 // Not modifying item directly like this is safer?
+                // Actually safer to just let player damage it via API or ignore durability for simplicity here.
+                // But let's be nice:
+                item.damage(1, event.player)
+            }
+        }
     }
 }
