@@ -139,6 +139,14 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
                 customName(Component.text("Defender of ${city.name}", NamedTextColor.BLUE))
                 isCustomNameVisible = true
                 isPlayerCreated = true 
+                
+                // MILITARY BASTION BUFF
+                if (city.specialization == com.projectatlas.city.CitySpecialization.MILITARY_BASTION) {
+                    getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.baseValue = 200.0
+                    health = 200.0
+                    addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, PotionEffect.INFINITE_DURATION, 1)) // Strength II
+                    world.spawnParticle(org.bukkit.Particle.COMPOSTER, location.add(0.0, 2.0, 0.0), 10)
+                }
             }
         }
         

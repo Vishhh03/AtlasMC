@@ -22,6 +22,39 @@ class CityManager(private val plugin: AtlasPlugin) {
     init {
         if (!dataFolder.exists()) dataFolder.mkdirs()
         loadAllCities()
+        startCityTask()
+    }
+    
+    // Periodic City Logic (1 Minute Tick)
+    private fun startCityTask() {
+        plugin.server.scheduler.runTaskTimer(plugin, Runnable {
+            cities.values.forEach { city ->
+                // 1. Industrial Forge: Passive Income
+                if (city.specialization == CitySpecialization.INDUSTRIAL_FORGE) {
+                    var income = 10.0 + (city.members.size * 2.0)
+                    
+                    // Overclock: Consume 1 Redstone (Energy) for +50% Gold
+                    if (city.energy > 0) {
+                        city.energy--
+                        income *= 1.5
+                        // Notify Mayor (optional)
+                    }
+                    
+                    city.treasury += income
+                    // Use action bar so it's not spammy
+                    // plugin.server.getPlayer(city.mayor)?.sendActionBar(Component.text("+$income g (Forge)", NamedTextColor.GOLD))
+                }
+                
+                // 2. Arcane Sanctum: Threat Reduction Fuel
+                // Logic is mostly in GlobalThreatManager, but we consume fuel here
+                if (city.specialization == CitySpecialization.ARCANE_SANCTUM) {
+                    if (city.mana > 0) {
+                        city.mana--
+                        // Sanctum is "Powered" for this minute
+                    }
+                }
+            }
+        }, 1200L, 1200L) // 1 minute
     }
     
     // Core Logic
@@ -40,6 +73,8 @@ class CityManager(private val plugin: AtlasPlugin) {
 
     fun getCity(id: String): City? = cities[id]
     
+    fun getAllCities(): Collection<City> = cities.values
+
     fun claimChunk(cityId: String, chunk: Chunk): Boolean {
         val key = getChunkKey(chunk)
         if (chunkMap.containsKey(key)) return false // Already claimed
@@ -123,6 +158,20 @@ class CityManager(private val plugin: AtlasPlugin) {
         val city = cities[cityId] ?: return
         city.taxRate = rate.coerceIn(0.0, 100.0)
         saveCity(city)
+    }
+
+    fun setSpecialization(cityId: String, spec: CitySpecialization) {
+        val city = cities[cityId] ?: return
+        city.specialization = spec
+        saveCity(city)
+        
+        plugin.server.broadcast(Component.text("═══════════════════════════════", spec.color))
+        plugin.server.broadcast(
+            Component.text("  ${city.name} has specialized as a ", NamedTextColor.WHITE)
+                .append(Component.text(spec.displayName, spec.color).decorate(TextDecoration.BOLD))
+        )
+        plugin.server.broadcast(Component.text("  ${spec.description.lines().first()}", NamedTextColor.GRAY))
+        plugin.server.broadcast(Component.text("═══════════════════════════════", spec.color))
     }
 
     fun kickPlayer(mayor: Player, targetName: String) {

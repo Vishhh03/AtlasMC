@@ -79,6 +79,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var milestoneListener: com.projectatlas.progression.MilestoneListener
     lateinit var resourcePackManager: com.projectatlas.visual.ResourcePackManager
     lateinit var packetManager: com.projectatlas.visual.PacketManager
+    lateinit var globalThreatManager: com.projectatlas.threat.GlobalThreatManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -117,6 +118,7 @@ class AtlasPlugin : JavaPlugin() {
         chatManager = ChatManager(this)
         supplyDropListener = SupplyDropListener(this)
         qolManager = QoLManager(this)
+        qolManager.registerRecallTotemRecipe()
         atmosphereManager = AtmosphereManager(this)
         atmosphereManager = AtmosphereManager(this)
         mapManager = MapManager(this)
@@ -131,6 +133,7 @@ class AtlasPlugin : JavaPlugin() {
         logger.info("PacketManager enabled with native Display Entities!")
         
         val entityCleanupManager = com.projectatlas.util.EntityCleanupManager(this) // Auto-starts task
+        globalThreatManager = com.projectatlas.threat.GlobalThreatManager(this) // Starts threat loop
         
         // Initialize Integrations
         com.projectatlas.integration.TypewriterManager.init()
@@ -171,6 +174,7 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(progressionManager, this)
         server.pluginManager.registerEvents(eraBossManager, this)
         server.pluginManager.registerEvents(milestoneListener, this)
+        server.pluginManager.registerEvents(com.projectatlas.villager.VillageTradeManager(this), this)
         
 
         

@@ -3,17 +3,14 @@
   "name": "VishShaji",
   "reputation": 0,
   "alignment": 0,
-  "balance": 5066.0,
-  "cityId": "b9add3ec-23a7-47dd-a9b8-72bba9b3c118",
-  "currentXp": 600,
-  "level": 8,
+  "balance": 320.0,
+  "currentXp": 100,
+  "level": 20,
   "titles": [
-    "achievement:dungeon_speed",
-    "achievement:dungeon_conqueror",
     "achievement:quest_complete"
   ],
-  "unlockedSkillNodes": "origin,archery_start,combat_start,fireball_1,sword_1,sword_2,crit_1",
+  "unlockedSkillNodes": "origin,combat_start",
   "settings": {
-    "atmosphere": true
+    "quest_count_1": true
   }
 }

@@ -70,6 +70,30 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
     // ═══════════════════════════════════════════════════════════════
     
     private val deathCompassKey = NamespacedKey(plugin, "death_compass")
+    private val recallTotemKey = NamespacedKey(plugin, "recall_totem")
+
+    fun registerRecallTotemRecipe() {
+        val key = NamespacedKey(plugin, "recall_totem_recipe")
+        if (Bukkit.getRecipe(key) != null) return // Already registered
+
+        val item = ItemStack(Material.ECHO_SHARD)
+        val meta = item.itemMeta!!
+        meta.displayName(Component.text("🌀 Recall Totem", NamedTextColor.AQUA, TextDecoration.BOLD))
+        meta.lore(listOf(
+            Component.text("Use to teleport to safety.", NamedTextColor.GRAY),
+            Component.text("Works inside Dungeons!", NamedTextColor.DARK_PURPLE)
+        ))
+        meta.persistentDataContainer.set(recallTotemKey, PersistentDataType.BYTE, 1.toByte())
+        item.itemMeta = meta
+        
+        val recipe = org.bukkit.inventory.ShapedRecipe(key, item)
+        recipe.shape(" A ", "AEA", " A ")
+        recipe.setIngredient('A', Material.AMETHYST_SHARD)
+        recipe.setIngredient('E', Material.ECHO_SHARD)
+        
+        plugin.server.addRecipe(recipe)
+        plugin.logger.info("Registered Recall Totem recipe!")
+    }
     
     @EventHandler(priority = EventPriority.MONITOR)
     fun onPlayerDeath(event: PlayerDeathEvent) {
@@ -196,6 +220,43 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
         val distance = player.location.distance(deathLoc).toInt()
         player.sendMessage(Component.text("☠ Compass updated! Death location is $distance blocks away.", NamedTextColor.RED))
         player.playSound(player.location, Sound.UI_BUTTON_CLICK, 0.5f, 1.2f)
+    }
+
+    @EventHandler
+    fun onRecallTotemUse(event: PlayerInteractEvent) {
+        val item = event.item ?: return
+        if (item.type != Material.ECHO_SHARD) return
+        if (!event.action.isRightClick) return
+        
+        // Simple check for now: Any Echo Shard works, OR enforce custom item
+        // Enforcing custom item for quality
+        val meta = item.itemMeta ?: return
+        if (!meta.persistentDataContainer.has(recallTotemKey, PersistentDataType.BYTE)) return
+        
+        event.isCancelled = true
+        val player = event.player
+        
+        // Consume item
+        item.amount -= 1
+        
+        // Effects
+        player.world.spawnParticle(Particle.REVERSE_PORTAL, player.location.add(0.0, 1.0, 0.0), 50, 0.5, 1.0, 0.5, 0.1)
+        player.playSound(player.location, Sound.BLOCK_PORTAL_TRAVEL, 1.0f, 0.5f)
+        player.playSound(player.location, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f)
+        
+        val activeDungeon = plugin.dungeonManager.getActiveInstance(player)
+        
+        if (activeDungeon != null) {
+            // Leave Dungeon
+            player.sendMessage(Component.text("🌀 Recalling from Dungeon...", NamedTextColor.AQUA))
+            plugin.dungeonManager.leaveDungeon(player)
+        } else {
+            // Teleport to Bed or Spawn
+            val target = player.bedSpawnLocation ?: player.world.spawnLocation
+            player.teleport(target)
+            player.sendMessage(Component.text("🌀 Recalled to safety.", NamedTextColor.AQUA))
+            player.playSound(target, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f)
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════

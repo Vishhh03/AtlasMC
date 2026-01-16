@@ -25,9 +25,9 @@ class ConfigManager(private val plugin: AtlasPlugin) {
     var relicSpawnChance: Double = 0.05
     
     // City
-    var cityCreationCost: Double = 1000.0
+    var cityCreationCost: Double = 5000.0
     var chunkClaimBaseCost: Double = 100.0
-    var chunkClaimScaling: Double = 1.5
+    var chunkClaimScaling: Double = 1.25
     var cityMaxChunks: Int = 50
     var cityMaxMembers: Int = 20
     
@@ -38,8 +38,8 @@ class ConfigManager(private val plugin: AtlasPlugin) {
     var fireballCooldownTicks: Int = 100
     var shieldWallCooldownTicks: Int = 400
     var shieldWallDurationTicks: Int = 100
-    var healingPulseCooldownTicks: Int = 300
-    var healingPulseAmount: Double = 8.0
+    var healingPulseCooldownTicks: Int = 900
+    var healingPulseAmount: Double = 4.0
     var dashCooldownTicks: Int = 100
     var dashVelocity: Double = 1.5
     
@@ -57,6 +57,8 @@ class ConfigManager(private val plugin: AtlasPlugin) {
     var dungeonTimeBonusThreshold: Double = 0.5
     var dungeonSpeedBonusMultiplier: Double = 1.5
     var dungeonRelicDropChance: Double = 0.20
+    var dungeonCompletionReward: Double = 500.0
+    var dungeonMobDamageScaling: Double = 0.5
     
     // Skill Tree Mults
     var skillHealthBonus: Double = 2.0
@@ -66,7 +68,7 @@ class ConfigManager(private val plugin: AtlasPlugin) {
     var skillBowMult: Double = 1.05
     var skillMiningSpeedMult: Double = 1.0
     var skillMovementSpeedBonus: Float = 0.01f
-    var skillLifeLeechBase: Double = 0.05
+    var skillLifeLeechBase: Double = 0.015
     var skillCritChanceBase: Double = 0.05
     var skillXpBonusBase: Double = 1.25
     
@@ -129,9 +131,9 @@ class ConfigManager(private val plugin: AtlasPlugin) {
         relicSpawnChance = config.getDouble("events.relic-spawn.spawn-chance", 0.05)
         
         // City
-        cityCreationCost = config.getDouble("city.creation-cost", 1000.0)
+        cityCreationCost = config.getDouble("city.creation-cost", 5000.0)
         chunkClaimBaseCost = config.getDouble("city.chunk-claim-base-cost", 100.0)
-        chunkClaimScaling = config.getDouble("city.chunk-claim-scaling", 1.5)
+        chunkClaimScaling = config.getDouble("city.chunk-claim-scaling", 1.25)
         cityMaxChunks = config.getInt("city.max-chunks", 50)
         cityMaxMembers = config.getInt("city.max-members", 20)
         
@@ -142,8 +144,8 @@ class ConfigManager(private val plugin: AtlasPlugin) {
         fireballCooldownTicks = config.getInt("abilities.fireball.cooldown-ticks", 100)
         shieldWallCooldownTicks = config.getInt("abilities.shield-wall.cooldown-ticks", 400)
         shieldWallDurationTicks = config.getInt("abilities.shield-wall.duration-ticks", 100)
-        healingPulseCooldownTicks = config.getInt("abilities.healing-pulse.cooldown-ticks", 300)
-        healingPulseAmount = config.getDouble("abilities.healing-pulse.amount", 8.0)
+        healingPulseCooldownTicks = config.getInt("abilities.healing-pulse.cooldown-ticks", 900)
+        healingPulseAmount = config.getDouble("abilities.healing-pulse.amount", 4.0)
         dashCooldownTicks = config.getInt("abilities.dash.cooldown-ticks", 100)
         dashVelocity = config.getDouble("abilities.dash.velocity", 1.5)
         
@@ -161,6 +163,8 @@ class ConfigManager(private val plugin: AtlasPlugin) {
         dungeonTimeBonusThreshold = config.getDouble("dungeons.time-bonus-threshold", 0.5)
         dungeonSpeedBonusMultiplier = config.getDouble("dungeons.speed-bonus-multiplier", 1.5)
         dungeonRelicDropChance = config.getDouble("dungeons.relic-drop-chance", 0.20)
+        dungeonCompletionReward = config.getDouble("dungeons.completion-reward", 500.0)
+        dungeonMobDamageScaling = config.getDouble("dungeons.mob-damage-scaling", 0.5)
         
         // Party
         partyMaxSize = config.getInt("party.max-size", 4)
@@ -174,7 +178,7 @@ class ConfigManager(private val plugin: AtlasPlugin) {
         skillBowMult = config.getDouble("skills.bow-multiplier", 1.05)
         skillMiningSpeedMult = config.getDouble("skills.mining-speed-multiplier", 1.0)
         skillMovementSpeedBonus = config.getDouble("skills.speed-bonus", 0.01).toFloat()
-        skillLifeLeechBase = config.getDouble("skills.leech-base", 0.05)
+        skillLifeLeechBase = config.getDouble("skills.leech-base", 0.015)
         skillCritChanceBase = config.getDouble("skills.crit-chance-base", 0.05)
         skillXpBonusBase = config.getDouble("skills.xp-bonus-base", 1.25)
         

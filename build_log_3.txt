@@ -1,12 +1,54 @@
-To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
-Daemon will be stopped at the end of the build 
+> Task :clean
 > Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
-> Task :processResources UP-TO-DATE
-> Task :compileKotlin
-> Task :compileJava NO-SOURCE
-> Task :classes UP-TO-DATE
-> Task :shadowJar
+> Task :processResources
 
-BUILD SUCCESSFUL in 17s
-3 actionable tasks: 2 executed, 1 up-to-date
-Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.2.1/userguide/configuration_cache_enabling.html
+> Task :compileKotlin FAILED
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:3:25 Conflicting import: imported name 'AtlasPlugin' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:4:33 Conflicting import: imported name 'Component' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:5:40 Conflicting import: imported name 'NamedTextColor' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:7:19 Conflicting import: imported name 'Material' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:8:19 Conflicting import: imported name 'Sound' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:9:26 Conflicting import: imported name 'Player' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:10:26 Conflicting import: imported name 'Villager' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:11:25 Conflicting import: imported name 'EventHandler' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:12:25 Conflicting import: imported name 'Listener' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:13:32 Conflicting import: imported name 'PlayerInteractEntityEvent' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:14:29 Conflicting import: imported name 'ItemStack' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:16:29 Conflicting import: imported name 'MerchantRecipe' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:17:18 Conflicting import: imported name 'ArrayList' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:19:1 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:19:9 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:19:12 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:19:13 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:19:25 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:19:26 Syntax error: Expecting a top level declaration.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:19:34 Syntax error: imports are only allowed in the beginning of file.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:21:25 Conflicting import: imported name 'AtlasPlugin' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:23:33 Conflicting import: imported name 'Component' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:24:40 Conflicting import: imported name 'NamedTextColor' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:25:19 Conflicting import: imported name 'Material' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:26:19 Conflicting import: imported name 'Sound' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:27:26 Conflicting import: imported name 'Player' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:28:26 Conflicting import: imported name 'Villager' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:29:25 Conflicting import: imported name 'EventHandler' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:30:25 Conflicting import: imported name 'Listener' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:31:32 Conflicting import: imported name 'PlayerInteractEntityEvent' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:32:29 Conflicting import: imported name 'ItemStack' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:33:29 Conflicting import: imported name 'MerchantRecipe' is ambiguous.
+e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageTradeManager.kt:35:18 Conflicting import: imported name 'ArrayList' is ambiguous.
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 4s
+3 actionable tasks: 3 executed

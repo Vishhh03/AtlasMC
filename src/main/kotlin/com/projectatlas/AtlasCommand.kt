@@ -333,9 +333,75 @@ class AtlasCommand(
             }
             "deposit" -> {
                  if (args.size < 3) {
-                    player.sendMessage(Component.text("Usage: /atlas city deposit <amount>", NamedTextColor.RED))
+                    player.sendMessage(Component.text("Usage: /atlas city deposit <amount|items>", NamedTextColor.RED))
                     return
                 }
+                
+                // Handle Item Deposit (Redstone/Lapis/GoldItems)
+                if (args[2].lowercase() == "items" || args[2].lowercase() == "item" || args[2].lowercase() == "hand") {
+                    val profile = identityManager.getPlayer(player.uniqueId) ?: return
+                    if (profile.cityId == null) {
+                        player.sendMessage(Component.text("You are not in a city.", NamedTextColor.RED))
+                        return
+                    }
+                    val city = cityManager.getCity(profile.cityId!!) ?: return
+                    val item = player.inventory.itemInMainHand
+                    
+                    if (item.type == org.bukkit.Material.REDSTONE) {
+                        val amount = item.amount
+                        city.energy += amount
+                        cityManager.saveCity(city)
+                        player.inventory.setItemInMainHand(null)
+                        player.sendMessage(Component.text("⚡ Depsoited $amount Redstone (Energy) to City!", NamedTextColor.RED))
+                        return
+                    }
+                    
+                    if (item.type == org.bukkit.Material.LAPIS_LAZULI) {
+                        val amount = item.amount
+                        city.mana += amount
+                        cityManager.saveCity(city)
+                        player.inventory.setItemInMainHand(null)
+                        player.sendMessage(Component.text("🔮 Deposited $amount Lapis (Mana) to City!", NamedTextColor.BLUE))
+                        return
+                    }
+                    
+                    // Allow raw gold deposit
+                    if (item.type == org.bukkit.Material.GOLD_NUGGET || item.type == org.bukkit.Material.GOLD_INGOT || item.type == org.bukkit.Material.GOLD_BLOCK) {
+                         val valuePer = when(item.type) {
+                             org.bukkit.Material.GOLD_NUGGET -> 0.11 // slightly less than 1/9 to encourage coin use? No, let's keep simple.
+                             org.bukkit.Material.GOLD_INGOT -> 1.0
+                             org.bukkit.Material.GOLD_BLOCK -> 9.0
+                             else -> 0.0
+                         }
+                         // Actually, our economy is usually 1.0 = 1 Gold ?? Let's assume standard.
+                         // Wait, in TradeManager, 1 Emerald = 5 Nuggets.
+                         // Let's standardise: 1 Ingot = 1.0 Economy? Or 1 Nugget = 1.0?
+                         // TradeManager: 20 Wheat -> 1 Nugget. 24 Paper -> 1 Nugget.
+                         // Most dungeons give Nuggets.
+                         // Let's say 1 Nugget = 1.0 Economy (Satoshis/Cents).
+                         
+                         val nuggetVal = 1.0
+                         val ingotVal = 9.0
+                         val blockVal = 81.0
+                         
+                         val totalVal = when(item.type) {
+                             org.bukkit.Material.GOLD_NUGGET -> item.amount * nuggetVal
+                             org.bukkit.Material.GOLD_INGOT -> item.amount * ingotVal
+                             org.bukkit.Material.GOLD_BLOCK -> item.amount * blockVal
+                             else -> 0.0
+                         }
+                         
+                         city.treasury += totalVal
+                         cityManager.saveCity(city)
+                         player.inventory.setItemInMainHand(null)
+                         player.sendMessage(Component.text("💰 Deposited items worth ${totalVal}g to Treasury!", NamedTextColor.GOLD))
+                         return
+                    }
+                    
+                    player.sendMessage(Component.text("Hold Redstone (Energy), Lapis (Mana), or Gold (Treasury) to deposit.", NamedTextColor.RED))
+                    return
+                }
+
                 val amount = args[2].toDoubleOrNull()
                 if (amount == null || amount <= 0) {
                      player.sendMessage(Component.text("Invalid amount.", NamedTextColor.RED))
@@ -372,6 +438,41 @@ class AtlasCommand(
                 val city = cityManager.getCity(profile.cityId!!) ?: return
                 
                 politicsManager.castVote(city, player, args[2])
+            }
+            "specialize", "spec" -> {
+                val profile = identityManager.getPlayer(player.uniqueId)
+                if (profile?.cityId == null) {
+                    player.sendMessage(Component.text("You are not in a city.", NamedTextColor.RED))
+                    return
+                }
+                val city = cityManager.getCity(profile.cityId!!) ?: return
+                
+                if (city.mayor != player.uniqueId) {
+                     player.sendMessage(Component.text("Only the mayor can choose a specialization.", NamedTextColor.RED))
+                     return
+                }
+                
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas city spec <type>", NamedTextColor.RED))
+                    player.sendMessage(Component.text("Types: ARCANE_SANCTUM, INDUSTRIAL_FORGE, MILITARY_BASTION", NamedTextColor.GRAY))
+                    return
+                }
+                
+                val type = try {
+                    com.projectatlas.city.CitySpecialization.valueOf(args[2].uppercase())
+                } catch (e: Exception) { null }
+                
+                if (type == null) {
+                    player.sendMessage(Component.text("Invalid specialization. Valid types:", NamedTextColor.RED))
+                    com.projectatlas.city.CitySpecialization.entries.forEach { 
+                        if (it != com.projectatlas.city.CitySpecialization.NONE) {
+                             player.sendMessage(Component.text("- ${it.name}", it.color))
+                        }
+                    }
+                    return
+                }
+                
+                cityManager.setSpecialization(city.id, type)
             }
         }
     }

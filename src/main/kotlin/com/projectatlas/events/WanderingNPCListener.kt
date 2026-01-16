@@ -141,7 +141,7 @@ class WanderingNPCListener(private val plugin: AtlasPlugin) : Listener {
         }
         
         player.sendMessage(Component.text("You spot a traveler nearby...", NamedTextColor.GREEN))
-        player.playSound(player.location, Sound.ENTITY_VILLAGER_AMBIENT, 1.0f, 1.0f)
+        player.playSound(player.location, Sound.ENTITY_VILLAGER_YES, 1.0f, 1.0f)
     }
     
     // --- 2. Bandit Ambush (Level-Scaled Difficulty) ---

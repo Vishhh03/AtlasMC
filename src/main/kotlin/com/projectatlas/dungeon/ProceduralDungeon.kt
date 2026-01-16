@@ -220,7 +220,7 @@ class ProceduralDungeon(
         entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.baseValue = finalHp
         entity.health = finalHp
         
-        val dmgMult = 1.0 + (diff * 0.2)
+        val dmgMult = 1.0 + (diff * plugin.configManager.dungeonMobDamageScaling)
         entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_ATTACK_DAMAGE)?.baseValue = 4.0 * dmgMult
         
         // Armor
@@ -268,6 +268,14 @@ class ProceduralDungeon(
         if (rand.nextDouble() < 0.3 + (diff * 0.1)) {
             inv.addItem(ItemStack(Material.IRON_INGOT, rand.nextInt(1, 4)))
         }
+        // Buff: Emeralds/Lapis
+        if (rand.nextDouble() < 0.2 + (diff * 0.1)) {
+            inv.addItem(ItemStack(Material.EMERALD, rand.nextInt(2, 6)))
+        }
+        if (rand.nextDouble() < 0.2) {
+            inv.addItem(ItemStack(Material.LAPIS_LAZULI, rand.nextInt(4, 12)))
+        }
+        
         if (diff >= 3 && rand.nextDouble() < 0.1 + (diff * 0.05)) {
             inv.addItem(ItemStack(Material.DIAMOND, rand.nextInt(1, 2 + (diff/2))))
         }
@@ -287,7 +295,9 @@ class ProceduralDungeon(
             it.hideBossBar(bossBar)
             if (success) {
                 it.sendMessage(Component.text("🏆 Dungeon Completed! 🏆", NamedTextColor.GOLD))
-                plugin.economyManager.deposit(it.uniqueId, 1000.0)
+                plugin.economyManager.deposit(it.uniqueId, plugin.configManager.dungeonCompletionReward)
+                // Reduce Global Threat
+                plugin.globalThreatManager.onDungeonComplete(true)
             } else {
                 it.sendMessage(Component.text("☠ Dungeon Failed", NamedTextColor.RED))
             }

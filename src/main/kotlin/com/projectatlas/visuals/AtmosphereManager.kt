@@ -40,7 +40,9 @@ class AtmosphereManager(private val plugin: AtlasPlugin) : Listener {
                 plugin.server.onlinePlayers.forEach { player ->
                     if (isatmosphereEnabled(player) && player.gameMode != GameMode.SPECTATOR) {
                         playBiomeAmbience(player)
+                        playBiomeAmbience(player)
                         playWaterEffects(player)
+                        playThreatAmbience(player)
                     }
                 }
             }
@@ -246,5 +248,47 @@ class AtmosphereManager(private val plugin: AtlasPlugin) : Listener {
     private fun Player.isWalking(): Boolean {
         // Approximate, velocity checks are flaky, but good enough for visual fluff
         return this.velocity.lengthSquared() > 0.01
+    }
+
+    // -------------------------------------------------------------------------
+    // Threat Visuals
+    // -------------------------------------------------------------------------
+    private var currentThreat: Double = 0.0
+    
+    fun setThreatLevel(level: Double) {
+        this.currentThreat = level
+    }
+    
+    private fun playThreatAmbience(player: Player) {
+        if (currentThreat < 50.0) return // No effect for low threat
+        
+        val loc = player.location
+        
+        // 1. Spooky Dust (50-80%)
+        if (currentThreat >= 50 && random.nextDouble() < 0.1) {
+             val pLoc = loc.clone().add(
+                (random.nextDouble() - 0.5) * 20, 
+                (random.nextDouble() * 5), 
+                (random.nextDouble() - 0.5) * 20
+             )
+             player.spawnParticle(Particle.ASH, pLoc, 0, 0.0, -0.1, 0.0)
+        }
+        
+        // 2. Red Sky / Crimson Spores (80%+)
+        if (currentThreat >= 80) {
+             // Red tint particles
+             // Use Red Dust
+             val pLoc = loc.clone().add(
+                (random.nextDouble() - 0.5) * 10, 
+                (random.nextDouble() * 3), 
+                (random.nextDouble() - 0.5) * 10
+             )
+             player.spawnParticle(Particle.DUST, pLoc, 0, 
+                 Particle.DustOptions(org.bukkit.Color.RED, 0.5f))
+                 
+             if (random.nextDouble() < 0.01) {
+                 player.playSound(pLoc, Sound.AMBIENT_CRIMSON_FOREST_ADDITIONS, 0.5f, 0.5f)
+             }
+        }
     }
 }

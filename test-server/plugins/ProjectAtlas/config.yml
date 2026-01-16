@@ -43,9 +43,9 @@ classes:
 # ============ DUNGEONS ============
 dungeons:
   max-size-blocks: 64
-  time-bonus-threshold: 0.5  # Complete in under 50% time for speed bonus
+  time-bonus-threshold: 0.5 # Complete in under 50% time for speed bonus
   speed-bonus-multiplier: 1.5
-  relic-drop-chance: 0.20
+  relic-drop-chance: 0.2
 
 # ============ PARTY ============
 party:
@@ -68,7 +68,7 @@ blueprints:
 # ============ RELICS ============
 relics:
   cooldowns:
-    phoenix-feather: 300  # seconds
+    phoenix-feather: 300 # seconds
     void-shard: 30
     frost-heart: 120
     titan-stone: 180
@@ -95,9 +95,14 @@ daily-rewards:
     day-4: 150
     day-5: 200
     day-6: 300
-    day-7: 500  # Weekly bonus!
+    day-7: 500 # Weekly bonus!
 
 # ============ DEBUG ============
 debug:
   enabled: false
   verbose-logging: false
+resource-pack:
+  url: ''
+  hash: ''
+  required: false
+  prompt-message: '&6Project Atlas &7requires a resource pack for the best experience!'
