@@ -13,7 +13,10 @@ data class AtlasPlayer(
     var level: Int = 1,
     val titles: MutableList<String> = mutableListOf(),
     var unlockedSkillNodes: String? = "origin",
-    var settings: MutableMap<String, Boolean> = mutableMapOf()
+    var settings: MutableMap<String, Boolean> = mutableMapOf(),
+    var soloEra: Int = 0,
+    var lastCityLeaveTime: Long = 0L,
+    var lastCityId: String? = null
 ) {
     fun getSetting(key: String, default: Boolean = false): Boolean {
         return settings.getOrDefault(key, default)

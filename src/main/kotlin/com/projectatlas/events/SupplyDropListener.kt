@@ -71,15 +71,16 @@ class SupplyDropListener(private val plugin: AtlasPlugin) : Listener {
         
         val halfCount = (initialCount + 1) / 2 // Round up
         
-        if (aliveCount >= halfCount) {
+        // Lock until ALL guardians are dead (user request)
+        if (aliveCount > 0) {
             event.isCancelled = true
             val player = event.player
             player.sendMessage(Component.empty())
             player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.RED))
             player.sendMessage(Component.text("  ⚠ SUPPLY DROP LOCKED ⚠", NamedTextColor.RED))
-            player.sendMessage(Component.text("  Kill at least half the guardians first!", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  Kill ALL the guardians first!", NamedTextColor.YELLOW))
             player.sendMessage(Component.text("  Guardians remaining: $aliveCount / $initialCount", NamedTextColor.GRAY))
-            player.sendMessage(Component.text("  Need to kill: ${aliveCount - halfCount + 1} more", NamedTextColor.GOLD))
+            player.sendMessage(Component.text("  Need to kill: $aliveCount more", NamedTextColor.GOLD))
             player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.RED))
             player.sendMessage(Component.empty())
             player.playSound(player.location, org.bukkit.Sound.BLOCK_CHEST_LOCKED, 1.0f, 0.8f)

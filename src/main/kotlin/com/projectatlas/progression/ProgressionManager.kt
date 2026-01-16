@@ -109,7 +109,11 @@ class ProgressionManager(private val plugin: AtlasPlugin) : Listener {
      */
     fun getPlayerEra(player: Player): Era {
         val profile = plugin.identityManager.getPlayer(player.uniqueId) ?: return Era.AWAKENING
-        val cityId = profile.cityId ?: return Era.AWAKENING // No city = stuck at Era 0
+        val cityId = profile.cityId
+        
+        if (cityId == null) {
+            return Era.entries.getOrNull(profile.soloEra) ?: Era.AWAKENING
+        }
         
         val city = plugin.cityManager.getCity(cityId) ?: return Era.AWAKENING
         return Era.entries.getOrNull(city.currentEra) ?: Era.AWAKENING

@@ -1,0 +1,118 @@
+﻿Initialized native services in: C:\Users\visha\.gradle\native
+Initialized jansi services in: C:\Users\visha\.gradle\native
+The client will now receive all logging from the daemon (pid: 27672). The daemon log file: C:\Users\visha\.gradle\daemon\9.2.1\daemon-27672.out.log
+Starting 14th build in daemon [uptime: 1 hrs 16 mins 10.049 secs, performance: 100%, GC rate: 0.00/s, heap usage: 3% of 512 MiB, non-heap usage: 21% of 384 MiB]
+Using 12 worker leases.
+Operational build model parameters: {requiresToolingModels=false, parallelProjectExecution=false, configureOnDemand=false, configurationCache=false, configurationCacheParallelStore=false, configurationCacheParallelLoad=true, isolatedProjects=false, parallelProjectConfiguration=false, intermediateModelCache=false, parallelToolingApiActions=false, invalidateCoupledProjects=false, modelAsProjectDependency=false, resilientModelBuilding=false}
+Now considering [C:\Users\visha\Desktop\Mc_Plugin] as hierarchies to watch
+Watching the file system is configured to be enabled if available
+File system watching is active
+Starting Build
+Settings evaluated using settings file 'C:\Users\visha\Desktop\Mc_Plugin\settings.gradle.kts'.
+Projects loaded. Root project using build file 'C:\Users\visha\Desktop\Mc_Plugin\build.gradle.kts'.
+Included projects: [root project 'ProjectAtlas']
+
+> Configure project :
+Evaluating root project 'ProjectAtlas' using build file 'C:\Users\visha\Desktop\Mc_Plugin\build.gradle.kts'.
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm', version: '2.0.21']
+Resolved plugin [id: 'io.github.goooler.shadow', version: '8.1.8']
+Using Kotlin Gradle Plugin gradle85 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+All projects evaluated.
+Task name matched 'shadowJar'
+Selected primary task 'shadowJar' from project :
+Tasks to be executed: [task ':checkKotlinGradlePluginConfigurationErrors', task ':compileKotlin', task ':compileJava', task ':processResources', task ':classes', task ':shadowJar']
+Tasks that were excluded: []
+Resolve mutations for :checkKotlinGradlePluginConfigurationErrors (Thread[#1127,Execution worker,5,main]) started.
+:checkKotlinGradlePluginConfigurationErrors (Thread[#1127,Execution worker,5,main]) started.
+
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+Skipping task ':checkKotlinGradlePluginConfigurationErrors' as task onlyIf 'errorDiagnostics are present' is false.
+Resolve mutations for :compileKotlin (Thread[#1127,Execution worker,5,main]) started.
+:compileKotlin (Thread[#1127,Execution worker,5,main]) started.
+Resolve mutations for :processResources (Thread[#1131,Execution worker Thread 5,5,main]) started.
+:processResources (Thread[#1131,Execution worker Thread 5,5,main]) started.
+
+> Task :processResources UP-TO-DATE
+Caching disabled for task ':processResources' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':processResources' as it is up-to-date.
+
+> Task :compileKotlin FAILED
+Caching disabled for task ':compileKotlin' because:
+  Build cache is disabled
+Task ':compileKotlin' is not up-to-date because:
+  Input property 'sources' file C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\AtlasListener.kt has changed.
+  Input property 'sources' file C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\bounty\BountyManager.kt has changed.
+  Input property 'sources' file C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\city\CityManager.kt has changed.
+  and more...
+file or directory 'C:\Users\visha\Desktop\Mc_Plugin\src\main\java', not found
+file or directory 'C:\Users\visha\Desktop\Mc_Plugin\src\main\java', not found
+file or directory 'C:\Users\visha\Desktop\Mc_Plugin\src\main\java', not found
+file or directory 'C:\Users\visha\Desktop\Mc_Plugin\src\main\java', not found
+Kotlin source files: C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\achievements\AchievementManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\AtlasCommand.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\AtlasListener.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\AtlasPlugin.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\bounty\BountyManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\chat\ChatManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\city\City.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\city\CityBuffTask.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\city\CityInfrastructure.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\city\CityManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\city\CitySpecialization.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\city\CityWonder.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\city\WonderManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\classes\AbilityListener.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\config\ConfigManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\dialogue\Dialogue.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\dialogue\DialogueManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\dungeon\DungeonDefinitions.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\dungeon\DungeonGenerator.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\dungeon\DungeonManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\dungeon\ProceduralDungeon.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\economy\EconomyManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\economy\MarketManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\events\DungeonEvents.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\events\EventManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\events\SupplyDropEvent.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\events\SupplyDropListener.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\events\WanderingNPCListener.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\events\WorldGenListener.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\gui\GuiManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\history\HistoryManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\identity\AtlasPlayer.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\identity\IdentityManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\integration\TypewriterManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\map\MapManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\marketplace\BlueprintMarketplace.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\npc\NPC.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\npc\NPCManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\party\PartyChatCommand.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\party\PartyManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\politics\PoliticsManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\progression\EraBossManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\progression\MilestoneListener.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\progression\MobScalingListener.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\progression\ProgressionManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\qol\QoLManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\quest\AgentQuestCommand.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\quest\impl\WelcomeQuest.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\quest\QuestSystem.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\quests\Quest.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\quests\QuestBoardManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\quests\QuestManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\relics\RelicManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\schematic\Schematic.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\schematic\SchematicManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\siege\SiegeManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\skills\SkillNode.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\skills\SkillTreeManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\structures\StructureListener.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\structures\StructureManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\survival\SurvivalManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\territory\OutpostManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\threat\GlobalThreatManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\util\EntityCleanupManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\util\LocationUtils.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\villager\VillageTradeManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\visual\CustomItemManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\visual\PacketManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\visual\ResourcePackManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\visuals\AtmosphereManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\visuals\VisualManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\worldboss\WorldBossManager.kt
+Java source files: 
+Script source files: 
+Script file extensions: 
+Using Kotlin/JVM incremental compilation
+[KOTLIN] Kotlin compilation 'jdkHome' argument: C:\Program Files\Java\jdk-23
+Options for KOTLIN DAEMON: IncrementalCompilationOptions(super=CompilationOptions(compilerMode=INCREMENTAL_COMPILER, targetPlatform=JVM, reportCategories=[0, 3], reportSeverity=2, requestedCompilationResults=[0], kotlinScriptExtensions=[]), areFileChangesKnown=true, modifiedFiles=[C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\AtlasListener.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\bounty\BountyManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\city\CityManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\dungeon\DungeonManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\events\SupplyDropListener.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\identity\AtlasPlayer.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\progression\ProgressionManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\quests\QuestManager.kt, C:\Users\visha\Desktop\Mc_Plugin\src\main\kotlin\com\projectatlas\villager\VillageTradeManager.kt], deletedFiles=[], classpathChanges=NoChanges, workingDir=C:\Users\visha\Desktop\Mc_Plugin\build\kotlin\compileKotlin\cacheable, multiModuleICSettings=MultiModuleICSettings(buildHistoryFile=C:\Users\visha\Desktop\Mc_Plugin\build\kotlin\compileKotlin\local-state\build-history.bin, useModuleDetection=false), usePreciseJavaTracking=true, icFeatures=IncrementalCompilationFeatures(withAbiSnapshot=false, preciseCompilationResultsBackup=true, keepIncrementalCompilationCachesInMemory=true, enableUnsafeIncrementalCompilationForMultiplatform=false), outputFiles=[C:\Users\visha\Desktop\Mc_Plugin\build\classes\kotlin\main, C:\Users\visha\Desktop\Mc_Plugin\build\kotlin\compileKotlin\cacheable, C:\Users\visha\Desktop\Mc_Plugin\build\kotlin\compileKotlin\local-state])
+Finished executing kotlin compiler using DAEMON strategy
+gradle : e: file:///C:/Us
+ers/visha/Desktop/Mc_Plug
+in/src/main/kotlin/com/pr
+ojectatlas/AtlasListener.
+kt:138:54 Unresolved 
+reference 'sum'.
+At C:\Users\visha\Desktop
+\Mc_Plugin\build.ps1:1 
+char:1
++ gradle shadowJar 
+--info > build.log 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo       
+       : NotSpecified:   
+  (e: file:///C:/U...e   
+ ference 'sum'.:Strin    
+g) [], RemoteExcepti    
+on
+    + FullyQualifiedErro 
+   rId : NativeCommandE  
+  rror
+ 
+Restoring task outputs to pre-compilation state
+
+FAILURE: Build failed 
+with an exception.
+
+* What went wrong:
+Execution failed for 
+task ':compileKotlin'.
+> A failure occurred 
+while executing org.jetbr
+ains.kotlin.compilerRunne
+r.GradleCompilerRunnerWit
+hWorkers$GradleKotlinComp
+ilerWorkAction
+   > Compilation error. 
+See log for more details
+
+* Try:
+> Run with --stacktrace 
+option to get the stack 
+trace.
+> Run with --debug 
+option to get more log 
+output.
+> Run with --scan to 
+generate a Build Scan 
+(powered by Develocity).
+> Get more help at 
+https://help.gradle.org.
+
+BUILD FAILED in 1s
+2 actionable tasks: 1 executed, 1 up-to-date
+Watched directory hierarchies: [C:\Users\visha\Desktop\Mc_Plugin]

@@ -32,10 +32,28 @@ class VillageTradeManager(private val plugin: AtlasPlugin) : Listener {
             return
         }
         
-        // STANDARD TRADING (Normal Click -> Vanilla GUI)
-        // We only modify the trades once, when the player opens it, if needed.
-        // Actually, best to do it on 'VillagerAcquireTradeEvent' or check periodically.
-        // For existing villagers, we force update them when a player opens them.
+        // CITY REQUIREMENT
+        val city = plugin.cityManager.getCityAt(villager.location.chunk)
+        if (city == null && !player.isOp) {
+             player.sendActionBar(Component.text("This villager belongs to no city.", NamedTextColor.RED))
+             event.isCancelled = true
+             // Only shake head if not recruiting
+             villager.shakeHead()
+             return
+        }
+        
+        // RESTOCK LOGIC
+        val lastRestockKey = org.bukkit.NamespacedKey(plugin, "atlas_last_restock")
+        val container = villager.persistentDataContainer
+        val lastRestock = container.get(lastRestockKey, org.bukkit.persistence.PersistentDataType.LONG) ?: 0L
+        
+        // Restock every 10 minutes
+        if (System.currentTimeMillis() - lastRestock > 10 * 60 * 1000) {
+            updateVillagerTrades(villager)
+            container.set(lastRestockKey, org.bukkit.persistence.PersistentDataType.LONG, System.currentTimeMillis())
+            // Visual feedback
+            villager.world.playSound(villager.location, Sound.ENTITY_VILLAGER_WORK_FARMER, 1.0f, 1.0f)
+        }
         
         if (shouldUpdateTrades(villager)) {
             updateVillagerTrades(villager)
@@ -140,7 +158,7 @@ class VillageTradeManager(private val plugin: AtlasPlugin) : Listener {
         villager.addScoreboardTag(updatedTag)
     }
     
-    private fun createTrade(input: ItemStack, result: ItemStack, maxUses: Int = 10): MerchantRecipe {
+    private fun createTrade(input: ItemStack, result: ItemStack, maxUses: Int = 3): MerchantRecipe {
         val recipe = MerchantRecipe(result, maxUses)
         recipe.addIngredient(input)
         return recipe

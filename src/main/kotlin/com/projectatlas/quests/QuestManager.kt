@@ -22,6 +22,8 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
 
     private val activeQuests = ConcurrentHashMap<UUID, ActiveQuest>()
     private val bossBars = ConcurrentHashMap<UUID, BossBar>()
+    // Player UUID -> Map<QuestID, CompletionTimestamp>
+    private val questCooldowns = ConcurrentHashMap<UUID, MutableMap<String, Long>>()
     
     private var questTask: BukkitTask? = null
     
@@ -246,6 +248,16 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
             return false
         }
         
+        // Cooldown Check
+        val cooldowns = questCooldowns.getOrDefault(player.uniqueId, mutableMapOf())
+        val lastCompletion = cooldowns[quest.id] ?: 0L
+        val cooldownMillis = 20 * 60 * 1000L // 20 Minutes
+        if (System.currentTimeMillis() - lastCompletion < cooldownMillis) {
+            val remainingMin = (cooldownMillis - (System.currentTimeMillis() - lastCompletion)) / 60000
+            player.sendMessage(Component.text("Quest on cooldown! Try again in $remainingMin minutes.", NamedTextColor.RED))
+            return false
+        }
+        
         val activeQuest = ActiveQuest(quest)
         activeQuests[player.uniqueId] = activeQuest
         
@@ -436,6 +448,9 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
     private fun completeQuest(player: Player, activeQuest: ActiveQuest) {
         activeQuests.remove(player.uniqueId)
         bossBars.remove(player.uniqueId)?.let { player.hideBossBar(it) }
+        
+        // STAMP COOLDOWN
+        questCooldowns.computeIfAbsent(player.uniqueId) { ConcurrentHashMap() }[activeQuest.quest.id] = System.currentTimeMillis()
         
         // Award reward
         val profile = plugin.identityManager.getPlayer(player.uniqueId)

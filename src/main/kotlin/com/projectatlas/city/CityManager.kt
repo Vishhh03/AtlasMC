@@ -129,6 +129,17 @@ class CityManager(private val plugin: AtlasPlugin) {
             return
         }
 
+        // Rejoin Cooldown Check
+        if (profile.lastCityId == city.id) {
+            val cooldown = 24 * 60 * 60 * 1000L // 24 Hours
+            val timeSinceLeave = System.currentTimeMillis() - profile.lastCityLeaveTime
+            if (timeSinceLeave < cooldown) {
+                val remaining = (cooldown - timeSinceLeave) / 1000 / 60 // Minutes
+                player.sendMessage(Component.text("You cannot rejoin the same city for another $remaining minutes.", NamedTextColor.RED))
+                return
+            }
+        }
+
         city.addMember(player.uniqueId)
         profile.cityId = city.id
         saveCity(city)
@@ -232,6 +243,10 @@ class CityManager(private val plugin: AtlasPlugin) {
         
         city.removeMember(player.uniqueId)
         profile.cityId = null
+        profile.lastCityId = city.id
+        profile.lastCityLeaveTime = System.currentTimeMillis()
+        // Retain Era progress as Solo Era
+        profile.soloEra = city.currentEra
         saveCity(city)
         player.sendMessage("You have left ${city.name}.")
     }

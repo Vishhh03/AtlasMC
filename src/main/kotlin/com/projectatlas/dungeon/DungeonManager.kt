@@ -114,9 +114,16 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
         player.sendMessage(Component.text("Left the dungeon.", NamedTextColor.YELLOW))
         
         if (dungeon.players.isEmpty()) {
-            dungeon.cleanup()
-            dungeonLog.remove(dungeon.id) // Properly remove from log if desired, or keep for history?
-            // Keep in log for a bit? No, if active=false, might as well clean.
+            // Idempotency check with delay to prevent race conditions
+            if (dungeon.active) {
+                plugin.server.scheduler.runTaskLater(plugin, Runnable {
+                    if (dungeon.active) {
+                        dungeon.cleanup()
+                        dungeon.active = false // Mark inactive after cleanup
+                        dungeonLog.remove(dungeon.id)
+                    }
+                }, 60L) // 3-second delay
+            }
         }
     }
 

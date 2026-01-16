@@ -29,6 +29,10 @@ class BountyManager(private val plugin: AtlasPlugin) : Listener {
         val timestamp: Long = System.currentTimeMillis()
     )
     
+    // Combat Tracking for "Legitimate Kill" check
+    // Attacker UUID -> Map<Victim UUID, Timestamp>
+    private val lastDamageDealt = ConcurrentHashMap<UUID, MutableMap<UUID, Long>>()
+    
     private val activeBounties = ConcurrentHashMap<UUID, MutableList<Bounty>>()
     
     fun placeBounty(placer: Player, targetName: String, amount: Double, reason: String = "Wanted"): Boolean {
@@ -95,19 +99,45 @@ class BountyManager(private val plugin: AtlasPlugin) : Listener {
         
         val totalReward = bounties.sumOf { it.amount }
         
+
+        
         // Pay the killer
         val killerProfile = plugin.identityManager.getPlayer(killer.uniqueId)
         if (killerProfile != null) {
-            killerProfile.balance += totalReward
-            plugin.identityManager.saveProfile(killer.uniqueId)
-        }
+            // "Legitimate Kill" Check (Anti-Abuse)
+            // Victim must have damaged killer in last 60 seconds
+            val lastHit = lastDamageDealt[victim.uniqueId]?.get(killer.uniqueId) ?: 0L
+            val isFightingBack = (System.currentTimeMillis() - lastHit) < 60000 
+            
+            if (!isFightingBack) {
+                killer.sendMessage(Component.text("⚠ Bounty withheld: Target was not fighting back!", NamedTextColor.RED))
+                killer.sendMessage(Component.text("To claim bounties, the target must be an active combatant.", NamedTextColor.GRAY))
+                // Refund bounties or keep them active? 
+                // Typically keep active if failed claim.
+                // Re-add bounties
+                activeBounties[victim.uniqueId] = bounties
+                return
+            }
         
-        // Announce
-        plugin.server.broadcast(Component.empty())
-        plugin.server.broadcast(Component.text("⚔️ BOUNTY CLAIMED ⚔️", NamedTextColor.GOLD, TextDecoration.BOLD))
-        plugin.server.broadcast(Component.text("${killer.name} killed ${victim.name}!", NamedTextColor.YELLOW))
-        plugin.server.broadcast(Component.text("Reward: ${totalReward}g", NamedTextColor.GOLD))
-        plugin.server.broadcast(Component.empty())
+            // Tax deduction (20% sink)
+            val taxRate = 0.20
+            val tax = totalReward * taxRate
+            val payout = totalReward - tax
+            
+            killerProfile.balance += payout
+            plugin.identityManager.saveProfile(killer.uniqueId)
+            
+            // Announce
+            plugin.server.broadcast(Component.empty())
+            plugin.server.broadcast(Component.text("⚔ BOUNTY CLAIMED ⚔", NamedTextColor.GOLD, TextDecoration.BOLD))
+            plugin.server.broadcast(Component.text("${killer.name} killed ${victim.name}!", NamedTextColor.YELLOW))
+            plugin.server.broadcast(Component.text("Reward: ${payout}g (Tax: ${tax}g)", NamedTextColor.GOLD))
+            plugin.server.broadcast(Component.empty())
+        } else {
+             // Fallback for offline/error
+             activeBounties[victim.uniqueId] = bounties
+             return
+        }
         
         killer.playSound(killer.location, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f)
         

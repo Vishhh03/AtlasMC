@@ -28,6 +28,7 @@ class AtlasListener(
     
     private val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
     private val shiftTimes = java.util.concurrent.ConcurrentHashMap<java.util.UUID, Long>()
+    private val damageMap = java.util.concurrent.ConcurrentHashMap<java.util.UUID, java.util.concurrent.ConcurrentHashMap<java.util.UUID, Double>>()
 
 
     @EventHandler
@@ -115,10 +116,94 @@ class AtlasListener(
             player.sendMessage(Component.text("You cannot access containers in ${city.name}!", NamedTextColor.RED))
         }
     }
+    // ═══════════════════════════════════════════════════════════════
+    // XP SHARING & MOB LOGIC
+    // ═══════════════════════════════════════════════════════════════
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    fun onEntityDamage(event: org.bukkit.event.entity.EntityDamageByEntityEvent) {
+        if (event.entity !is org.bukkit.entity.LivingEntity || event.entity is org.bukkit.entity.Player) return
+        
+        val damager = when (val d = event.damager) {
+             is org.bukkit.entity.Player -> d
+             is org.bukkit.entity.Projectile -> d.shooter as? org.bukkit.entity.Player
+             else -> null
+        } ?: return
+        
+        val mobId = event.entity.uniqueId
+        val damage = event.finalDamage
+        
+        // Record damage contribution
+        damageMap.computeIfAbsent(mobId) { java.util.concurrent.ConcurrentHashMap() }
+            .merge(damager.uniqueId, damage) { old, new -> old + new }
+    }
+
     @EventHandler
     fun onMobKill(event: EntityDeathEvent) {
-        val killer = event.entity.killer ?: return
-        // Grant 10 XP per kill
-        identityManager.grantXp(killer, 10L)
+        val entity = event.entity
+        val mobId = entity.uniqueId
+        
+        // Base XP Calculation: 10 + (Max HP / 2) -> Tougher mobs give more XP
+        val maxHp = entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
+        val baseXp = 10.0 + (maxHp / 2.0)
+        
+        val contributors = damageMap.remove(mobId)
+        
+        // Fallback for one-shots or misses: Give full XP to killer
+        if (contributors == null || contributors.isEmpty()) {
+            entity.killer?.let { killer ->
+                identityManager.grantXp(killer, baseXp.toLong())
+                sendXpMessage(killer, baseXp.toLong())
+            }
+            return
+        }
+        
+        val totalDamage = contributors.values.sum()
+        if (totalDamage <= 0) return
+        
+        val partyManager = plugin.partyManager
+        
+        contributors.forEach { (playerId, damage) ->
+            val player = org.bukkit.Bukkit.getPlayer(playerId)
+            
+            if (player != null && player.isOnline) {
+                // Calculate "Earned Share" based on contribution
+                val shareRatio = damage / totalDamage
+                val earnedXp = baseXp * shareRatio
+                
+                // Get nearby party members
+                val nearbyMembers = if (partyManager.isInParty(player)) {
+                    partyManager.getOnlinePartyMembers(player)
+                        .filter { it.world == entity.world && it.location.distance(entity.location) < 50.0 }
+                } else {
+                    emptyList()
+                }
+                
+                if (nearbyMembers.isNotEmpty()) {
+                    // Split the earned share among the party
+                    val splitXp = (earnedXp / nearbyMembers.size).toLong()
+                    if (splitXp > 0) {
+                        nearbyMembers.forEach { member ->
+                            identityManager.grantXp(member, splitXp)
+                            if (member.uniqueId == playerId) {
+                                sendXpMessage(member, splitXp, true)
+                            }
+                        }
+                    }
+                } else {
+                    // Solo: Keep full earned share
+                    val finalXp = earnedXp.toLong()
+                    if (finalXp > 0) {
+                        identityManager.grantXp(player, finalXp)
+                        sendXpMessage(player, finalXp)
+                    }
+                }
+            }
+        }
+    }
+    
+    private fun sendXpMessage(player: org.bukkit.entity.Player, amount: Long, isPartyParams: Boolean = false) {
+        val msg = if (isPartyParams) " (Party Split)" else ""
+        player.sendActionBar(Component.text("+$amount XP$msg", NamedTextColor.AQUA))
     }
 }
