@@ -337,10 +337,7 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         bossBars.remove(player.uniqueId)?.let { player.hideBossBar(it) }
         
         if (quest != null) {
-            // Cleanup entity if exists
-            if (quest.entityId != null) {
-                plugin.server.getEntity(quest.entityId!!)?.remove()
-            }
+            cleanupQuestEntities(quest)
             player.sendMessage(Component.text("Quest abandoned.", NamedTextColor.RED))
         }
     }
@@ -354,10 +351,7 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         val quest = activeQuests.remove(player.uniqueId) ?: return
         bossBars.remove(player.uniqueId)?.let { player.hideBossBar(it) }
         
-        // Cleanup quest entity
-        if (quest.entityId != null) {
-            plugin.server.getEntity(quest.entityId!!)?.remove()
-        }
+        cleanupQuestEntities(quest)
         
         player.sendMessage(Component.empty())
         player.sendMessage(Component.text("═══ QUEST FAILED ═══", NamedTextColor.DARK_RED))
@@ -379,6 +373,8 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
         val quest = activeQuests.remove(ownerId)!!
         
         bossBars.remove(ownerId)?.let { player.hideBossBar(it) }
+        
+        cleanupQuestEntities(quest)
         
         player.sendMessage(Component.empty())
         player.sendMessage(Component.text("═══ QUEST FAILED ═══", NamedTextColor.DARK_RED))
@@ -406,10 +402,7 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
             activeQuests.remove(player.uniqueId)
             bossBars.remove(player.uniqueId)?.let { player.hideBossBar(it) }
             
-            // Cleanup entity
-            if (activeQuest.entityId != null) {
-                plugin.server.getEntity(activeQuest.entityId!!)?.remove()
-            }
+            cleanupQuestEntities(activeQuest)
             
             player.sendMessage(Component.text("═══ QUEST FAILED ═══", NamedTextColor.DARK_RED))
             player.sendMessage(Component.text("Time ran out!", NamedTextColor.RED))
@@ -448,6 +441,8 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
     private fun completeQuest(player: Player, activeQuest: ActiveQuest) {
         activeQuests.remove(player.uniqueId)
         bossBars.remove(player.uniqueId)?.let { player.hideBossBar(it) }
+        
+        cleanupQuestEntities(activeQuest)
         
         // STAMP COOLDOWN
         questCooldowns.computeIfAbsent(player.uniqueId) { ConcurrentHashMap() }[activeQuest.quest.id] = System.currentTimeMillis()
@@ -633,6 +628,10 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
     
     private fun spawnAttacker(target: LivingEntity) {
         val world = target.world
+        // Track for cleanup
+        val ownerId = activeQuests.entries.find { it.value.entityId == target.uniqueId }?.key ?: return
+        val activeQuest = activeQuests[ownerId] ?: return
+
         // Pick random spot around target
         val offsetX = (Math.random() * 20 - 10).toInt()
         val offsetZ = (Math.random() * 20 - 10).toInt()
@@ -646,18 +645,20 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
              isCustomNameVisible = true
              // Ensure it doesn't despawn instantly
              persistentDataContainer.set(org.bukkit.NamespacedKey(plugin, "atlas_expiry"), org.bukkit.persistence.PersistentDataType.LONG, System.currentTimeMillis() + 60000) // 1 min life
+             
+             activeQuest.spawnedMobs.add(this.uniqueId)
         }
     }
     
     private fun spawnQuestMob(player: Player, type: EntityType, isDay: Boolean) {
         val loc = player.location
         // Simple random offset
-        val x = (Math.random() * 20 - 10).toInt()
+        val x = (Math.random() * 20 - 10).toInt() // +/- 10 blocks
         val z = (Math.random() * 20 - 10).toInt()
         
         val spawnLoc = com.projectatlas.util.LocationUtils.getSafeSpawnLocationWithOffset(loc, x, z) ?: return
         
-        if (spawnLoc.distance(loc) < 5) return // Too close
+        if (spawnLoc.distance(loc) < 3) return // Too close
         
         try {
             loc.world.spawnEntity(spawnLoc, type).apply {
@@ -674,10 +675,37 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
                     if (isDay && (type == EntityType.ZOMBIE || type == EntityType.SKELETON)) {
                         this.equipment?.helmet = org.bukkit.inventory.ItemStack(org.bukkit.Material.LEATHER_HELMET)
                     }
+                    
+                    // AGGRESSIVE AI: Hunt the player!
+                    if (this is org.bukkit.entity.Mob) {
+                        this.target = player
+                        // Boost follow range to ensure they keep tracking
+                        this.getAttribute(org.bukkit.attribute.Attribute.GENERIC_FOLLOW_RANGE)?.baseValue = 50.0
+                    }
+                    
+                    // Allow cleanup
+                    val activeQuest = activeQuests[player.uniqueId]
+                    if (activeQuest != null) {
+                        activeQuest.spawnedMobs.add(this.uniqueId)
+                    }
                 }
             }
         } catch (e: Exception) {
             // Ignore spawn failures
+        }
+    }
+    
+    private fun cleanupQuestEntities(activeQuest: ActiveQuest) {
+        // Remove primary entity (Escort/Defend target)
+        if (activeQuest.entityId != null) {
+            plugin.server.getEntity(activeQuest.entityId!!)?.remove()
+        }
+        // Remove all tracked mobs
+        val iter = activeQuest.spawnedMobs.iterator()
+        while(iter.hasNext()) {
+            val uuid = iter.next()
+            plugin.server.getEntity(uuid)?.remove()
+            iter.remove()
         }
     }
     

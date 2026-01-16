@@ -3,14 +3,16 @@
   "name": "VishShaji",
   "reputation": 0,
   "alignment": 0,
-  "balance": 320.0,
-  "currentXp": 100,
-  "level": 20,
+  "balance": 920.0,
+  "currentXp": 930,
+  "level": 22,
   "titles": [
     "achievement:quest_complete"
   ],
   "unlockedSkillNodes": "origin,combat_start",
   "settings": {
     "quest_count_1": true
-  }
+  },
+  "soloEra": 0,
+  "lastCityLeaveTime": 0
 }

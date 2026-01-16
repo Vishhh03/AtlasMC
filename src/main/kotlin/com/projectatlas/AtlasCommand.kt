@@ -69,6 +69,7 @@ class AtlasCommand(
             "map" -> handleMap(sender)
             "progress", "journey", "era" -> handleProgress(sender)
             "admin" -> handleAdmin(sender, args)
+            "guide", "wiki", "tutorial" -> guiManager.openGuideMenu(sender)
             
             else -> sender.sendMessage(Component.text("Unknown command. Type /atlas help for commands.", NamedTextColor.RED))
         }

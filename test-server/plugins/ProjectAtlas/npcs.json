@@ -9,6 +9,15 @@
     "z": 312.0
   },
   {
+    "id": "c3b705e3-6553-4387-854f-9806a36fc858",
+    "name": "Trader Joe",
+    "type": "MERCHANT",
+    "worldName": "world",
+    "x": 902.0,
+    "y": 66.0,
+    "z": -171.0
+  },
+  {
     "id": "5cbcd225-d54f-4e4d-a557-060aaef62e7c",
     "name": "Ranger Rick",
     "type": "QUEST_GIVER",

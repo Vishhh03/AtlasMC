@@ -160,7 +160,11 @@ class PacketManager(private val plugin: AtlasPlugin) {
         
         val text = Component.text()
             .append(Component.text("❤ ", NamedTextColor.DARK_RED))
-            .append(Component.text(damageText, color, if (isCritical) TextDecoration.BOLD else null))
+            .append(
+                Component.text(damageText, color).let { 
+                    if (isCritical) it.decorate(TextDecoration.BOLD) else it 
+                }
+            )
             .build()
         
         // Randomize spawn position slightly for visual variety

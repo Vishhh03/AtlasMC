@@ -51,7 +51,8 @@ data class ActiveQuest(
     val quest: Quest,
     val startTime: Long = System.currentTimeMillis(),
     var progress: Int = 0, // e.g., kills made or items collected
-    var entityId: java.util.UUID? = null // For tracking quest-specific entities like the Escort Villager
+    var entityId: java.util.UUID? = null, // For tracking quest-specific entities like the Escort Villager
+    val spawnedMobs: MutableList<java.util.UUID> = mutableListOf()
 ) {
     fun isComplete(): Boolean {
         return when (val obj = quest.objective) {

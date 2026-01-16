@@ -25,7 +25,6 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         val inv = Bukkit.createInventory(null, 54, Component.text("✦ Project Atlas Menu ✦", NamedTextColor.DARK_BLUE))
         
         // Row 1: Core Features
-        // Row 1: Core Features
         inv.setItem(10, createGuiItem(Material.PLAYER_HEAD, "Your Profile", "action:profile", "View your stats"))
         inv.setItem(12, createGuiItem(Material.COMPARATOR, "Settings", "action:settings_menu", "Adjust client preferences", "Visuals, Scoreboard, etc."))
         inv.setItem(14, createGuiItem(Material.BEACON, "City Management", "action:city_menu", "Manage your city"))
@@ -46,9 +45,50 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
         // Row 4: Progression
         inv.setItem(40, createGuiItem(Material.ENCHANTED_BOOK, "Skill Tree", "action:skill_tree", "Unlock passive abilities", "Spend Skill Points"))
         
-        // Bottom row: Help
-        inv.setItem(49, createGuiItem(Material.BOOK, "Help", "action:help", "View all commands"))
+        // Bottom row: Guide
+        inv.setItem(49, createGuiItem(Material.KNOWLEDGE_BOOK, "Game Guide / Wiki", "action:guide_menu", "Start here! Learn how to play.", "Eras, Cities, Economy, & more."))
 
+        player.openInventory(inv)
+        playClickSound(player)
+    }
+
+    // ========== GUIDE MENU ==========
+    fun openGuideMenu(player: Player) {
+        val inv = Bukkit.createInventory(null, 45, Component.text("Atlas Game Guide", NamedTextColor.DARK_GREEN))
+        
+        // Row 2: Categories
+        inv.setItem(10, createGuiItem(Material.CLOCK, "The Era System", "action:guide_eras", 
+            "The world evolves over time.", 
+            "Unlock new abilities, bosses,",
+            "and dungeons as the Era progresses.",
+            "§eClick to read more in chat."))
+            
+        inv.setItem(12, createGuiItem(Material.BEACON, "Cities & Territory", "action:guide_cities", 
+            "Create or join a City to claim land.", 
+            "Build infrastructure like Walls,", 
+            "Generators, and Turrets.",
+            "§eClick to read more in chat."))
+            
+        inv.setItem(14, createGuiItem(Material.GOLD_INGOT, "Economy & Trade", "action:guide_economy", 
+            "Gold is the currency.", 
+            "Earn via Quests and selling items.", 
+            "Villagers adhere to strict trade laws.",
+            "§eClick to read more in chat."))
+            
+        inv.setItem(16, createGuiItem(Material.IRON_SWORD, "Combat & Skills", "action:guide_combat", 
+            "Unlock skills in the Skill Tree.", 
+            "Fight in Dungeons and against", 
+            "World Bosses for rare loot.",
+            "§eClick to read more in chat."))
+            
+        inv.setItem(22, createGuiItem(Material.TOTEM_OF_UNDYING, "Survival Mechanics", "action:guide_survival", 
+            "Custom healing items (Bandages, Medkits).", 
+            "Harder mobs scaling with distance.", 
+            "Death penalties.",
+            "§eClick to read more in chat."))
+            
+        inv.setItem(40, createGuiItem(Material.ARROW, "Back", "action:main_menu", "Return to Main Menu"))
+        
         player.openInventory(inv)
         playClickSound(player)
     }
@@ -431,7 +471,63 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
                 plugin.skillTreeManager.openSkillTree(player)
             }
             
-            // Settings Toggles
+            // Guide Menu Actions
+            "action:guide_menu" -> openGuideMenu(player)
+            
+            "action:guide_eras" -> {
+                player.closeInventory()
+                player.sendMessage(Component.empty())
+                player.sendMessage(Component.text("═══ THE ERA SYSTEM ═══", NamedTextColor.GOLD, TextDecoration.BOLD))
+                player.sendMessage(Component.text("The world of Atlas evolves. Everyone starts in Era 0.", NamedTextColor.GRAY))
+                player.sendMessage(Component.text("1. Era 0 (Wilderness):", NamedTextColor.YELLOW).append(Component.text(" Basic survival. No major cities.", NamedTextColor.WHITE)))
+                player.sendMessage(Component.text("2. Era 1 (Settlement):", NamedTextColor.YELLOW).append(Component.text(" Cities can be founded. Skill Tree unlocks.", NamedTextColor.WHITE)))
+                player.sendMessage(Component.text("3. Era 2 (Expedition):", NamedTextColor.YELLOW).append(Component.text(" Dungeons unlock. Rare resources appear.", NamedTextColor.WHITE)))
+                player.sendMessage(Component.text("4. Era 3 (Empire):", NamedTextColor.YELLOW).append(Component.text(" World Bosses awaken. High-tech infrastructure.", NamedTextColor.WHITE)))
+                player.sendMessage(Component.text("Check your progress with ", NamedTextColor.GRAY).append(Component.text("/atlas progress", NamedTextColor.AQUA)))
+            }
+            
+            "action:guide_cities" -> {
+                player.closeInventory()
+                player.sendMessage(Component.empty())
+                player.sendMessage(Component.text("═══ CITIES & TERRITORY ═══", NamedTextColor.AQUA, TextDecoration.BOLD))
+                player.sendMessage(Component.text("Cities are the heart of civilization.", NamedTextColor.GRAY))
+                player.sendMessage(Component.text("• Creation:", NamedTextColor.WHITE).append(Component.text(" Cost gold to found. Requires Era 1.", NamedTextColor.GRAY)))
+                player.sendMessage(Component.text("• Claims:", NamedTextColor.WHITE).append(Component.text(" Mayors can claim chunks to protect land.", NamedTextColor.GRAY)))
+                player.sendMessage(Component.text("• Infrastructure:", NamedTextColor.WHITE).append(Component.text(" Build Walls (defense), Generators (income),", NamedTextColor.GRAY)))
+                player.sendMessage(Component.text("  and Turrets (combat) via the City Menu.", NamedTextColor.GRAY)))
+                player.sendMessage(Component.text("• Taxes:", NamedTextColor.WHITE).append(Component.text(" Mayors set taxes on member income (quests/bounties).", NamedTextColor.GRAY)))
+            }
+            
+            "action:guide_economy" -> {
+                player.closeInventory()
+                player.sendMessage(Component.empty())
+                player.sendMessage(Component.text("═══ ECONOMY ═══", NamedTextColor.GOLD, TextDecoration.BOLD))
+                player.sendMessage(Component.text("Gold (g) is the universal currency.", NamedTextColor.GRAY))
+                player.sendMessage(Component.text("• Earning:", NamedTextColor.WHITE).append(Component.text(" Complete Quests, hunt Bounties, or kill mobs.", NamedTextColor.GRAY)))
+                player.sendMessage(Component.text("• Trading:", NamedTextColor.WHITE).append(Component.text(" /pay <player> to transfer funds.", NamedTextColor.GRAY)))
+                player.sendMessage(Component.text("• Villagers:", NamedTextColor.WHITE).append(Component.text(" Villagers barely trade with nomads.", NamedTextColor.GRAY)))
+                player.sendMessage(Component.text("  Join a city to unlock better trades!", NamedTextColor.YELLOW)))
+            }
+            
+            "action:guide_combat" -> {
+                player.closeInventory()
+                player.sendMessage(Component.empty())
+                player.sendMessage(Component.text("═══ COMBAT & SKILLS ═══", NamedTextColor.RED, TextDecoration.BOLD))
+                player.sendMessage(Component.text("• Skill Tree:", NamedTextColor.WHITE).append(Component.text(" Use /atlas skills to spend points on passives.", NamedTextColor.GRAY)))
+                player.sendMessage(Component.text("• Dungeons:", NamedTextColor.WHITE).append(Component.text(" Instanced challenges with waves of mobs. Great XP.", NamedTextColor.GRAY)))
+                player.sendMessage(Component.text("• World Bosses:", NamedTextColor.WHITE).append(Component.text(" Massive events. Contribute damage to get loot.", NamedTextColor.GRAY)))
+                player.sendMessage(Component.text("• Death:", NamedTextColor.WHITE).append(Component.text(" You lose a portion of XP on death.", NamedTextColor.GRAY)))
+            }
+            
+            "action:guide_survival" -> {
+                player.closeInventory()
+                player.sendMessage(Component.empty())
+                player.sendMessage(Component.text("═══ SURVIVAL MECHANICS ═══", NamedTextColor.GREEN, TextDecoration.BOLD))
+                player.sendMessage(Component.text("Atlas is harsher than vanilla.", NamedTextColor.GRAY))
+                player.sendMessage(Component.text("• Scaling:", NamedTextColor.WHITE).append(Component.text(" Mobs get stronger the further you go from spawn.", NamedTextColor.GRAY)))
+                player.sendMessage(Component.text("• Healing:", NamedTextColor.WHITE).append(Component.text(" Use Bandages and Medkits. Natural regen is slow.", NamedTextColor.GRAY)))
+                player.sendMessage(Component.text("• Use /atlas heal items to see available meds.", NamedTextColor.YELLOW)))
+            }
             "settings:toggle_atmosphere" -> handleSettingToggle(player, "atmosphere")
             "settings:toggle_scoreboard" -> handleSettingToggle(player, "scoreboard")
             "settings:toggle_dmg" -> handleSettingToggle(player, "damage_indicators")
