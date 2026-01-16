@@ -1,72 +1,70 @@
-[03:24:56] [ServerMain/INFO]: [bootstrap] Running Java 23 (Java HotSpot(TM) 64-Bit Server VM 23.0.1+11-39; Oracle Corporation null) on Windows 11 10.0 (amd64)
-[03:24:56] [ServerMain/INFO]: [bootstrap] Loading Paper 1.21.11-69-main@94d0c97 (2025-12-30T20:33:30Z) for Minecraft 1.21.11
-[03:24:57] [ServerMain/INFO]: [PluginInitializerManager] Initializing plugins...
-[03:24:57] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Remapping plugin 'plugins\ProjectAtlas.jar'...
-[03:24:59] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Done remapping plugin 'plugins\ProjectAtlas.jar' in 1438ms.
-[03:24:59] [ServerMain/INFO]: [PluginInitializerManager] Initialized 1 plugin
-[03:24:59] [ServerMain/INFO]: [PluginInitializerManager] Bukkit plugins (1):
+[03:43:20] [ServerMain/INFO]: [bootstrap] Running Java 23 (Java HotSpot(TM) 64-Bit Server VM 23.0.1+11-39; Oracle Corporation null) on Windows 11 10.0 (amd64)
+[03:43:20] [ServerMain/INFO]: [bootstrap] Loading Paper 1.21.11-69-main@94d0c97 (2025-12-30T20:33:30Z) for Minecraft 1.21.11
+[03:43:21] [ServerMain/INFO]: [PluginInitializerManager] Initializing plugins...
+[03:43:21] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Remapping plugin 'plugins\ProjectAtlas-1.0-SNAPSHOT.jar'...
+[03:43:21] [Paper Plugin Remapper Thread - 3/INFO]: [PluginRemapper] Remapping plugin 'plugins\ProjectAtlas.jar'...
+[03:43:22] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Done remapping plugin 'plugins\ProjectAtlas-1.0-SNAPSHOT.jar' in 767ms.
+[03:43:22] [Paper Plugin Remapper Thread - 3/INFO]: [PluginRemapper] Done remapping plugin 'plugins\ProjectAtlas.jar' in 1101ms.
+[03:43:22] [ServerMain/INFO]: [PluginInitializerManager] Initialized 1 plugin
+[03:43:22] [ServerMain/INFO]: [PluginInitializerManager] Bukkit plugins (1):
  - ProjectAtlas (1.0-SNAPSHOT)
-[03:25:04] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[03:25:05] [ServerMain/INFO]: Loaded 1470 recipes
-[03:25:05] [ServerMain/INFO]: Loaded 1584 advancements
-[03:25:05] [ServerMain/INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Initialising converters for DataConverter...
-[03:25:06] [ServerMain/INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Finished initialising converters for DataConverter in 337.6ms
-[03:25:06] [Server thread/INFO]: Starting minecraft server version 1.21.11
-[03:25:06] [Server thread/INFO]: Loading properties
-[03:25:06] [Server thread/INFO]: This server is running Paper version 1.21.11-69-main@94d0c97 (2025-12-30T20:33:30Z) (Implementing API version 1.21.11-R0.1-SNAPSHOT)
-[03:25:06] [Server thread/INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
-[03:25:06] [Server thread/INFO]: Using 4 threads for Netty based IO
-[03:25:06] [Server thread/INFO]: Server Ping Player Sample Count: 12
-[03:25:07] [Server thread/INFO]: [MoonriseCommon] Paper is using 3 worker threads, 1 I/O threads
-[03:25:07] [Server thread/INFO]: Default game type: SURVIVAL
-[03:25:07] [Server thread/INFO]: Generating keypair
-[03:25:07] [Server thread/INFO]: Starting Minecraft server on *:25565
-[03:25:07] [Server thread/INFO]: Paper: Using Java compression from Velocity.
-[03:25:07] [Server thread/INFO]: Paper: Using Java cipher from Velocity.
-[03:25:07] [Server thread/INFO]: [ProjectAtlas] Loading server plugin ProjectAtlas v1.0-SNAPSHOT
-[03:25:07] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
-[03:25:07] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
-[03:25:07] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
-[03:25:07] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
-[03:25:07] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
-[03:25:07] [Server thread/INFO]: Preparing level "world"
-[03:25:08] [Server thread/INFO]: Loading 0 persistent chunks for world 'minecraft:overworld'...
-[03:25:08] [Server thread/INFO]: Preparing spawn area: 100%
-[03:25:08] [Server thread/INFO]: Prepared spawn area in 3 ms
-[03:25:08] [Server thread/INFO]: Loading 0 persistent chunks for world 'minecraft:the_nether'...
-[03:25:08] [Server thread/INFO]: Prepared spawn area in 1 ms
-[03:25:08] [Server thread/INFO]: Loading 0 persistent chunks for world 'minecraft:the_end'...
-[03:25:08] [Server thread/INFO]: Prepared spawn area in 1 ms
-[03:25:08] [Server thread/INFO]: Done preparing level "world" (0.595s)
-[03:25:08] [Server thread/INFO]: [ProjectAtlas] Enabling ProjectAtlas v1.0-SNAPSHOT
-[03:25:08] [Server thread/INFO]: [ProjectAtlas] Project Atlas is waking up...
-[03:25:08] [Server thread/INFO]: [ProjectAtlas] Configuration loaded successfully!
-[03:25:08] [Server thread/INFO]: [ProjectAtlas] Loaded 7 NPCs
-[03:25:09] [Server thread/INFO]: [ProjectAtlas] Registered Recall Totem recipe!
-[03:25:09] [Server thread/INFO]: [ProjectAtlas] PacketManager enabled with native Display Entities!
-[03:25:09] [Server thread/INFO]: [ProjectAtlas] MobCustomizer enabled!
-[03:25:09] [Server thread/INFO]: [ProjectAtlas] Animation System initialized with 15 animations and 9 model blueprints!
-[03:25:09] [Server thread/INFO]: [ProjectAtlas] Animation System initialized with 15 animations and 9 model blueprints!
-[03:25:09] [Server thread/INFO]: [ProjectAtlas] Animation System enabled with 15 animations and 9 model blueprints!
-[03:25:09] [Server thread/INFO]: [ProjectAtlas] AtlasPlugin enabled successfully!
-[03:25:09] [Server thread/WARN]: Typewriter plugin not found. Visuals will be disabled.
-[03:25:09] [Server thread/INFO]: [ProjectAtlas] Project Atlas has fully loaded v1.3 - Dungeon Update!
-[03:25:09] [Server thread/INFO]: [spark] Starting background profiler...
-[03:25:09] [Server thread/INFO]: [spark] The async-profiler engine is not supported for your os/arch (windows11/amd64), so the built-in Java engine will be used instead.
-[03:25:09] [Server thread/INFO]: Running delayed init tasks
-[03:25:09] [Server thread/INFO]: Done (14.006s)! For help, type "help"
-[03:30:06] [User Authenticator #0/INFO]: UUID of player VishShaji is eb432bf4-697b-3788-bb81-22c8915b3256
-[03:30:07] [Server thread/INFO]: VishShaji joined the game
-[03:30:07] [Server thread/INFO]: VishShaji[/127.0.0.1:49302] logged in with entity id 55 at ([world]249.99447716965307, 63.0, -475.32870511151987)
-[03:30:09] [Server thread/INFO]: [ProjectAtlas] Supply drop (RARE) spawned at 212, 94, -157
-[03:31:19] [Server thread/INFO]: [VishShaji: Set own game mode to Survival Mode]
-[03:32:58] [Server thread/INFO]: [VishShaji: Set own game mode to Creative Mode]
-[03:33:35] [Server thread/INFO]: VishShaji issued server command: /atlas dialogue trade temp_91b92d35-49fc-4ffa-9172-620b3a4c5c6d
-[03:33:52] [Server thread/INFO]: Named entity Husk['Bandit'/806, uuid='48f49bd7-d15f-49bd-bcb0-6d8088942918', l='ServerLevel[world]', x=193.37, y=68.42, z=-469.30, cpos=[12, -30], tl=247, v=true] died: Bandit was slain by VishShaji using [Hollow Knight's Blade]
-[03:33:55] [Server thread/INFO]: Named entity Husk['Bandit'/808, uuid='bc358cb6-41b2-4804-bab4-14244ab2b183', l='ServerLevel[world]', x=191.07, y=71.00, z=-466.31, cpos=[11, -30], tl=311, v=true] died: Bandit was slain by VishShaji using [Hollow Knight's Blade]
-[03:33:58] [Server thread/INFO]: Named entity Husk['Bandit'/807, uuid='f8272fe5-32a2-4d4a-8349-4624eddb5e7b', l='ServerLevel[world]', x=182.09, y=72.00, z=-465.60, cpos=[11, -30], tl=372, v=true] died: Bandit was slain by VishShaji using [Hollow Knight's Blade]
-[03:35:22] [Server thread/INFO]: Named entity Husk['Bandit'/1061, uuid='e91ec5ec-578f-4fbd-b287-647757fc62d5', l='ServerLevel[world]', x=270.24, y=63.00, z=-469.72, cpos=[16, -30], tl=260, v=true] died: Bandit was slain by VishShaji using [Hollow Knight's Blade]
-[03:35:24] [Server thread/INFO]: [VishShaji: Set own game mode to Survival Mode]
-[03:35:29] [Server thread/INFO]: Named entity Husk['Bandit'/1060, uuid='660b0004-7886-4f17-b03d-d42c97d27d3a', l='ServerLevel[world]', x=275.84, y=63.00, z=-480.12, cpos=[17, -31], tl=402, v=true] died: Bandit was slain by VishShaji using [Hollow Knight's Blade]
-[03:35:31] [Server thread/INFO]: Named entity Husk['Bandit'/1059, uuid='71c23ed0-1743-4afe-888d-ec27b8d93a50', l='ServerLevel[world]', x=276.80, y=63.00, z=-479.91, cpos=[17, -30], tl=442, v=true] died: Bandit was slain by VishShaji using [Hollow Knight's Blade]
-[03:36:01] [Server thread/INFO]: [VishShaji: Set own game mode to Creative Mode]
+[03:43:28] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[03:43:29] [ServerMain/INFO]: Loaded 1470 recipes
+[03:43:29] [ServerMain/INFO]: Loaded 1584 advancements
+[03:43:29] [ServerMain/INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Initialising converters for DataConverter...
+[03:43:30] [ServerMain/INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Finished initialising converters for DataConverter in 344.4ms
+[03:43:30] [Server thread/INFO]: Starting minecraft server version 1.21.11
+[03:43:30] [Server thread/INFO]: Loading properties
+[03:43:30] [Server thread/INFO]: This server is running Paper version 1.21.11-69-main@94d0c97 (2025-12-30T20:33:30Z) (Implementing API version 1.21.11-R0.1-SNAPSHOT)
+[03:43:30] [Server thread/INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
+[03:43:30] [Server thread/INFO]: Using 4 threads for Netty based IO
+[03:43:30] [Server thread/INFO]: Server Ping Player Sample Count: 12
+[03:43:32] [Server thread/INFO]: [MoonriseCommon] Paper is using 3 worker threads, 1 I/O threads
+[03:43:32] [Server thread/INFO]: Default game type: SURVIVAL
+[03:43:32] [Server thread/INFO]: Generating keypair
+[03:43:32] [Server thread/INFO]: Starting Minecraft server on *:25565
+[03:43:33] [Server thread/INFO]: Paper: Using Java compression from Velocity.
+[03:43:33] [Server thread/INFO]: Paper: Using Java cipher from Velocity.
+[03:43:33] [Server thread/ERROR]: [ModernPluginLoadingStrategy] Ambiguous plugin name 'ProjectAtlas' for files 'plugins\.paper-remapped\ProjectAtlas.jar' and 'plugins\.paper-remapped\ProjectAtlas-1.0-SNAPSHOT.jar' in 'plugins\.paper-remapped'
+[03:43:33] [Server thread/INFO]: [ProjectAtlas] Loading server plugin ProjectAtlas v1.0-SNAPSHOT
+[03:43:33] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
+[03:43:33] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[03:43:33] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
+[03:43:33] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[03:43:33] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[03:43:33] [Server thread/INFO]: Preparing level "world"
+[03:43:33] [Server thread/INFO]: Loading 0 persistent chunks for world 'minecraft:overworld'...
+[03:43:33] [Server thread/INFO]: Prepared spawn area in 1 ms
+[03:43:33] [Server thread/INFO]: Loading 0 persistent chunks for world 'minecraft:the_nether'...
+[03:43:33] [Server thread/INFO]: Prepared spawn area in 2 ms
+[03:43:33] [Server thread/INFO]: Loading 0 persistent chunks for world 'minecraft:the_end'...
+[03:43:33] [Server thread/INFO]: Prepared spawn area in 0 ms
+[03:43:33] [Server thread/INFO]: Done preparing level "world" (0.486s)
+[03:43:33] [Server thread/INFO]: [ProjectAtlas] Enabling ProjectAtlas v1.0-SNAPSHOT
+[03:43:33] [Server thread/INFO]: [ProjectAtlas] Project Atlas is waking up...
+[03:43:33] [Server thread/INFO]: [ProjectAtlas] Configuration loaded successfully!
+[03:43:34] [Server thread/INFO]: [ProjectAtlas] Loaded 7 NPCs
+[03:43:34] [Server thread/INFO]: [ProjectAtlas] Registered Recall Totem recipe!
+[03:43:34] [Server thread/INFO]: [ProjectAtlas] PacketManager enabled with native Display Entities!
+[03:43:34] [Server thread/INFO]: [ProjectAtlas] MobCustomizer enabled!
+[03:43:34] [Server thread/INFO]: [ProjectAtlas] Animation System initialized with 15 animations and 9 model blueprints!
+[03:43:34] [Server thread/INFO]: [ProjectAtlas] Animation System initialized with 15 animations and 9 model blueprints!
+[03:43:34] [Server thread/INFO]: [ProjectAtlas] Animation System enabled with 15 animations and 9 model blueprints!
+[03:43:34] [Server thread/INFO]: [ProjectAtlas] AtlasPlugin enabled successfully!
+[03:43:34] [Server thread/WARN]: Typewriter plugin not found. Visuals will be disabled.
+[03:43:34] [Server thread/INFO]: [ProjectAtlas] Project Atlas has fully loaded v1.3 - Dungeon Update!
+[03:43:34] [Server thread/INFO]: [spark] Starting background profiler...
+[03:43:34] [Server thread/INFO]: [spark] The async-profiler engine is not supported for your os/arch (windows11/amd64), so the built-in Java engine will be used instead.
+[03:43:34] [Server thread/INFO]: Running delayed init tasks
+[03:43:34] [Server thread/INFO]: Done (15.594s)! For help, type "help"
+[03:43:42] [User Authenticator #0/INFO]: UUID of player VishShaji is eb432bf4-697b-3788-bb81-22c8915b3256
+[03:43:43] [Server thread/INFO]: VishShaji joined the game
+[03:43:43] [Server thread/INFO]: VishShaji[/127.0.0.1:54958] logged in with entity id 84 at ([world]274.07039872173397, 63.0, -468.25548581814814)
+[03:44:15] [Server thread/INFO]: VishShaji issued server command: /atlas rp generate
+[03:44:15] [Craft Scheduler Thread - 4 - ProjectAtlas/INFO]: [ProjectAtlas] Generating resource pack...
+[03:44:16] [Craft Scheduler Thread - 4 - ProjectAtlas/INFO]: [ProjectAtlas] Resource pack generated at: C:\Users\visha\Desktop\Mc_Plugin\test-server\plugins\ProjectAtlas\resource-pack
+[03:44:34] [Server thread/INFO]: [ProjectAtlas] Quest board spawned: Ocean Monument Raid at 275, 63, -510
+[03:48:34] [Server thread/INFO]: [ProjectAtlas] Quest board spawned: Zombie Cleanup at 281, 63, -469
+[03:48:34] [Server thread/INFO]: [ProjectAtlas] Supply drop (RARE) spawned at 499, 66, -495
+[03:49:34] [Server thread/INFO]: VishShaji is now AFK
+[03:52:30] [Server thread/INFO]: VishShaji is no longer AFK
