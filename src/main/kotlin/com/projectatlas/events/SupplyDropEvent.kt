@@ -124,13 +124,13 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
         plugin.server.onlinePlayers.forEach { player ->
             if (player.world == world && player.location.distance(dropLocation) <= broadcastRadius) {
                 player.sendMessage(Component.empty())
-                player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
-                player.sendMessage(Component.text("  ⚠ SUPPLY DROP DETECTED NEARBY ⚠", NamedTextColor.RED))
+                player.sendMessage(Component.empty())
+                player.sendMessage(Component.text("  ⚠ SUPPLY DROP DETECTED NEARBY ⚠", NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD))
                 player.sendMessage(Component.text("  Type: ${tier.displayName}", tier.textColor))
                 player.sendMessage(Component.text("  Location: Somewhere in a $biomeName...", NamedTextColor.YELLOW))
                 player.sendMessage(Component.text("  Hint: ${x - (x % 100)}, ${z - (z % 100)} (Approx)", NamedTextColor.GRAY))
                 player.sendMessage(Component.text("  Guarded by hostiles!", NamedTextColor.RED))
-                player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
+                player.sendMessage(Component.empty())
                 player.sendMessage(Component.empty())
                 
                 // Play sound

@@ -1,0 +1,9 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "item/tripwire_hook"
+  },
+  "overrides": [
+    { "predicate": { "custom_model_data": 3003 }, "model": "item/dungeon_key" }
+  ]
+}

@@ -55,6 +55,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var questManager: QuestManager
     lateinit var siegeManager: SiegeManager
     lateinit var dialogueManager: DialogueManager
+    lateinit var cinematicDialogueManager: com.projectatlas.dialogue.CinematicDialogueManager
     lateinit var structureManager: StructureManager
     lateinit var schematicManager: SchematicManager
     lateinit var historyManager: HistoryManager
@@ -105,9 +106,10 @@ class AtlasPlugin : JavaPlugin() {
         npcManager = NPCManager(this)
         questManager = QuestManager(this)
         siegeManager = SiegeManager(this)
-        dialogueManager = DialogueManager(this)
         structureManager = StructureManager(this)
         schematicManager = SchematicManager(this)
+        dialogueManager = DialogueManager(this) // Initialize existing dialogue manager
+        cinematicDialogueManager = com.projectatlas.dialogue.CinematicDialogueManager(this) // Initialize new cinematic one
         historyManager = HistoryManager(this)
         politicsManager = PoliticsManager(this)
         bountyManager = BountyManager(this)
@@ -230,6 +232,10 @@ class AtlasPlugin : JavaPlugin() {
 
         server.pluginManager.registerEvents(wonderManager, this)
         server.pluginManager.registerEvents(outpostManager, this)
+        server.pluginManager.registerEvents(cinematicDialogueManager, this)
+        
+        // Cinematic Tick Task
+        server.scheduler.runTaskTimer(this, Runnable { cinematicDialogueManager.tick() }, 1L, 1L)
         
         logger.info("Project Atlas has fully loaded v1.3 - Dungeon Update!")
     }

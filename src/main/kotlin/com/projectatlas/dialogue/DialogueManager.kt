@@ -21,28 +21,12 @@ class DialogueManager(private val plugin: AtlasPlugin) : Listener {
     /**
      * Open a generic dialogue for a player
      */
-    fun openDialogue(player: Player, dialogue: Dialogue) {
-        // 1. Play Sound
-        player.playSound(player.location, org.bukkit.Sound.ENTITY_VILLAGER_TRADE, 1.0f, 1.0f)
-        
-        // 2. Send Message (Immersive Chat)
-        player.sendMessage(Component.empty())
-        player.sendMessage(
-            Component.text(dialogue.speakerName, NamedTextColor.GOLD).decorate(TextDecoration.BOLD)
-                .append(Component.text(": ", NamedTextColor.GRAY))
-                .append(Component.text(dialogue.text, NamedTextColor.WHITE))
-        )
-        player.sendMessage(Component.empty())
-        
-        // 3. Send Clickable Options
-        dialogue.options.forEach { option ->
-            player.sendMessage(createOptionComponent("  [${option.text}]  ", option.command, option.color, option.hoverText))
-        }
-        
-        // 4. UX Hint
-        player.sendMessage(Component.empty())
-        player.sendMessage(Component.text(" [Press T to select an option]", NamedTextColor.DARK_GRAY, TextDecoration.ITALIC))
-        player.sendMessage(Component.empty())
+    /**
+     * Open a generic dialogue for a player
+     */
+    fun openDialogue(player: Player, dialogue: Dialogue, npc: NPC? = null) {
+        // Delegate to Cinematic Manager
+        plugin.cinematicDialogueManager.startCinematicDialogue(player, npc, dialogue)
     }
 
     /**
@@ -86,7 +70,7 @@ class DialogueManager(private val plugin: AtlasPlugin) : Listener {
                 )
             )
         }
-        openDialogue(player, dialogue)
+        openDialogue(player, dialogue, npc)
     }
     
     private fun createOptionComponent(text: String, command: String, color: NamedTextColor, hoverText: String): Component {

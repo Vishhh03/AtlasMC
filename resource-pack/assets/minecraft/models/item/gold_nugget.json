@@ -1,0 +1,12 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "item/gold_nugget"
+  },
+  "overrides": [
+    { "predicate": { "custom_model_data": 1002 }, "model": "item/awakening_medal" },
+    { "predicate": { "custom_model_data": 2002 }, "model": "item/settler_badge" },
+    { "predicate": { "custom_model_data": 4002 }, "model": "item/ascendant_crown" },
+    { "predicate": { "custom_model_data": 5002 }, "model": "item/legend_crown" }
+  ]
+}

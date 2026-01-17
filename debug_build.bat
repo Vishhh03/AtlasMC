@@ -1,1 +1,1 @@
-call gradle compileKotlin > compile_log.txt 2>&1
+call gradle clean shadowJar > compile_log.txt 2>&1

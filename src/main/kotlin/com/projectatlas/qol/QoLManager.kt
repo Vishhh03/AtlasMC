@@ -136,11 +136,10 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
         // Show death coordinates (delayed to appear after respawn)
         plugin.server.scheduler.runTaskLater(plugin, Runnable {
             player.sendMessage(Component.empty())
-            player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GRAY))
-            player.sendMessage(Component.text("  ☠ You died at:", NamedTextColor.RED))
-            player.sendMessage(Component.text("  X: ${deathLoc.blockX}  Y: ${deathLoc.blockY}  Z: ${deathLoc.blockZ}", NamedTextColor.YELLOW))
-            player.sendMessage(Component.text("  World: ${deathLoc.world?.name}", NamedTextColor.GRAY))
             player.sendMessage(Component.empty())
+            player.sendMessage(Component.text("☠ You died at:", NamedTextColor.RED, TextDecoration.BOLD))
+            player.sendMessage(Component.text("X: ${deathLoc.blockX}  Y: ${deathLoc.blockY}  Z: ${deathLoc.blockZ}", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("World: ${deathLoc.world?.name}", NamedTextColor.GRAY))
             
             // Set compass target to death location
             player.compassTarget = deathLoc
@@ -151,7 +150,6 @@ class QoLManager(private val plugin: AtlasPlugin) : Listener {
             
             player.sendMessage(Component.text("  📍 You received a Death Compass!", NamedTextColor.AQUA))
             player.sendMessage(Component.text("  Right-click it to track your death location.", NamedTextColor.GRAY))
-            player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GRAY))
             player.sendMessage(Component.empty())
             
             player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 0.5f)

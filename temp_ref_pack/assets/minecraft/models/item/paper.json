@@ -1,0 +1,32 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "item/paper"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 1001
+      },
+      "model": "item/custom/portal_rune"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10100
+      },
+      "model": "item/blueprint_generic"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10101
+      },
+      "model": "item/blueprint_barracks"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10102
+      },
+      "model": "item/blueprint_turret"
+    }
+  ]
+}

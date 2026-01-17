@@ -241,12 +241,12 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin, private val schemati
         selectionSessions.remove(player.uniqueId)
 
         player.sendMessage(Component.empty())
-        player.sendMessage(Component.text("═══ BLUEPRINT CAPTURED ═══", NamedTextColor.GREEN, TextDecoration.BOLD))
-        player.sendMessage(Component.text("Name: $name", NamedTextColor.YELLOW))
-        player.sendMessage(Component.text("Size: ${dims.first} x ${dims.second} x ${dims.third}", NamedTextColor.GRAY))
-        player.sendMessage(Component.text("Blocks: $capturedCount", NamedTextColor.GRAY))
-        player.sendMessage(Component.text("Price: ${price}g", NamedTextColor.GOLD))
-        player.sendMessage(Component.text("Your blueprint is now listed on the marketplace!", NamedTextColor.GREEN))
+        player.sendMessage(Component.text("  BLUEPRINT CAPTURED", NamedTextColor.GREEN, TextDecoration.BOLD))
+        player.sendMessage(Component.text("  Name: $name", NamedTextColor.YELLOW))
+        player.sendMessage(Component.text("  Size: ${dims.first} x ${dims.second} x ${dims.third}", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  Blocks: $capturedCount", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  Price: ${price}g", NamedTextColor.GOLD))
+        player.sendMessage(Component.text("  Your blueprint is now listed on the marketplace!", NamedTextColor.GREEN))
         player.sendMessage(Component.empty())
         player.playSound(player.location, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f)
 
@@ -261,7 +261,7 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin, private val schemati
         val totalPages = maxOf(1, (listed.size + pageSize - 1) / pageSize)
         val startIdx = (page - 1) * pageSize
 
-        player.sendMessage(Component.text("═══ BLUEPRINT MARKETPLACE ═══ (Page $page/$totalPages)", NamedTextColor.GOLD, TextDecoration.BOLD))
+        player.sendMessage(Component.text("  BLUEPRINT MARKETPLACE (Page $page/$totalPages)", NamedTextColor.GOLD, TextDecoration.BOLD))
 
         if (listed.isEmpty()) {
             player.sendMessage(Component.text("No blueprints for sale yet!", NamedTextColor.GRAY))
@@ -284,7 +284,7 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin, private val schemati
     fun getMyBlueprints(player: Player) {
         val mine = blueprints.values.filter { it.creatorUUID == player.uniqueId }
         
-        player.sendMessage(Component.text("═══ YOUR BLUEPRINTS ═══", NamedTextColor.GOLD, TextDecoration.BOLD))
+        player.sendMessage(Component.text("  YOUR BLUEPRINTS", NamedTextColor.GOLD, TextDecoration.BOLD))
         
         if (mine.isEmpty()) {
             player.sendMessage(Component.text("You haven't created any blueprints yet!", NamedTextColor.GRAY))
@@ -347,12 +347,12 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin, private val schemati
         previewSessions[player.uniqueId] = session
 
         player.sendMessage(Component.empty())
-        player.sendMessage(Component.text("═══ PREVIEW MODE ═══", NamedTextColor.AQUA, TextDecoration.BOLD))
-        player.sendMessage(Component.text("Blueprint: ${blueprint.name}", NamedTextColor.YELLOW))
-        player.sendMessage(Component.text("Size: ${blueprint.width} x ${blueprint.height} x ${blueprint.length}", NamedTextColor.GRAY))
-        player.sendMessage(Component.text("White = clear | Red = collision", NamedTextColor.GRAY))
-        player.sendMessage(Component.text("Move around and use /atlas blueprint place to confirm", NamedTextColor.GREEN))
-        player.sendMessage(Component.text("Use /atlas blueprint cancel to exit preview", NamedTextColor.YELLOW))
+        player.sendMessage(Component.text("  PREVIEW MODE", NamedTextColor.AQUA, TextDecoration.BOLD))
+        player.sendMessage(Component.text("  Blueprint: ${blueprint.name}", NamedTextColor.YELLOW))
+        player.sendMessage(Component.text("  Size: ${blueprint.width} x ${blueprint.height} x ${blueprint.length}", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  White = clear | Red = collision", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  Move around and use /atlas blueprint place to confirm", NamedTextColor.GREEN))
+        player.sendMessage(Component.text("  Use /atlas blueprint cancel to exit preview", NamedTextColor.YELLOW))
         player.sendMessage(Component.empty())
 
         return true
@@ -408,11 +408,11 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin, private val schemati
         saveData()
 
         player.sendMessage(Component.empty())
-        player.sendMessage(Component.text("═══ PURCHASE COMPLETE ═══", NamedTextColor.GREEN, TextDecoration.BOLD))
-        player.sendMessage(Component.text("Blueprint: ${blueprint.name}", NamedTextColor.YELLOW))
-        player.sendMessage(Component.text("Cost: ${blueprint.price}g", NamedTextColor.GOLD))
-        player.sendMessage(Component.text("You can now place this blueprint unlimited times!", NamedTextColor.GREEN))
-        player.sendMessage(Component.text("Use: /atlas blueprint preview ${blueprint.name}", NamedTextColor.YELLOW))
+        player.sendMessage(Component.text("  PURCHASE COMPLETE", NamedTextColor.GREEN, TextDecoration.BOLD))
+        player.sendMessage(Component.text("  Blueprint: ${blueprint.name}", NamedTextColor.YELLOW))
+        player.sendMessage(Component.text("  Cost: ${blueprint.price}g", NamedTextColor.GOLD))
+        player.sendMessage(Component.text("  You can now place this blueprint unlimited times!", NamedTextColor.GREEN))
+        player.sendMessage(Component.text("  Use: /atlas blueprint preview ${blueprint.name}", NamedTextColor.YELLOW))
         player.sendMessage(Component.empty())
         player.playSound(player.location, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.2f)
 
@@ -519,9 +519,9 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin, private val schemati
         cancelPreview(player)
 
         player.sendMessage(Component.empty())
-        player.sendMessage(Component.text("═══ BLUEPRINT PLACED ═══", NamedTextColor.GREEN, TextDecoration.BOLD))
-        player.sendMessage(Component.text("${blueprint.name}", NamedTextColor.YELLOW))
-        player.sendMessage(Component.text("Placed: $placedCount blocks" + if (failedCount > 0) " (${failedCount} failed)" else "", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  BLUEPRINT PLACED", NamedTextColor.GREEN, TextDecoration.BOLD))
+        player.sendMessage(Component.text("  ${blueprint.name}", NamedTextColor.YELLOW))
+        player.sendMessage(Component.text("  Placed: $placedCount blocks" + if (failedCount > 0) " (${failedCount} failed)" else "", NamedTextColor.GRAY))
         player.sendMessage(Component.empty())
         player.playSound(player.location, Sound.BLOCK_ANVIL_USE, 1.0f, 1.0f)
 

@@ -27,6 +27,7 @@ class AtlasCommand(
 ) : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+        org.bukkit.Bukkit.getLogger().info("AtlasCommand DEBUG: onCommand reached. Sender: ${sender.name} Args: ${args.joinToString(" ")}")
         if (sender !is Player) {
             sender.sendMessage("Only players can use this command.")
             return true
@@ -72,12 +73,9 @@ class AtlasCommand(
             "admin" -> handleAdmin(sender, args)
             "guide", "wiki", "tutorial" -> guiManager.openGuideMenu(sender)
             "anim", "animation" -> handleAnimation(sender, args)
-            "schem" -> handleSchematic(player, args)
             // Resource Pack Command
             "resourcepack", "rp" -> handleResourcePack(player, args)
             "siege" -> handleSiege(player, args)
-            
-            "dungeon" -> handleDungeon(player, args)
 
             else -> player.sendMessage(Component.text("Unknown command. Type /atlas help for help.", NamedTextColor.RED))
         }
@@ -136,11 +134,9 @@ class AtlasCommand(
             // Era Gate: Skill tree requires Era 1 (Settlement)
             if (!plugin.progressionManager.canAccessSkillTree(player)) {
                 player.sendMessage(Component.empty())
-                player.sendMessage(Component.text("═══════════════════════════════════", NamedTextColor.DARK_RED))
-                player.sendMessage(Component.text("  ✗ SKILL TREE LOCKED", NamedTextColor.RED))
+                player.sendMessage(Component.text("  Locked Feature: Skill Tree", NamedTextColor.RED, TextDecoration.BOLD))
                 player.sendMessage(Component.text("  Complete Era 0 to unlock!", NamedTextColor.GRAY))
                 player.sendMessage(Component.text("  Use /atlas progress to check.", NamedTextColor.YELLOW))
-                player.sendMessage(Component.text("═══════════════════════════════════", NamedTextColor.DARK_RED))
                 player.sendMessage(Component.empty())
                 return
             }
@@ -536,15 +532,12 @@ class AtlasCommand(
             plugin.eventManager.forceTrigger()
             player.sendMessage(Component.text("Event triggered manually.", NamedTextColor.GREEN))
         }
-    }
-
+    } 
     private fun handleHelp(player: Player) {
         player.sendMessage(Component.empty())
-        player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
-        player.sendMessage(Component.text("  ⚔ Project Atlas Help ⚔", NamedTextColor.YELLOW))
-        player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
+        player.sendMessage(Component.text("  ⚔ Project Atlas Help ⚔", NamedTextColor.GOLD, TextDecoration.BOLD))
         player.sendMessage(Component.empty())
-        player.sendMessage(Component.text("  Core Commands:", NamedTextColor.WHITE))
+        player.sendMessage(Component.text("  Core Commands:", NamedTextColor.WHITE, TextDecoration.BOLD))
         player.sendMessage(Component.text("  /atlas - Open main menu", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas profile - View your stats", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas progress - View journey/era", NamedTextColor.AQUA))
@@ -552,32 +545,31 @@ class AtlasCommand(
         player.sendMessage(Component.text("  /atlas bal - View balance", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas pay <player> <amount>", NamedTextColor.GRAY))
         player.sendMessage(Component.empty())
-        player.sendMessage(Component.text("  City & Social:", NamedTextColor.WHITE))
+        player.sendMessage(Component.text("  City & Social:", NamedTextColor.WHITE, TextDecoration.BOLD))
         player.sendMessage(Component.text("  /atlas city <create|claim|invite|...>", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas party <create|invite|accept|...>", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas bounty <place|check|list>", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /pc <message> - Party chat", NamedTextColor.GRAY))
         player.sendMessage(Component.empty())
-        player.sendMessage(Component.text("  QoL Features:", NamedTextColor.WHITE))
+        player.sendMessage(Component.text("  QoL Features:", NamedTextColor.WHITE, TextDecoration.BOLD))
         player.sendMessage(Component.text("  /atlas sort - Sort inventory", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas stats - View kill stats", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas sb - Toggle scoreboard", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas dmg - Toggle damage numbers", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas qs - Quick stack to nearby chests", NamedTextColor.GRAY))
         player.sendMessage(Component.empty())
-        player.sendMessage(Component.text("  Content:", NamedTextColor.WHITE))
+        player.sendMessage(Component.text("  Content:", NamedTextColor.WHITE, TextDecoration.BOLD))
         player.sendMessage(Component.text("  /atlas quest - Quest board", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas dungeon - Enter dungeons (Era 2+)", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas blueprint - Schematic marketplace", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  /atlas map - World map", NamedTextColor.GRAY))
         if (player.hasPermission("atlas.admin")) {
             player.sendMessage(Component.empty())
-            player.sendMessage(Component.text("  Admin:", NamedTextColor.RED))
+            player.sendMessage(Component.text("  Admin:", NamedTextColor.RED, TextDecoration.BOLD))
             player.sendMessage(Component.text("  /atlas event start - Force supply drop", NamedTextColor.DARK_RED))
             player.sendMessage(Component.text("  /atlas boss spawn - Force world boss", NamedTextColor.DARK_RED))
             player.sendMessage(Component.text("  /atlas relic spawn - Force relic spawn", NamedTextColor.DARK_RED))
         }
-        player.sendMessage(Component.text("═══════════════════════════════", NamedTextColor.GOLD))
         player.sendMessage(Component.empty())
     }
 
@@ -730,6 +722,25 @@ class AtlasCommand(
             return
         }
         
+        // DEBUG LOGGING
+        org.bukkit.Bukkit.getLogger().info("AtlasCommand DEBUG: handleBoss called. Args: ${args.joinToString(", ")}")
+        player.sendMessage(Component.text("DEBUG: handleBoss called. Args: ${args.joinToString(", ")}", NamedTextColor.YELLOW))
+
+        
+        if (args.size >= 3 && args[1].lowercase() == "admin" && args[2].lowercase() == "gear") {
+             val type = if (args.size >= 4) args[3].lowercase() else "hollow"
+             if (type == "hollow") {
+                 val sword = org.bukkit.inventory.ItemStack(org.bukkit.Material.NETHERITE_SWORD)
+                 val meta = sword.itemMeta
+                 meta.displayName(Component.text("Hollow Knight's Blade", NamedTextColor.DARK_PURPLE, TextDecoration.BOLD))
+                 meta.setCustomModelData(1001)
+                 sword.itemMeta = meta
+                 player.inventory.addItem(sword)
+                 player.sendMessage(Component.text("Gave Hollow Knight's Blade", NamedTextColor.GREEN))
+             }
+             return
+        }
+
         if (args.size >= 2 && args[1].lowercase() == "era") {
             // Era boss spawning
             val bossType = if (args.size >= 3) args[2].lowercase() else "hollow"
@@ -1059,6 +1070,7 @@ class AtlasCommand(
 
     private fun handleMap(player: Player) {
         val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        player.sendMessage(Component.text("DEBUG: handleMap called...", NamedTextColor.YELLOW))
         plugin.mapManager.openMap(player)
     }
 
@@ -1399,7 +1411,7 @@ class AtlasCommand(
                     .filter { it.startsWith(args[1].lowercase()) }
                 "bounty" -> listOf("place", "check", "list")
                     .filter { it.startsWith(args[1].lowercase()) }
-                "boss" -> listOf("spawn", "info")
+                "boss" -> listOf("spawn", "info", "era", "admin", "start", "summon")
                     .filter { it.startsWith(args[1].lowercase()) }
                 "relic" -> listOf("give", "spawn", "list")
                     .filter { it.startsWith(args[1].lowercase()) }
@@ -1415,6 +1427,14 @@ class AtlasCommand(
             }
             
             3 -> when (args[0].lowercase()) {
+                "boss" -> {
+                     when (args[1].lowercase()) {
+                        "spawn" -> com.projectatlas.worldboss.WorldBossManager.BossType.entries.map { it.name }.filter { it.lowercase().startsWith(args[2].lowercase()) }
+                        "era" -> listOf("hollow", "tax", "warden", "ender").filter { it.startsWith(args[2].lowercase()) }
+                        "admin" -> if (sender.hasPermission("atlas.admin")) listOf("gear").filter { it.startsWith(args[2].lowercase()) } else emptyList()
+                        else -> emptyList()
+                     }
+                }
                 "dungeon" -> if (args[1].lowercase() in listOf("enter", "join")) {
                     com.projectatlas.dungeon.DungeonManager.DungeonType.entries
                         .map { it.displayName }
@@ -1440,12 +1460,6 @@ class AtlasCommand(
                     }
                     else -> emptyList()
                 }
-                
-                "boss" -> if (args[1].lowercase() == "spawn") {
-                    com.projectatlas.worldboss.WorldBossManager.BossType.entries
-                        .map { it.name }
-                        .filter { it.lowercase().startsWith(args[2].lowercase()) }
-                } else emptyList()
                 
                 "relic" -> if (args[1].lowercase() == "give") {
                     com.projectatlas.relics.RelicManager.RelicType.entries
@@ -1475,6 +1489,13 @@ class AtlasCommand(
                     }
                 } else emptyList()
                 
+                else -> emptyList()
+            }
+            
+            4 -> when (args[0].lowercase()) {
+                "boss" -> if (args[1].lowercase() == "admin" && args[2].lowercase() == "gear") {
+                    listOf("hollow", "tax", "warden", "ender").filter { it.startsWith(args[3].lowercase()) }
+                } else emptyList()
                 else -> emptyList()
             }
             
