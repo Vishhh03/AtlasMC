@@ -1,9 +1,0 @@
-{
-  "parent": "block/hollow_log",
-  "textures": {
-    "particle": "#side",
-    "#side": "#side",
-    "#inside": "#inside",
-    "#top": "#end"
-  }
-}
