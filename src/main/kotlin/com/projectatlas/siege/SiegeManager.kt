@@ -25,6 +25,7 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.scheduler.BukkitTask
 import com.projectatlas.history.EventType
+import com.projectatlas.animation.ProceduralConfig
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -813,6 +814,13 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
             zombie.getAttribute(Attribute.ATTACK_DAMAGE)?.baseValue = stats.damage
             zombie.addPotionEffect(PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 0, false, false))
             setSiegeRole(zombie, SiegeRoles.GRUNT)
+            
+            // Attach animated model
+            plugin.server.scheduler.runTaskLater(plugin, Runnable {
+                plugin.animationSystem.attachModel(zombie, "siege_grunt")
+                plugin.animationSystem.configureProcedural(zombie, ProceduralConfig.HUMANOID)
+                plugin.animationSystem.playAnimation(zombie, "siege_spawn", loop = false)
+            }, 1L)
         }
     }
 
@@ -825,6 +833,13 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
             skel.health = stats.health * healthMultiplier
             skel.addPotionEffect(PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 1, false, false))
             setSiegeRole(skel, SiegeRoles.SNIPER)
+            
+            // Attach animated model (reduced movement lean for stationary archers)
+            plugin.server.scheduler.runTaskLater(plugin, Runnable {
+                plugin.animationSystem.attachModel(skel, "siege_sniper")
+                plugin.animationSystem.configureProcedural(skel, ProceduralConfig.HUMANOID.copy(leanMultiplier = 0.3f))
+                plugin.animationSystem.playAnimation(skel, "siege_spawn", loop = false)
+            }, 1L)
         }
     }
 
@@ -839,6 +854,13 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
             vin.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, PotionEffect.INFINITE_DURATION, 1, false, false))
             vin.addPotionEffect(PotionEffect(PotionEffectType.RESISTANCE, PotionEffect.INFINITE_DURATION, 1, false, false))
             setSiegeRole(vin, SiegeRoles.BREACHER)
+            
+            // Attach animated model (heavy golem-like movement)
+            plugin.server.scheduler.runTaskLater(plugin, Runnable {
+                plugin.animationSystem.attachModel(vin, "siege_breacher")
+                plugin.animationSystem.configureProcedural(vin, ProceduralConfig.GOLEM.copy(breathingIntensity = 1.3f))
+                plugin.animationSystem.playAnimation(vin, "siege_spawn", loop = false)
+            }, 1L)
         }
     }
     
@@ -852,6 +874,13 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
             witch.addPotionEffect(PotionEffect(PotionEffectType.INVISIBILITY, PotionEffect.INFINITE_DURATION, 0, false, false))
             witch.addPotionEffect(PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 2, false, false))
             setSiegeRole(witch, SiegeRoles.SABOTEUR)
+            
+            // Attach animated model (ghostly movement for sneaky saboteur)
+            plugin.server.scheduler.runTaskLater(plugin, Runnable {
+                plugin.animationSystem.attachModel(witch, "siege_saboteur")
+                plugin.animationSystem.configureProcedural(witch, ProceduralConfig.GHOST)
+                plugin.animationSystem.playAnimation(witch, "siege_spawn", loop = false)
+            }, 1L)
         }
     }
     
@@ -868,6 +897,15 @@ class SiegeManager(private val plugin: AtlasPlugin) : Listener {
             ravager.addPotionEffect(PotionEffect(PotionEffectType.RESISTANCE, PotionEffect.INFINITE_DURATION, 1, false, false))
             ravager.addPotionEffect(PotionEffect(PotionEffectType.FIRE_RESISTANCE, PotionEffect.INFINITE_DURATION, 0, false, false))
             setSiegeRole(ravager, SiegeRoles.COMMANDER)
+            
+            // Attach animated model (beast-like commander with rally roar)
+            plugin.server.scheduler.runTaskLater(plugin, Runnable {
+                plugin.animationSystem.attachModel(ravager, "siege_commander")
+                plugin.animationSystem.configureProcedural(ravager, ProceduralConfig.BEAST)
+                plugin.animationSystem.playAnimation(ravager, "rally_roar", loop = false)
+                // Play roar sound
+                ravager.world.playSound(ravager.location, Sound.ENTITY_RAVAGER_ROAR, 2.0f, 0.8f)
+            }, 1L)
         }
     }
     

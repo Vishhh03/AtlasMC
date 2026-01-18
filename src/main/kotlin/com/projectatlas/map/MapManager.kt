@@ -44,7 +44,6 @@ class MapManager(private val plugin: AtlasPlugin) : Listener {
      * Open the local area map for a player
      */
     fun openMap(player: Player) {
-        plugin.logger.info("DEBUG: openMap called for ${player.name}")
         try {
             val inv = Bukkit.createInventory(null, 54, Component.text("🗺 Local Map", NamedTextColor.DARK_GREEN, TextDecoration.BOLD))
             
@@ -53,7 +52,6 @@ class MapManager(private val plugin: AtlasPlugin) : Listener {
             player.openInventory(inv)
             openMaps.add(player.uniqueId)
             player.playSound(player.location, Sound.ITEM_BOOK_PAGE_TURN, 1f, 1f)
-            plugin.logger.info("DEBUG: Map inventory opened for ${player.name}")
         } catch (e: Exception) {
             plugin.logger.severe("Error opening map: ${e.message}")
             e.printStackTrace()

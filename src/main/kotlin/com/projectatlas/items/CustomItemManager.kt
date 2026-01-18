@@ -358,13 +358,22 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
         val durability = plugin.configManager.hollowKnightDashDurability
         if (!checkWeaponUse(player, HOLLOW_KNIGHT_BLADE, cooldown, durability)) return
         
+        val startLoc = player.location.clone()
+        
         // Dash logic
         val direction = player.location.direction.clone().setY(0).normalize().multiply(1.5)
         player.velocity = player.velocity.add(direction)
         
+        // Enhanced trail effect using SkillEffectSystem
+        val endLoc = startLoc.clone().add(direction.clone().multiply(3.0))
+        plugin.skillEffectSystem.playDashTrailEffect(player, startLoc, endLoc)
+        
         // Effects
         player.world.spawnParticle(Particle.SOUL_FIRE_FLAME, player.location, 20, 0.5, 0.5, 0.5, 0.1)
         player.playSound(player.location, "projectatlas:item.hollow_knight.dash", 1f, 0.8f)
+        
+        // Afterimage ghost effect at origin
+        player.world.spawnParticle(Particle.LARGE_SMOKE, startLoc.add(0.0, 1.0, 0.0), 15, 0.2, 0.5, 0.2, 0.01)
         
         // Damage enemies in path
         val damage = plugin.configManager.hollowKnightDashDamage
@@ -372,6 +381,8 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
             if (entity is org.bukkit.entity.LivingEntity && entity != player) {
                 entity.damage(damage, player)
                 entity.world.spawnParticle(Particle.SWEEP_ATTACK, entity.location, 1)
+                // Soul slash effect on hit
+                entity.world.spawnParticle(Particle.SOUL, entity.location.add(0.0, 1.0, 0.0), 10, 0.3, 0.3, 0.3, 0.05)
             }
         }
     }
@@ -389,18 +400,30 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
         
         player.playSound(origin, "projectatlas:item.warden_sword.beam", 1f, 1f)
         
-        // Beam
+        // Enhanced beam effect
+        plugin.skillEffectSystem.playSonicBoomEffect(origin, direction, range)
+        
+        // Beam with hit detection
+        val hitEntities = mutableSetOf<org.bukkit.entity.LivingEntity>()
         for (i in 0..range) {
             val point = origin.clone().add(direction.clone().multiply(i.toDouble()))
             player.world.spawnParticle(Particle.SONIC_BOOM, point, 1)
             
             // Hit detection
             point.getNearbyEntities(1.5, 1.5, 1.5).forEach { entity ->
-                if (entity is org.bukkit.entity.LivingEntity && entity != player) {
-                    entity.damage(damage, player) // High damage
-                    entity.velocity = direction.clone().multiply(1.5).setY(0.5) // Knockback
+                if (entity is org.bukkit.entity.LivingEntity && entity != player && entity !in hitEntities) {
+                    hitEntities.add(entity)
+                    entity.damage(damage, player)
+                    entity.velocity = direction.clone().multiply(1.5).setY(0.5)
+                    // Impact effect
+                    entity.world.spawnParticle(Particle.FLASH, entity.location.add(0.0, 1.0, 0.0), 1)
                 }
             }
+        }
+        
+        // Camera shake effect for hit players
+        hitEntities.filterIsInstance<Player>().forEach { hitPlayer ->
+            hitPlayer.playSound(hitPlayer.location, Sound.ENTITY_WARDEN_SONIC_BOOM, 1.0f, 0.8f)
         }
     }
 
@@ -412,20 +435,26 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
         player.playSound(player.location, "projectatlas:item.dragon_slayer.roar", 1f, 1f)
         player.world.spawnParticle(Particle.EXPLOSION_EMITTER, player.location, 1)
         
+        // Enhanced shockwave effect
+        plugin.skillEffectSystem.playDragonRoarShockwave(player.location, 6.0)
+        
         val damage = plugin.configManager.dragonRoarDamage
         val knockback = plugin.configManager.dragonRoarKnockback
         
-        // Knockback AOE
+        // Knockback AOE with enhanced visuals
         player.getNearbyEntities(6.0, 6.0, 6.0).forEach { entity ->
             if (entity is org.bukkit.entity.LivingEntity && entity != player) {
                 entity.damage(damage, player)
                 val dir = entity.location.toVector().subtract(player.location.toVector()).normalize()
                 entity.velocity = dir.multiply(knockback).setY(0.5)
+                // Fire burst on each target
+                entity.world.spawnParticle(Particle.FLAME, entity.location.add(0.0, 0.5, 0.0), 10, 0.2, 0.3, 0.2, 0.05)
             }
         }
         
-        // Buff
-        player.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, 100, 1)) // Str II for 5s
+        // Buff with visual indicator
+        player.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, 100, 1))
+        player.sendActionBar(Component.text("🐉 Dragon's Might!", NamedTextColor.GOLD))
     }
 
     private fun useEnderTeleport(player: Player) {
@@ -453,6 +482,11 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
              return
         }
         
+        val originLoc = player.location.clone()
+        
+        // Enhanced rift effect
+        plugin.skillEffectSystem.playEnderTeleportEffect(originLoc, safeLoc)
+        
         player.world.spawnParticle(Particle.PORTAL, player.location, 30, 0.5, 1.0, 0.5)
         player.playSound(player.location, "projectatlas:item.ender_scythe.teleport", 1f, 1f)
         
@@ -460,5 +494,6 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
         
         player.playSound(player.location, "projectatlas:item.ender_scythe.teleport", 1f, 1f)
         player.world.spawnParticle(Particle.END_ROD, player.location, 20, 0.5, 0.5, 0.5, 0.1)
+        player.world.spawnParticle(Particle.REVERSE_PORTAL, player.location.add(0.0, 1.0, 0.0), 25, 0.3, 0.5, 0.3, 0.2)
     }
 }

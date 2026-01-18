@@ -27,7 +27,6 @@ class AtlasCommand(
 ) : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
-        org.bukkit.Bukkit.getLogger().info("AtlasCommand DEBUG: onCommand reached. Sender: ${sender.name} Args: ${args.joinToString(" ")}")
         if (sender !is Player) {
             sender.sendMessage("Only players can use this command.")
             return true
@@ -734,11 +733,6 @@ class AtlasCommand(
             return
         }
         
-        // DEBUG LOGGING
-        org.bukkit.Bukkit.getLogger().info("AtlasCommand DEBUG: handleBoss called. Args: ${args.joinToString(", ")}")
-        player.sendMessage(Component.text("DEBUG: handleBoss called. Args: ${args.joinToString(", ")}", NamedTextColor.YELLOW))
-
-        
         if (args.size >= 3 && args[1].lowercase() == "admin" && args[2].lowercase() == "gear") {
              val type = if (args.size >= 4) args[3].lowercase() else "hollow"
              if (type == "hollow") {
@@ -1082,7 +1076,6 @@ class AtlasCommand(
 
     private fun handleMap(player: Player) {
         val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
-        player.sendMessage(Component.text("DEBUG: handleMap called...", NamedTextColor.YELLOW))
         plugin.mapManager.openMap(player)
     }
 

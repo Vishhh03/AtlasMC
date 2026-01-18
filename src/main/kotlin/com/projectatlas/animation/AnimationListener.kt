@@ -62,6 +62,7 @@ class AnimationListener(private val plugin: AtlasPlugin) : Listener {
     
     /**
      * When an animated mob attacks, play attack animation.
+     * Uses role-specific animations for siege mobs.
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     fun onEntityAttack(event: EntityDamageByEntityEvent) {
@@ -71,7 +72,29 @@ class AnimationListener(private val plugin: AtlasPlugin) : Listener {
             // Play attack animation (non-looping), then return to previous state
             val wasWalking = animationSystem.getCurrentAnimation(attacker) == "walk"
             
-            animationSystem.playAnimation(attacker, "attack", loop = false)
+            // Determine attack animation based on siege role
+            val siegeRole = getSiegeRole(attacker)
+            val attackAnim = when (siegeRole) {
+                "sniper" -> "ranged_attack"
+                "breacher" -> "heavy_swing"
+                "saboteur" -> "sabotage"
+                "commander" -> {
+                    // Commanders cycle between attack and rally_roar
+                    if (Math.random() < 0.3) "rally_roar" else "attack"
+                }
+                else -> "attack"
+            }
+            
+            animationSystem.playAnimation(attacker, attackAnim, loop = false)
+            
+            // Animation duration varies by type
+            val animDuration = when (attackAnim) {
+                "ranged_attack" -> 20L
+                "heavy_swing" -> 22L
+                "sabotage" -> 27L
+                "rally_roar" -> 37L
+                else -> 18L
+            }
             
             // Return to walk/idle after attack
             object : BukkitRunnable() {
@@ -81,8 +104,18 @@ class AnimationListener(private val plugin: AtlasPlugin) : Listener {
                         animationSystem.playAnimation(attacker, returnAnim)
                     }
                 }
-            }.runTaskLater(plugin, 18L) // attack animation is ~15 ticks
+            }.runTaskLater(plugin, animDuration)
         }
+    }
+    
+    /**
+     * Get the siege role of an entity, if any.
+     */
+    private fun getSiegeRole(entity: LivingEntity): String? {
+        return entity.persistentDataContainer.get(
+            org.bukkit.NamespacedKey(plugin, "siege_role"),
+            org.bukkit.persistence.PersistentDataType.STRING
+        )
     }
     
     /**

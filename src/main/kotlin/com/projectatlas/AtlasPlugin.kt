@@ -40,6 +40,7 @@ import com.projectatlas.progression.ProgressionManager
 import com.projectatlas.mobs.MobCustomizer
 import com.projectatlas.animation.AnimationSystem
 import com.projectatlas.animation.AnimationListener
+import com.projectatlas.animation.SkillEffectSystem
 
 class AtlasPlugin : JavaPlugin() {
     
@@ -87,6 +88,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var packetManager: com.projectatlas.visual.PacketManager
     lateinit var globalThreatManager: com.projectatlas.threat.GlobalThreatManager
     lateinit var animationSystem: AnimationSystem
+    lateinit var skillEffectSystem: SkillEffectSystem
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -128,7 +130,6 @@ class AtlasPlugin : JavaPlugin() {
         qolManager = QoLManager(this)
         qolManager.registerRecallTotemRecipe()
         atmosphereManager = AtmosphereManager(this)
-        atmosphereManager = AtmosphereManager(this)
         mapManager = MapManager(this)
         progressionManager = ProgressionManager(this)
         eraBossManager = com.projectatlas.progression.EraBossManager(this)
@@ -146,10 +147,13 @@ class AtlasPlugin : JavaPlugin() {
         
         // Initialize Animation System (Display Entity-based custom mob animations)
         animationSystem = AnimationSystem(this)
-        animationSystem = AnimationSystem(this)
         server.pluginManager.registerEvents(AnimationListener(this), this)
         server.pluginManager.registerEvents(com.projectatlas.gameplay.ItemEffectListener(this), this)
         logger.info("Animation System enabled with ${animationSystem.getAnimationCount()} animations and ${animationSystem.getModelBlueprintCount()} model blueprints!")
+        
+        // Initialize Skill Effect System (visual feedback for skill tree abilities and weapon effects)
+        skillEffectSystem = SkillEffectSystem(this)
+        logger.info("Skill Effect System enabled!")
         
         val entityCleanupManager = com.projectatlas.util.EntityCleanupManager(this) // Auto-starts task
         globalThreatManager = com.projectatlas.threat.GlobalThreatManager(this) // Starts threat loop
