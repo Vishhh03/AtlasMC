@@ -1103,11 +1103,21 @@ class AtlasCommand(
             return
         }
         
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
         if (args.size < 2) {
             player.sendMessage(Component.text("Admin Commands:", NamedTextColor.GOLD))
-            player.sendMessage(Component.text("  /atlas admin give <player> <amount> - Give gold", NamedTextColor.YELLOW))
-            player.sendMessage(Component.text("  /atlas admin reset <player> - Reset progression", NamedTextColor.YELLOW))
-            player.sendMessage(Component.text("  /atlas admin xp <player> <amount> - Give XP", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  Player:", NamedTextColor.WHITE, TextDecoration.BOLD))
+            player.sendMessage(Component.text("  /atlas admin give <player> <amount|item>", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas admin reset <player>", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas admin xp <player> <amount>", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  Systems:", NamedTextColor.WHITE, TextDecoration.BOLD))
+            player.sendMessage(Component.text("  /atlas admin threat <view|set|bloodmoon>", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas admin altar <create|list|remove>", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas admin villager <spawn|refresh>", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas admin market <list|clear>", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas admin questboard <spawn>", NamedTextColor.YELLOW))
+            player.sendMessage(Component.text("  /atlas admin history <view|clear> [player]", NamedTextColor.YELLOW))
             return
         }
         
@@ -1134,6 +1144,9 @@ class AtlasCommand(
                     "hollow_blade" -> com.projectatlas.visual.CustomItemManager.createHollowKnightBlade()
                     "warden_sword" -> com.projectatlas.visual.CustomItemManager.createWardenFlameSword()
                     "ender_scythe" -> com.projectatlas.visual.CustomItemManager.createEnderSentinelScythe()
+                    "blueprint_barracks" -> com.projectatlas.visual.CustomItemManager.createBlueprintBarracks()
+                    "blueprint_turret" -> com.projectatlas.visual.CustomItemManager.createBlueprintTurret()
+                    "blueprint_generic" -> com.projectatlas.visual.CustomItemManager.createBlueprintGeneric()
                     else -> null
                 }
                 
@@ -1177,8 +1190,7 @@ class AtlasCommand(
                          profile.cityId = null
                      }
                      // Reset era
-                     val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
-                     plugin.progressionManager.resetPlayer(target) // resetPlayer is confirmed to exist now
+                     plugin.progressionManager.resetPlayer(target)
                      
                      player.sendMessage(Component.text("Reset progression for ${target.name}.", NamedTextColor.GREEN))
                 }
@@ -1203,6 +1215,161 @@ class AtlasCommand(
                 target.giveExp(amount)
                 player.sendMessage(Component.text("Gave $amount XP to ${target.name}.", NamedTextColor.GREEN))
             }
+            
+            // --- THREAT SYSTEM ---
+            "threat" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Threat Commands:", NamedTextColor.GOLD))
+                    player.sendMessage(Component.text("  /atlas admin threat view - Show current threat level", NamedTextColor.YELLOW))
+                    player.sendMessage(Component.text("  /atlas admin threat set <0-100> - Set threat level", NamedTextColor.YELLOW))
+                    player.sendMessage(Component.text("  /atlas admin threat bloodmoon - Trigger Blood Moon", NamedTextColor.YELLOW))
+                    return
+                }
+                when (args[2].lowercase()) {
+                    "view" -> {
+                        val threat = plugin.globalThreatManager.threatLevel
+                        val status = when {
+                            threat < 30 -> "LOW"
+                            threat < 70 -> "MODERATE"
+                            threat < 90 -> "HIGH"
+                            else -> "CRITICAL"
+                        }
+                        player.sendMessage(Component.text("Global Threat: ${"%.1f".format(threat)}% ($status)", NamedTextColor.RED))
+                    }
+                    "set" -> {
+                        if (args.size < 4) {
+                            player.sendMessage(Component.text("Usage: /atlas admin threat set <0-100>", NamedTextColor.RED))
+                            return
+                        }
+                        val value = args[3].toDoubleOrNull()
+                        if (value == null || value < 0 || value > 100) {
+                            player.sendMessage(Component.text("Value must be 0-100.", NamedTextColor.RED))
+                            return
+                        }
+                        plugin.globalThreatManager.threatLevel = value
+                        player.sendMessage(Component.text("Threat level set to $value%", NamedTextColor.GREEN))
+                    }
+                    "bloodmoon" -> {
+                        plugin.globalThreatManager.threatLevel = 100.0
+                        player.sendMessage(Component.text("Blood Moon triggered!", NamedTextColor.DARK_RED))
+                    }
+                }
+            }
+            
+            // --- ALTAR SYSTEM ---
+            "altar" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Altar Commands:", NamedTextColor.GOLD))
+                    player.sendMessage(Component.text("  /atlas admin altar info - Show altar info", NamedTextColor.YELLOW))
+                    return
+                }
+                when (args[2].lowercase()) {
+                    "info" -> {
+                        player.sendMessage(Component.text("Summoning Altars can be built by placing the correct multiblock pattern.", NamedTextColor.GRAY))
+                        player.sendMessage(Component.text("Pattern: 3x3 Nether Brick base with Crying Obsidian center.", NamedTextColor.GRAY))
+                    }
+                }
+            }
+            
+            // --- VILLAGER SYSTEM ---
+            "villager" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Villager Commands:", NamedTextColor.GOLD))
+                    player.sendMessage(Component.text("  /atlas admin villager spawn <profession> - Spawn villager", NamedTextColor.YELLOW))
+                    player.sendMessage(Component.text("  /atlas admin villager refresh - Refresh nearby villagers", NamedTextColor.YELLOW))
+                    return
+                }
+                when (args[2].lowercase()) {
+                    "spawn" -> {
+                        val profession = if (args.size > 3) {
+                            try { org.bukkit.entity.Villager.Profession.valueOf(args[3].uppercase()) }
+                            catch (e: Exception) { org.bukkit.entity.Villager.Profession.FARMER }
+                        } else org.bukkit.entity.Villager.Profession.FARMER
+                        
+                        val villager = player.world.spawn(player.location, org.bukkit.entity.Villager::class.java)
+                        villager.profession = profession
+                        villager.villagerLevel = 1
+                        player.sendMessage(Component.text("Spawned ${profession.toString()} villager.", NamedTextColor.GREEN))
+                    }
+                    "refresh" -> {
+                        val nearbyVillagers = player.getNearbyEntities(20.0, 10.0, 20.0)
+                            .filterIsInstance<org.bukkit.entity.Villager>()
+                        var count = 0
+                        nearbyVillagers.forEach { v ->
+                            v.removeScoreboardTag("atlas_trades_updated")
+                            count++
+                        }
+                        player.sendMessage(Component.text("Refreshed $count villagers (trades will update on next interaction).", NamedTextColor.GREEN))
+                    }
+                }
+            }
+            
+            // --- MARKET SYSTEM ---
+            "market" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Market Commands:", NamedTextColor.GOLD))
+                    player.sendMessage(Component.text("  /atlas admin market list - List active shops", NamedTextColor.YELLOW))
+                    player.sendMessage(Component.text("  /atlas admin market clear - Remove all shops", NamedTextColor.YELLOW))
+                    return
+                }
+                when (args[2].lowercase()) {
+                    "list" -> {
+                        player.sendMessage(Component.text("Market shop listing (sign-based shops are auto-detected).", NamedTextColor.GRAY))
+                    }
+                    "clear" -> {
+                        player.sendMessage(Component.text("Market clearing not implemented (break signs manually).", NamedTextColor.GRAY))
+                    }
+                }
+            }
+            
+            // --- QUEST BOARD ---
+            "questboard" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Quest Board Commands:", NamedTextColor.GOLD))
+                    player.sendMessage(Component.text("  /atlas admin questboard spawn - Spawn quest board at location", NamedTextColor.YELLOW))
+                    return
+                }
+                when (args[2].lowercase()) {
+                    "spawn" -> {
+                        plugin.questBoardManager.spawnQuestBoard(player.location)
+                        player.sendMessage(Component.text("Quest Board spawned!", NamedTextColor.GREEN))
+                    }
+                }
+            }
+            
+            // --- HISTORY ---
+            "history" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("History Commands:", NamedTextColor.GOLD))
+                    player.sendMessage(Component.text("  /atlas admin history view <city> - View city history", NamedTextColor.YELLOW))
+                    return
+                }
+                when (args[2].lowercase()) {
+                    "view" -> {
+                        val cityName = args.getOrNull(3)
+                        if (cityName != null) {
+                            val city = plugin.cityManager.getAllCities().find { it.name.equals(cityName, true) }
+                            if (city != null) {
+                                val events = plugin.historyManager.getHistory(city.id)
+                                if (events.isEmpty()) {
+                                    player.sendMessage(Component.text("No history recorded for ${city.name}.", NamedTextColor.GRAY))
+                                } else {
+                                    player.sendMessage(Component.text("─── History of ${city.name} ───", NamedTextColor.GOLD))
+                                    events.takeLast(10).forEach { event ->
+                                        val date = java.text.SimpleDateFormat("MM/dd HH:mm").format(java.util.Date(event.timestamp))
+                                        player.sendMessage(Component.text("[$date] ${event.description}", NamedTextColor.GRAY))
+                                    }
+                                }
+                            } else {
+                                player.sendMessage(Component.text("City not found.", NamedTextColor.RED))
+                            }
+                        } else {
+                            player.sendMessage(Component.text("Usage: /atlas admin history view <city>", NamedTextColor.RED))
+                        }
+                    }
+                }
+            }
+            
             else -> player.sendMessage(Component.text("Unknown admin subcommand. Use /atlas admin", NamedTextColor.RED))
         }
     }
@@ -1433,7 +1600,7 @@ class AtlasCommand(
                 "spawn" -> listOf("merchant_hut", "quest_camp").filter { it.startsWith(args[1].lowercase()) }
                 "pay" -> org.bukkit.Bukkit.getOnlinePlayers().map { it.name }
                     .filter { it.lowercase().startsWith(args[1].lowercase()) }
-                "admin" -> if (sender.hasPermission("atlas.admin")) listOf("give", "reset", "xp").filter { it.startsWith(args[1].lowercase()) } else emptyList()
+                "admin" -> if (sender.hasPermission("atlas.admin")) listOf("give", "reset", "xp", "threat", "altar", "villager", "market", "questboard", "history").filter { it.startsWith(args[1].lowercase()) } else emptyList()
                 "anim", "animation" -> if (sender.hasPermission("atlas.admin")) listOf("spawn", "attach", "play", "stop", "detach", "list", "effect", "recoil", "proc").filter { it.startsWith(args[1].lowercase()) } else emptyList()
                 else -> emptyList()
             }
@@ -1501,12 +1668,42 @@ class AtlasCommand(
                     }
                 } else emptyList()
                 
+                "admin" -> if (sender.hasPermission("atlas.admin")) {
+                    when (args[1].lowercase()) {
+                        "give", "reset", "xp" -> org.bukkit.Bukkit.getOnlinePlayers().map { it.name }
+                            .filter { it.lowercase().startsWith(args[2].lowercase()) }
+                        "threat" -> listOf("view", "set", "bloodmoon").filter { it.startsWith(args[2].lowercase()) }
+                        "altar" -> listOf("info").filter { it.startsWith(args[2].lowercase()) }
+                        "villager" -> listOf("spawn", "refresh").filter { it.startsWith(args[2].lowercase()) }
+                        "market" -> listOf("list", "clear").filter { it.startsWith(args[2].lowercase()) }
+                        "questboard" -> listOf("spawn").filter { it.startsWith(args[2].lowercase()) }
+                        "history" -> listOf("view").filter { it.startsWith(args[2].lowercase()) }
+                        else -> emptyList()
+                    }
+                } else emptyList()
+                
                 else -> emptyList()
             }
+            
             
             4 -> when (args[0].lowercase()) {
                 "boss" -> if (args[1].lowercase() == "admin" && args[2].lowercase() == "gear") {
                     listOf("hollow", "tax", "warden", "ender").filter { it.startsWith(args[3].lowercase()) }
+                } else emptyList()
+                "admin" -> if (sender.hasPermission("atlas.admin")) {
+                    when (args[1].lowercase()) {
+                        "give" -> listOf("healing_salve", "spirit_totem", "hollow_blade", "warden_sword", "ender_scythe", "blueprint_barracks", "blueprint_turret", "blueprint_generic")
+                            .filter { it.startsWith(args[3].lowercase()) }
+                        "villager" -> if (args[2].lowercase() == "spawn") {
+                            org.bukkit.entity.Villager.Profession.values().map { it.toString().lowercase() }
+                                .filter { it.startsWith(args[3].lowercase()) }
+                        } else emptyList()
+                        "history" -> if (args[2].lowercase() == "view") {
+                            plugin.cityManager.getAllCities().map { it.name }
+                                .filter { it.lowercase().startsWith(args[3].lowercase()) }
+                        } else emptyList()
+                        else -> emptyList()
+                    }
                 } else emptyList()
                 else -> emptyList()
             }

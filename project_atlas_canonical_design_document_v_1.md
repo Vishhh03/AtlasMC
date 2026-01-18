@@ -1,5 +1,5 @@
 # Project Atlas
-## Canonical Design Document (CDD) v1.5
+## Canonical Design Document (CDD) v2.0
 
 > **A multiplayer-first RPG game built entirely inside Minecraft using server-side systems.**
 
@@ -8,8 +8,9 @@
 ## 0. DOCUMENT STATUS
 
 - **Status:** Canonical, authoritative
-- **Version:** v1.0
-- **Scope:** Full vision (not MVP)
+- **Version:** v2.0
+- **Last Updated:** January 2026
+- **Scope:** Full vision and current implementations
 - **Persistence Rule:** This document is the *single source of truth*. Any future design, code, or discussion must reference this document.
 
 ---
@@ -45,284 +46,293 @@ The world is meant to:
 
 ---
 
-## 3. TECHNICAL CONSTRAINTS
+## 3. TECHNICAL ARCHITECTURE
 
-### 3.1 Platform Assumptions
-- Server software: Paper-based
+### 3.1 Platform
+- Server software: Paper 1.21.x
 - Client: Vanilla Minecraft (no required mods)
-- All systems must be server-authoritative
+- All systems are server-authoritative
+- Custom resource pack for visual enhancements
 
-### 3.2 Hard Constraints
-- No client-side UI beyond inventories
-- **Inventory GUIs (Chest Menus)** are the primary interface.
-- No high-frequency combat math
-- No true physics simulation
-- All mechanics must be low-tick, state-driven
+### 3.2 Core Systems (46 Managers)
+```
+Identity & Social          Economy & Trade           Combat & Progression
+├── IdentityManager        ├── EconomyManager        ├── ProgressionManager
+├── ChatManager            ├── MarketManager         ├── EraBossManager
+├── PartyManager           ├── BountyManager         ├── SkillTreeManager
+├── AchievementManager     └── VillageTradeManager   ├── SurvivalManager
+└── HistoryManager                                   └── MobCustomizer
 
-Design implication: systems must favor **deliberate decisions**, not twitch mechanics.
+City & Territory           World & Events            Dungeons & Content
+├── CityManager            ├── EventManager          ├── DungeonManager
+├── SiegeManager           ├── GlobalThreatManager   ├── QuestManager
+├── WonderManager          ├── WorldBossManager      ├── QuestBoardManager
+├── OutpostManager         ├── AtmosphereManager     ├── RelicManager
+└── PoliticsManager        └── SupplyDropListener    └── NPCManager
 
----
+Visual & Animation         Structures                Utilities
+├── AnimationSystem        ├── StructureManager      ├── ConfigManager
+├── VisualManager          ├── StructureHealthManager├── GuiManager
+├── PacketManager          ├── BlueprintMarketplace  ├── MapManager
+├── AtmosphereManager      ├── SchematicManager      └── QoLManager
+└── ResourcePackManager    └── SummoningAltarManager
+```
 
-## 4. MACRO SYSTEM ARCHITECTURE
-
-Project Atlas is composed of seven primary systems:
-
-1. Identity & Reputation
-2. Cities & Politics
-3. Economy & Trade
-4. Combat & Roles
-5. Survival & World Pressure
-6. Events & History
-7. Endgame & Legacy
-
-Each system is independent but interconnected.
-
----
-
-## 5. PLAYER IDENTITY & REPUTATION
-
-### 5.1 Persistent Player Identity
-Each player has permanent attributes:
-- Public Reputation Score
-- Hidden Moral Alignment
-- Criminal Record
-- Social Trust Score
-- Titles & Honors
-- Player History Log
-
-No global wipes.
-
-### 5.2 Reputation Mechanics
-Reputation is affected by:
-- PvP behavior
-- Theft & crime
-- Contracts completed
-- City service
-- Betrayal or loyalty
-
-Reputation influences:
-- NPC interactions
-- Market prices
-- PvP legality
-- City access
-- Quest availability
-
-### 5.3 Weakness & Mitigation
-- **Alt abuse:** Mitigated via playtime-weighted gains and social validation
-- **Griefing:** Mitigated via reputation decay and exile mechanics
+### 3.3 Technical Constraints
+- Inventory GUIs (Chest Menus) are the primary interface
+- All mechanics are low-tick, state-driven
+- Design favors **deliberate decisions**, not twitch mechanics
 
 ---
 
-## 6. CITIES, FACTIONS & POLITICS
+## 4. PLAYER PROGRESSION SYSTEM
 
-### 6.1 Cities as Core Multiplayer Units
-Cities are player-founded and player-run.
+### 4.1 Era-Based Progression
+Players progress through distinct eras, each with milestones and a boss:
 
-Each city has:
-- Charter (laws)
-- Treasury
-- Leadership structure
-- Controlled zones
-- Resource rights
+| Era | Name | Requirements | Boss |
+|-----|------|--------------|------|
+| 0 | Awakening | Basic survival milestones | Hollow Knight |
+| 1 | Settlement | Join/create city, infrastructure | Tax Collector |
+| 2 | Dominion | Dungeons, advanced structures | Warden of Flames |
+| 3 | Ascension | Wonders, full specialization | Ender Sentinel |
 
-Cities unlock **mechanics**, not raw power.
+### 4.2 Skill Tree System
+Five skill branches with 25+ nodes:
+- **Combat**: Damage, armor, critical hits
+- **Survival**: Health, resistance, swimming
+- **Rest**: Sleep bonuses, regeneration
+- **Trade**: Discounts, reputation bonuses
+- **Siege**: Defense bonuses during city sieges
 
-### 6.2 Political Systems
-- Elections
-- Appointments
-- Coups (high risk)
-- Revolutions
-- Public trials
-- Impeachment
-
-Leadership creates responsibility, not immunity.
-
-### 6.3 Weakness & Mitigation
-- **Tyranny:** Revolts, emigration, legitimacy decay
-- **Inactivity:** Automatic decay & succession
-
-### 6.4 City Infrastructure & Customization
-Cities are not just claims; they are functional engines.
-- **City Core**: A central nexus block that defines the city's heart. If destroyed during a siege, the city falls.
-- **Infrastructure Modules** (Fallout-style base building):
-  - **Defensive**: Arrow Towers (buffs damage), Shield Generators (temp resistance), Reinforced Walls.
-  - **Industrial**: Auto-Smelteries (passive processing), Generators (upkeep reduction).
-  - **Social**: Clinics (Regen II), Academies (XP boost), Markets (Trade tax).
-- **Customization**:
-  - Modular building nodes (buy a "Turret Node", place it to spawn a defensive mob).
-  - Upgradable tiers for all structures.
+### 4.3 Class System
+Soft classes emerge through skill investment:
+- Vanguard (Tank)
+- Scout (DPS)
+- Medic (Support)
+- Diplomat (Trade)
 
 ---
 
-## 7. ECONOMY & TRADE SYSTEM
+## 5. CITY & POLITICAL SYSTEMS
 
-### 7.1 Absolute Rules
-1. No admin shops
-2. No infinite money generation
-3. Everything decays or has upkeep
-4. Transport has cost and risk
+### 5.1 City Features
+- **Treasury**: Gold-based funding from taxes and deposits
+- **Energy**: Redstone-based power for structures
+- **Mana**: Lapis-based resource for special abilities
+- **Territory**: Chunk-based claims with scaling costs
 
-### 7.2 Economic Flow
-Resource → Processing → Transport → Market → Tax → Sink
+### 5.2 Infrastructure Modules
+| Category | Module | Effect |
+|----------|--------|--------|
+| Defense | Walls | Reduce siege damage |
+| Defense | Turrets | Auto-attack during sieges |
+| Defense | Barracks | Spawn Iron Golem defenders |
+| Economy | Generator | Passive resource generation |
+| Economy | Market | Tax efficiency bonus |
+| Support | Clinic | Regeneration buff to members |
+| Support | Beacon | Various buffs |
 
-### 7.3 Money Sinks
-- Repairs
-- Travel
-- City upkeep
-- Death recovery
-- Power maintenance
-- Bribes and fines
+### 5.3 City Specializations
+- **Arcane Sanctum**: Mana generation, threat mitigation
+- **Industrial Forge**: Production bonuses
+- **Military Bastion**: Defense bonuses
 
-### 7.4 Weakness & Mitigation
-- **Inflation:** Progressive taxation, exponential upkeep
-- **Monopolies:** Anti-trust systems, smuggling
+### 5.4 Wonders
+Unique city-wide projects with powerful effects (only one per server).
 
----
+### 5.5 Outposts
+Resource-generating territory expansions:
+- Iron Mine, Coal Pit, Gold Pan, Diamond Drill
 
-## 8. COMBAT & ROLES
-
-### 8.1 Role-Based Identity
-No hard classes. Roles emerge via usage:
-- Frontliner
-- Support
-- Healer
-- Scout
-- Control
-- Specialist
-
-### 8.2 Multiplayer Combat Rules
-- Friendly fire zones
-- Morale system
-- Injury persistence
-- Revives cost resources
-- Retreat is valid gameplay
-
-### 8.3 Weakness & Mitigation
-- **Zerging:** Stamina scaling, morale penalties
-- **Ganking:** PvP legality & bounty systems
+### 5.6 Political Systems
+- Democratic elections
+- Tax rate control (0-100%)
+- Member invites and kicks
+- City history logging
 
 ---
 
-## 9. SURVIVAL & WORLD PRESSURE
+## 6. ECONOMY SYSTEM
 
-### 9.1 Shared Survival
-- Group food pools
-- Medical roles
-- Shelter ratings
-- Sanity sharing
-- Disease transmission
+### 6.1 Currency
+- **Gold Nuggets**: Base unit (1.0 economy value)
+- **Gold Ingots**: 9x value
+- **Gold Blocks**: 81x value
 
-### 9.2 Environmental Pressure
-- Seasons
-- Weather
-- Plagues
-- Resource depletion
-- Invasions
+### 6.2 Economic Mechanics
+- Player-to-player payments
+- City treasury deposits
+- Villager gold-based trades (emeralds converted)
+- Chest shop system with signs
+- Bounty system for PvP rewards
 
-The world constantly pushes back.
-
----
-
-## 10. EVENTS & WORLD HISTORY
-
-### 10.1 Event Design
-- Multi-day events
-- Sieges
-- Economic crashes
-- Plagues
-- World bosses
-
-Failure has permanent consequences.
-
-### 10.2 World Memory
-- Player monuments
-- Named eras
-- Historical records
-- Retired legends
-
-The world ages.
-
-### 10.3 Siege System (Enhanced Raids)
-- **Targeted Raids**: Raids are not random; they target specific Cities based on Treasury size or Threat level.
-- **Siege Mechanics**:
-  - Waves of custom mobs (Breachers, Snipers, Tanks).
-  - Goal: Destroy the **City Core** or kill the Mayor.
-  - **Base Defense**: Players must build layouts that funnel enemies into killboxes (Tower Defense elements).
-  - **Consequence**: Loss of Treasury, downgrading of Infrastructure levels.
-
-### 10.4 NPCs & Quest System
-- **NPC Types**:
-  - **Merchants**: Sell rare items for gold. Spawn at structures.
-  - **Quest Givers**: Offer combat and collection quests.
-- **Dialogue System**: Sequential text with player choices. Opens inventory GUI.
-- **Quest Mechanics**:
-  - **Objectives**: Kill X mobs, Defend location, Collect items.
-  - **Difficulty Tiers**: Easy (100g), Medium (300g), Hard (600g), Nightmare (1500g).
-  - **Time Limits**: Optional countdown. Failure = no reward.
-  - **Boss Bars**: Show progress for Hard+ quests.
-- **Structures**: Random wilderness spawns containing NPCs (Merchant Huts, Quest Camps).
+### 6.3 Money Sinks
+- City creation cost
+- Chunk claims (scaling costs)
+- Infrastructure upgrades
+- Wonder construction
+- Death taxes
 
 ---
 
-## 11. ENDGAME & LEGACY
+## 7. COMBAT & DUNGEONS
 
-### 11.1 Endgame Definition
-Endgame is:
-- Political dominance
-- Economic control
-- Cultural influence
-- Knowledge monopoly
+### 7.1 Dungeon System
+Instanced PvE content with party support:
 
-Not gear score.
+| Dungeon | Theme | Rooms | Difficulty |
+|---------|-------|-------|------------|
+| Shadow Cavern | Dark caves | 5 | Medium |
+| Infernal Pit | Nether-themed | 6 | Hard |
+| Crystal Sanctum | Ice/crystal | 5 | Medium |
 
-### 11.2 World Endings
-- Server-wide decisions
-- Cataclysms
-- Era transitions
-- Legacy carryover
+Features:
+- Persistent mobs (don't despawn)
+- Trap rooms with ambush mechanics
+- Boss encounters
+- Loot scaling with modifiers
 
----
+### 7.2 World Bosses
+Four era bosses with unique mechanics:
+- **Hollow Knight** (Era 0): Melee, summons shadows
+- **Tax Collector** (Era 1): Economic debuffs
+- **Warden of Flames** (Era 2): Fire-based attacks
+- **Ender Sentinel** (Era 3): Teleportation, void damage
 
-## 12. WEAKNESSES & RISKS
-
-### 12.1 Complexity
-Risk: Player overwhelm
-Mitigation: Mentorship, diegetic tutorials
-
-### 12.2 Toxicity
-Risk: Political abuse
-Mitigation: Transparency, exile, reputation
-
-### 12.3 Development Burnout
-Risk: Overengineering
-Mitigation: Strict MVP gating
+### 7.3 Sieges
+City defense events triggered by threat level:
+- Wave-based mob spawning
+- Smart AI targeting infrastructure
+- Dynamic difficulty scaling based on city strength
+- Defensive structure activation
 
 ---
 
-## 13. MVP PHASING (NON-NEGOTIABLE)
+## 8. SURVIVAL MECHANICS
 
-### Phase 1 – Core Loop
-- Identity
-- Reputation
-- Economy
-- Single city
-- One event type
+### 8.1 Healing System
+Tiered healing items replacing instant food healing:
 
-### Phase 2 – Expansion
-- Multiple cities
-- Trade routes
-- Combat roles
-- Survival pressure
+| Tier | Items | Heal Amount |
+|------|-------|-------------|
+| 1 | Bandage, Poultice | 3-4 HP |
+| 2 | Salve, Remedy | 5-6 HP + effects |
+| 3 | Medkit, Draught | 8-10 HP + regen |
+| 4 | Surgeon, Phoenix | 12-16 HP + buffs |
+| 5 | Divine Restoration | 20 HP + absorption |
 
-### Phase 3 – Warfare & Industry
-- **Infrastructure**: Buildable City Modules (Turrets, Generators).
-- **Siege Engine**: Targeted PvE Raids on cities.
-- **Politics**: Elections and Policies.
-- **Legacy**: History recording.
+### 8.2 Environmental Pressure
+- Hypothermia in cold oceans
+- Weather effects
+- Disease transmission (planned)
 
 ---
 
-## 14. FINAL RULE
+## 9. QUEST & NPC SYSTEMS
+
+### 9.1 Quest Types
+- Kill objectives
+- Collection objectives
+- Escort missions
+- Defense missions
+- Boss encounters
+
+### 9.2 Quest Board
+Physical spawn points for procedural quests with difficulty tiers.
+
+### 9.3 NPC System
+- Cinematic dialogue with typewriter effect
+- Head tracking after dialogue
+- Fade-out animations
+- Custom merchants at structures
+
+---
+
+## 10. GLOBAL SYSTEMS
+
+### 10.1 Threat System
+- Passive threat increase over time
+- Arcane Sanctum cities mitigate threat
+- Dungeon completion reduces threat
+- At 100% threat: **Blood Moon** (all-city siege)
+
+### 10.2 Supply Drops
+Random world events with loot containers.
+
+### 10.3 Relic System
+Rare artifacts with active abilities:
+- Combat relics
+- Utility relics
+- Defense relics
+
+### 10.4 History Recording
+Persistent logging of city events:
+- Foundings, sieges, politics
+- Member changes, upgrades
+
+---
+
+## 11. VISUAL & ANIMATION SYSTEMS
+
+### 11.1 Custom Models
+- Resource pack with custom item textures
+- Model animations via Display Entities
+- Procedural animation presets (humanoid, floating, beast)
+
+### 11.2 Atmosphere System
+- Dynamic fog and sky effects
+- Threat-based visual changes
+- Weather integration
+
+### 11.3 Blueprint Preview
+- Real-time placement visualization
+- Border outlines and corner pillars
+- Color-coded validity (green/red)
+- Error indication with problem markers
+
+---
+
+## 12. ADMIN COMMANDS
+
+Full admin command suite for testing and management:
+
+| Category | Commands |
+|----------|----------|
+| Player | give, reset, xp |
+| Systems | threat, villager, questboard |
+| World | event, boss, relic, siege |
+| Building | spawn, schem, blueprint |
+| Animation | anim spawn/attach/play |
+| City | history view |
+
+---
+
+## 13. QOL FEATURES
+
+- Inventory sorting
+- Quick stack to nearby chests
+- Damage numbers toggle
+- Scoreboard toggle
+- Death compass
+- Party chat (/pc)
+- Map system
+
+---
+
+## 14. FUTURE ROADMAP
+
+### Phase 4 Planned Features
+- Naval combat system
+- Extended dungeon types
+- Cross-server city alliances
+- Seasonal events
+- Achievement rewards
+- Extended relic system
+
+---
+
+## 15. FINAL RULE
 
 If a feature does not:
 - Encourage multiplayer interaction
@@ -333,44 +343,4 @@ It does not belong in Project Atlas.
 
 ---
 
-**End of Canonical Design Document v1.5**
-
-
-## 15. RECENT IMPLEMENTATIONS (v1.5)
-- **Skill Tree Expansion**: Added "Rest", "Siege", "Trade", and "Ocean" branches.
-  - **Siege Defender**: Bonus damage during sieges.
-  - **Diplomacy**: Discounts on city claims.
-  - **Mariner / Iron Lungs**: Swim speed and water breathing.
-  - **Restful Sleep**: Bonus healing from beds.
-- **Ocean Update**: Added "Hypothermia" mechanic for cold oceans (freezing damage) and counter-skills.
-- **City Infrastructure (Phase 3 Core)**:
-  - **Modules**: Cities can now build/upgrade Barracks, Clinics, Markets, and Generators.
-  - **Barracks**: Spawns Iron Golem defenders during sieges (Level 1-3).
-  - **Clinic**: Grants Regeneration buff to city members (Level 1-3).
-  - **Market**: Increases tax revenue efficiency (Level 1-3).
-  - **Walls**: Reduces siege damage to core.
-- **Quest System**: Added Escort and Defend objectives.
-- **Dungeon System**: Instanced PvE arenas with unique themes (Shadow Cavern, Infernal Pit) and wave-based combat.
-- **Relic System**: Rare artifacts spawning in the world with active abilities.
-
-## 16. FUTURE CONCEPTS (BRAINSTORMING)
-### 16.1 Active Class Abilities
-- **Concept**: Move beyond passive stats. Give classes active skills bound to items.
-- **Examples**: 
-  - *Vanguard*: Shield Bash (Right-click Shield) -> Stuns enemies.
-  - *Scout*: Shadow Step (Right-click Feather) -> Teleport behind target.
-  - *Medic*: Healing Circle (Right-click Dye) -> AoE regeneration.
-
-### 16.2 Player Economy (Markets)
-- **Concept**: Physical chests that function as shops.
-- **Mechanics**:
-  - Players rent stalls in Cities or spawn.
-  - Set prices for items.
-  - Taxes go to the City Treasury.
-
-### 16.3 Visual Territory Control
-- **Concept**: See exactly where City influence ends.
-- **Mechanics**:
-  - Particle borders when holding a specific item (Map/Compass).
-  - "Contested Zones" between rival cities.
-
+**End of Canonical Design Document v2.0**

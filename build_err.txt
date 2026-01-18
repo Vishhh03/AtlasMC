@@ -1,0 +1,68 @@
+﻿> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+
+> Task :compileKotlin FAILED
+gradle : e: file:///C:/
+Users/visha/Desktop/Mc_
+Plugin/src/main/kotlin/
+com/projectatlas/AtlasC
+ommand.kt:1292:81 
+Function invocation 
+'name()' expected.
+At line:1 char:1
++ gradle compileKotlin 
+2>&1 | Out-File 
+-FilePath 
+build_err.txt -Encodin 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (e: file:///C:   
+ /U...me()' expecte    
+d.:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+e: file:///C:/Users/vis
+ha/Desktop/Mc_Plugin/sr
+c/main/kotlin/com/proje
+ctatlas/AtlasCommand.kt
+:1698:85 Function 
+invocation 'name()' 
+expected.
+
+FAILURE: Build failed 
+with an exception.
+
+* What went wrong:
+Execution failed for 
+task ':compileKotlin'.
+> A failure occurred 
+while executing org.jet
+brains.kotlin.compilerR
+unner.GradleCompilerRun
+nerWithWorkers$GradleKo
+tlinCompilerWorkAction
+   > Compilation 
+error. See log for 
+more details
+
+* Try:
+> Run with 
+--stacktrace option to 
+get the stack trace.
+> Run with --info or 
+--debug option to get 
+more log output.
+> Run with --scan to 
+generate a Build Scan 
+(powered by 
+Develocity).
+> Get more help at http
+s://help.gradle.org.
+
+BUILD FAILED in 2s
+1 actionable task: 1 executed

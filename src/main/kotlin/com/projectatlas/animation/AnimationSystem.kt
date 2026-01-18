@@ -63,7 +63,9 @@ class AnimationSystem(private val plugin: AtlasPlugin) {
         // Register built-in animations
         registerBuiltInAnimations()
         registerAdvancedAnimations()
+        registerSiegeAnimations()
         registerBuiltInModels()
+        registerSiegeModels()
         
         // Start the animation tick loop
         startAnimationLoop()
@@ -776,6 +778,364 @@ class AnimationSystem(private val plugin: AtlasPlugin) {
             Keyframe(15f, mapOf("body" to BoneTransform(Vector3f(0f, 0f, 0f), Vector3f(0.5f, 0f, 0f), Vector3f(1.2f, 0.8f, 1.2f)))), // Impact squish
             Keyframe(25f, mapOf("body" to BoneTransform.IDENTITY))
         ))
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SIEGE MOB ANIMATIONS
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    private fun registerSiegeAnimations() {
+        // SIEGE_SPAWN - Dramatic ground slam spawn
+        animations["siege_spawn"] = Animation("siege_spawn", 30, listOf(
+            Keyframe(0f, mapOf(
+                "body" to BoneTransform(Vector3f(0f, -2f, 0f), Vector3f(0f, 0f, 0f), Vector3f(0.3f, 0.3f, 0.3f)),
+                "head" to BoneTransform(Vector3f(0f, -0.5f, 0f), Vector3f(0.5f, 0f, 0f), Vector3f(0.3f, 0.3f, 0.3f))
+            )),
+            Keyframe(10f, mapOf(
+                "body" to BoneTransform(Vector3f(0f, 0.3f, 0f), Vector3f(-0.3f, 0f, 0f), Vector3f(1.2f, 1.2f, 1.2f)),
+                "head" to BoneTransform(Vector3f(0f, 1.8f, 0f), Vector3f(-0.4f, 0f, 0f), Vector3f(1.2f, 1.2f, 1.2f))
+            )),
+            Keyframe(15f, mapOf(
+                "body" to BoneTransform(Vector3f(0f, -0.1f, 0f), Vector3f(0.2f, 0f, 0f), Vector3f(0.9f, 1.1f, 0.9f)),
+                "head" to BoneTransform(Vector3f(0f, 1.4f, 0f), Vector3f(0.1f, 0f, 0f), Vector3f(0.95f, 0.95f, 0.95f))
+            )),
+            Keyframe(30f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "head" to BoneTransform(Vector3f(0f, 1.5f, 0f), Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            ))
+        ))
+        
+        // RANGED_ATTACK - Skeleton archer draw and release
+        animations["ranged_attack"] = Animation("ranged_attack", 18, listOf(
+            Keyframe(0f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "left_arm" to BoneTransform(Vector3f(-0.5f, 1.2f, 0.3f), Vector3f(-1.2f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.5f, 1.2f, 0f), Vector3f(-0.8f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(8f, mapOf(  // Draw back
+                "body" to BoneTransform(Vector3f(0f, 0f, -0.1f), Vector3f(0.1f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "left_arm" to BoneTransform(Vector3f(-0.5f, 1.4f, 0.5f), Vector3f(-1.5f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.3f, 1.3f, -0.3f), Vector3f(-1.3f, 0.3f, 0f), Vector3f(1.1f, 1.1f, 1.1f))
+            )),
+            Keyframe(10f, mapOf(  // Release
+                "body" to BoneTransform(Vector3f(0f, 0f, 0.05f), Vector3f(-0.05f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "left_arm" to BoneTransform(Vector3f(-0.5f, 1.3f, 0.4f), Vector3f(-1.3f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.5f, 1.0f, 0.1f), Vector3f(-0.5f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(18f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "left_arm" to BoneTransform(Vector3f(-0.5f, 1.2f, 0.3f), Vector3f(-1.2f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.5f, 1.2f, 0f), Vector3f(-0.8f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            ))
+        ))
+        
+        // HEAVY_SWING - Breacher heavy axe swing
+        animations["heavy_swing"] = Animation("heavy_swing", 20, listOf(
+            Keyframe(0f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "right_arm" to BoneTransform(Vector3f(0.5f, 1.2f, 0f), Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "weapon" to BoneTransform(Vector3f(0.7f, 1.4f, 0.3f), Vector3f(-0.5f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(5f, mapOf(  // Wind up
+                "body" to BoneTransform(Vector3f(0f, 0f, -0.2f), Vector3f(0.2f, -0.4f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.6f, 1.8f, -0.5f), Vector3f(-2.5f, 0f, 0.5f), Vector3f(1.1f, 1.1f, 1.1f)),
+                "weapon" to BoneTransform(Vector3f(0.8f, 2.2f, -0.8f), Vector3f(-2.8f, 0f, 0.5f), Vector3f(1.2f, 1.2f, 1.2f))
+            )),
+            Keyframe(8f, mapOf(  // Swing down
+                "body" to BoneTransform(Vector3f(0f, -0.1f, 0.3f), Vector3f(-0.3f, 0.5f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.4f, 0.7f, 0.6f), Vector3f(1.2f, 0f, -0.3f), Vector3f(1f, 1f, 1f)),
+                "weapon" to BoneTransform(Vector3f(0.4f, 0.3f, 1.0f), Vector3f(1.8f, 0f, -0.4f), Vector3f(1.3f, 1.3f, 1.3f))
+            )),
+            Keyframe(12f, mapOf(  // Follow through
+                "body" to BoneTransform(Vector3f(0f, 0f, 0.1f), Vector3f(-0.1f, 0.3f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.3f, 0.9f, 0.4f), Vector3f(0.8f, 0f, -0.2f), Vector3f(1f, 1f, 1f)),
+                "weapon" to BoneTransform(Vector3f(0.3f, 0.5f, 0.7f), Vector3f(1.3f, 0f, -0.3f), Vector3f(1.15f, 1.15f, 1.15f))
+            )),
+            Keyframe(20f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "right_arm" to BoneTransform(Vector3f(0.5f, 1.2f, 0f), Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "weapon" to BoneTransform(Vector3f(0.7f, 1.4f, 0.3f), Vector3f(-0.5f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            ))
+        ))
+        
+        // SABOTAGE - Sneaky placement motion
+        animations["sabotage"] = Animation("sabotage", 25, listOf(
+            Keyframe(0f, mapOf(
+                "body" to BoneTransform(Vector3f(0f, -0.3f, 0f), Vector3f(0.3f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "head" to BoneTransform(Vector3f(0f, 1.2f, 0f), Vector3f(0.4f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.4f, 0.8f, 0.3f), Vector3f(0.8f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(8f, mapOf(  // Look around
+                "body" to BoneTransform(Vector3f(0f, -0.35f, 0f), Vector3f(0.35f, 0.3f, 0f), Vector3f(1f, 1f, 1f)),
+                "head" to BoneTransform(Vector3f(0f, 1.15f, 0f), Vector3f(0.3f, 0.6f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.4f, 0.6f, 0.4f), Vector3f(1.0f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(12f, mapOf(  // Look other side
+                "body" to BoneTransform(Vector3f(0f, -0.35f, 0f), Vector3f(0.35f, -0.3f, 0f), Vector3f(1f, 1f, 1f)),
+                "head" to BoneTransform(Vector3f(0f, 1.15f, 0f), Vector3f(0.3f, -0.6f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.4f, 0.5f, 0.5f), Vector3f(1.2f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(18f, mapOf(  // Place
+                "body" to BoneTransform(Vector3f(0f, -0.4f, 0.1f), Vector3f(0.5f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "head" to BoneTransform(Vector3f(0f, 1.1f, 0.1f), Vector3f(0.6f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.3f, 0.3f, 0.6f), Vector3f(1.5f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(25f, mapOf(
+                "body" to BoneTransform(Vector3f(0f, -0.3f, 0f), Vector3f(0.3f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "head" to BoneTransform(Vector3f(0f, 1.2f, 0f), Vector3f(0.4f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.4f, 0.8f, 0.3f), Vector3f(0.8f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            ))
+        ))
+        
+        // RALLY_ROAR - Commander buff animation
+        animations["rally_roar"] = Animation("rally_roar", 35, listOf(
+            Keyframe(0f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "head" to BoneTransform(Vector3f(0f, 1.5f, 0f), Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "left_arm" to BoneTransform(Vector3f(-0.5f, 1.2f, 0f), Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.5f, 1.2f, 0f), Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(10f, mapOf(  // Crouch and gather
+                "body" to BoneTransform(Vector3f(0f, -0.3f, 0f), Vector3f(0.3f, 0f, 0f), Vector3f(1.05f, 0.95f, 1.05f)),
+                "head" to BoneTransform(Vector3f(0f, 1.2f, 0.1f), Vector3f(0.4f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "left_arm" to BoneTransform(Vector3f(-0.4f, 0.9f, 0.2f), Vector3f(0.5f, 0f, 0.3f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.4f, 0.9f, 0.2f), Vector3f(0.5f, 0f, -0.3f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(15f, mapOf(  // Explode upward
+                "body" to BoneTransform(Vector3f(0f, 0.2f, -0.1f), Vector3f(-0.2f, 0f, 0f), Vector3f(1.1f, 1.1f, 1.1f)),
+                "head" to BoneTransform(Vector3f(0f, 1.7f, -0.2f), Vector3f(-0.6f, 0f, 0f), Vector3f(1.1f, 1.1f, 1.1f)),
+                "left_arm" to BoneTransform(Vector3f(-0.7f, 2.0f, -0.1f), Vector3f(-2.8f, 0f, -0.5f), Vector3f(1.1f, 1.1f, 1.1f)),
+                "right_arm" to BoneTransform(Vector3f(0.7f, 2.0f, -0.1f), Vector3f(-2.8f, 0f, 0.5f), Vector3f(1.1f, 1.1f, 1.1f))
+            )),
+            Keyframe(25f, mapOf(  // Hold pose
+                "body" to BoneTransform(Vector3f(0f, 0.15f, -0.05f), Vector3f(-0.15f, 0f, 0f), Vector3f(1.08f, 1.08f, 1.08f)),
+                "head" to BoneTransform(Vector3f(0f, 1.65f, -0.15f), Vector3f(-0.5f, 0f, 0f), Vector3f(1.08f, 1.08f, 1.08f)),
+                "left_arm" to BoneTransform(Vector3f(-0.65f, 1.95f, -0.05f), Vector3f(-2.6f, 0f, -0.4f), Vector3f(1.05f, 1.05f, 1.05f)),
+                "right_arm" to BoneTransform(Vector3f(0.65f, 1.95f, -0.05f), Vector3f(-2.6f, 0f, 0.4f), Vector3f(1.05f, 1.05f, 1.05f))
+            )),
+            Keyframe(35f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "head" to BoneTransform(Vector3f(0f, 1.5f, 0f), Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "left_arm" to BoneTransform(Vector3f(-0.5f, 1.2f, 0f), Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.5f, 1.2f, 0f), Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            ))
+        ))
+        
+        // LEAP - Quick forward leap
+        animations["leap"] = Animation("leap", 15, listOf(
+            Keyframe(0f, mapOf(
+                "body" to BoneTransform(Vector3f(0f, -0.2f, 0f), Vector3f(0.3f, 0f, 0f), Vector3f(1f, 0.9f, 1f))
+            )),
+            Keyframe(5f, mapOf(
+                "body" to BoneTransform(Vector3f(0f, 0.8f, 0.5f), Vector3f(-0.4f, 0f, 0f), Vector3f(1f, 1.1f, 1f))
+            )),
+            Keyframe(10f, mapOf(
+                "body" to BoneTransform(Vector3f(0f, 0.3f, 0.8f), Vector3f(0.2f, 0f, 0f), Vector3f(1.1f, 0.9f, 1.1f))
+            )),
+            Keyframe(15f, mapOf("body" to BoneTransform.IDENTITY))
+        ))
+        
+        // SHIELD_BASH - Defensive bash
+        animations["shield_bash"] = Animation("shield_bash", 18, listOf(
+            Keyframe(0f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "left_arm" to BoneTransform(Vector3f(-0.4f, 1.1f, 0.2f), Vector3f(-0.3f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(5f, mapOf(  // Wind back
+                "body" to BoneTransform(Vector3f(0f, 0f, -0.2f), Vector3f(0.1f, 0.2f, 0f), Vector3f(1f, 1f, 1f)),
+                "left_arm" to BoneTransform(Vector3f(-0.6f, 1.2f, -0.3f), Vector3f(-0.5f, 0.3f, 0f), Vector3f(1.1f, 1.1f, 1.1f))
+            )),
+            Keyframe(8f, mapOf(  // Bash forward
+                "body" to BoneTransform(Vector3f(0f, 0f, 0.3f), Vector3f(-0.2f, -0.2f, 0f), Vector3f(1f, 1f, 1f)),
+                "left_arm" to BoneTransform(Vector3f(-0.3f, 1.0f, 0.6f), Vector3f(-0.8f, -0.3f, 0f), Vector3f(1.15f, 1.15f, 1.15f))
+            )),
+            Keyframe(18f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "left_arm" to BoneTransform(Vector3f(-0.4f, 1.1f, 0.2f), Vector3f(-0.3f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            ))
+        ))
+        
+        // ═════════════════════════════════════════════════════════════
+        // WEAPON ABILITY ANIMATIONS
+        // ═════════════════════════════════════════════════════════════
+        
+        // HOLLOW_DASH - Quick dash with sword
+        animations["hollow_dash"] = Animation("hollow_dash", 12, listOf(
+            Keyframe(0f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "right_arm" to BoneTransform(Vector3f(0.5f, 1.2f, 0f), Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(3f, mapOf(
+                "body" to BoneTransform(Vector3f(0f, 0f, 0.5f), Vector3f(-0.3f, 0f, 0f), Vector3f(1f, 0.95f, 1.1f)),
+                "right_arm" to BoneTransform(Vector3f(0.6f, 1.4f, 0.3f), Vector3f(-1.5f, 0f, 0.3f), Vector3f(1.1f, 1.1f, 1.1f))
+            )),
+            Keyframe(6f, mapOf(
+                "body" to BoneTransform(Vector3f(0f, 0f, 1.0f), Vector3f(-0.4f, 0f, 0f), Vector3f(0.9f, 0.9f, 1.2f)),
+                "right_arm" to BoneTransform(Vector3f(0.5f, 1.3f, 0.5f), Vector3f(-1.8f, 0f, 0.2f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(12f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "right_arm" to BoneTransform(Vector3f(0.5f, 1.2f, 0f), Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f))
+            ))
+        ))
+        
+        // SONIC_BOOM - Two-handed beam charge
+        animations["sonic_boom"] = Animation("sonic_boom", 20, listOf(
+            Keyframe(0f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "left_arm" to BoneTransform.IDENTITY,
+                "right_arm" to BoneTransform.IDENTITY
+            )),
+            Keyframe(8f, mapOf(  // Charge up
+                "body" to BoneTransform(Vector3f(0f, -0.1f, -0.2f), Vector3f(0.2f, 0f, 0f), Vector3f(1.05f, 0.95f, 1.05f)),
+                "left_arm" to BoneTransform(Vector3f(-0.3f, 1.4f, 0.4f), Vector3f(-1.5f, 0.3f, 0f), Vector3f(1.1f, 1.1f, 1.1f)),
+                "right_arm" to BoneTransform(Vector3f(0.3f, 1.4f, 0.4f), Vector3f(-1.5f, -0.3f, 0f), Vector3f(1.1f, 1.1f, 1.1f))
+            )),
+            Keyframe(10f, mapOf(  // Release
+                "body" to BoneTransform(Vector3f(0f, 0.1f, 0.1f), Vector3f(-0.1f, 0f, 0f), Vector3f(1f, 1.05f, 1f)),
+                "left_arm" to BoneTransform(Vector3f(-0.2f, 1.3f, 0.6f), Vector3f(-1.8f, 0.2f, 0f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.2f, 1.3f, 0.6f), Vector3f(-1.8f, -0.2f, 0f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(20f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "left_arm" to BoneTransform.IDENTITY,
+                "right_arm" to BoneTransform.IDENTITY
+            ))
+        ))
+        
+        // DRAGON_ROAR - Arms spread, head back
+        animations["dragon_roar"] = Animation("dragon_roar", 30, listOf(
+            Keyframe(0f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "head" to BoneTransform(Vector3f(0f, 1.5f, 0f), Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "left_arm" to BoneTransform.IDENTITY,
+                "right_arm" to BoneTransform.IDENTITY
+            )),
+            Keyframe(8f, mapOf(  // Gather
+                "body" to BoneTransform(Vector3f(0f, -0.15f, 0f), Vector3f(0.2f, 0f, 0f), Vector3f(1.05f, 0.95f, 1.05f)),
+                "head" to BoneTransform(Vector3f(0f, 1.35f, 0.1f), Vector3f(0.3f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "left_arm" to BoneTransform(Vector3f(-0.4f, 1.0f, 0.1f), Vector3f(0.3f, 0f, 0.2f), Vector3f(1f, 1f, 1f)),
+                "right_arm" to BoneTransform(Vector3f(0.4f, 1.0f, 0.1f), Vector3f(0.3f, 0f, -0.2f), Vector3f(1f, 1f, 1f))
+            )),
+            Keyframe(12f, mapOf(  // Explode
+                "body" to BoneTransform(Vector3f(0f, 0.2f, -0.1f), Vector3f(-0.3f, 0f, 0f), Vector3f(1.15f, 1.15f, 1.15f)),
+                "head" to BoneTransform(Vector3f(0f, 1.7f, -0.2f), Vector3f(-0.7f, 0f, 0f), Vector3f(1.15f, 1.15f, 1.15f)),
+                "left_arm" to BoneTransform(Vector3f(-0.8f, 1.5f, -0.2f), Vector3f(-0.5f, 0f, -1.0f), Vector3f(1.1f, 1.1f, 1.1f)),
+                "right_arm" to BoneTransform(Vector3f(0.8f, 1.5f, -0.2f), Vector3f(-0.5f, 0f, 1.0f), Vector3f(1.1f, 1.1f, 1.1f))
+            )),
+            Keyframe(20f, mapOf(  // Hold
+                "body" to BoneTransform(Vector3f(0f, 0.15f, -0.05f), Vector3f(-0.2f, 0f, 0f), Vector3f(1.1f, 1.1f, 1.1f)),
+                "head" to BoneTransform(Vector3f(0f, 1.65f, -0.15f), Vector3f(-0.5f, 0f, 0f), Vector3f(1.1f, 1.1f, 1.1f)),
+                "left_arm" to BoneTransform(Vector3f(-0.75f, 1.45f, -0.15f), Vector3f(-0.4f, 0f, -0.9f), Vector3f(1.05f, 1.05f, 1.05f)),
+                "right_arm" to BoneTransform(Vector3f(0.75f, 1.45f, -0.15f), Vector3f(-0.4f, 0f, 0.9f), Vector3f(1.05f, 1.05f, 1.05f))
+            )),
+            Keyframe(30f, mapOf(
+                "body" to BoneTransform.IDENTITY,
+                "head" to BoneTransform(Vector3f(0f, 1.5f, 0f), Vector3f(0f, 0f, 0f), Vector3f(1f, 1f, 1f)),
+                "left_arm" to BoneTransform.IDENTITY,
+                "right_arm" to BoneTransform.IDENTITY
+            ))
+        ))
+        
+        // ENDER_TELEPORT - Crouch, dissolve, reform
+        animations["ender_teleport"] = Animation("ender_teleport", 15, listOf(
+            Keyframe(0f, mapOf(
+                "body" to BoneTransform.IDENTITY
+            )),
+            Keyframe(4f, mapOf(  // Crouch
+                "body" to BoneTransform(Vector3f(0f, -0.3f, 0f), Vector3f(0.3f, 0f, 0f), Vector3f(0.95f, 0.9f, 0.95f))
+            )),
+            Keyframe(7f, mapOf(  // Dissolve
+                "body" to BoneTransform(Vector3f(0f, 0.5f, 0f), Vector3f(0f, 1.0f, 0f), Vector3f(0.5f, 1.5f, 0.5f))
+            )),
+            Keyframe(10f, mapOf(  // Reform
+                "body" to BoneTransform(Vector3f(0f, 0.2f, 0f), Vector3f(0f, -0.5f, 0f), Vector3f(1.2f, 0.8f, 1.2f))
+            )),
+            Keyframe(15f, mapOf(
+                "body" to BoneTransform.IDENTITY
+            ))
+        ))
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SIEGE MOB MODEL BLUEPRINTS
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    private fun registerSiegeModels() {
+        // SIEGE_GRUNT - Armored zombie soldier
+        modelBlueprints["siege_grunt"] = ModelBlueprint(
+            name = "siege_grunt",
+            bones = listOf(
+                BoneDefinition("body", org.bukkit.util.Vector(0.0, 0.9, 0.0), ItemStack(Material.IRON_CHESTPLATE), 1.0f),
+                BoneDefinition("head", org.bukkit.util.Vector(0.0, 1.7, 0.0), ItemStack(Material.ZOMBIE_HEAD), 0.9f, "body"),
+                BoneDefinition("left_arm", org.bukkit.util.Vector(-0.5, 1.3, 0.0), ItemStack(Material.STICK), 0.7f, "body"),
+                BoneDefinition("right_arm", org.bukkit.util.Vector(0.5, 1.3, 0.0), ItemStack(Material.STICK), 0.7f, "body"),
+                BoneDefinition("weapon", org.bukkit.util.Vector(0.5, -0.4, 0.0), ItemStack(Material.IRON_SWORD), 0.9f, "right_arm"),
+                BoneDefinition("left_leg", org.bukkit.util.Vector(-0.25, 0.0, 0.0), ItemStack(Material.IRON_LEGGINGS), 0.7f, "body"),
+                BoneDefinition("right_leg", org.bukkit.util.Vector(0.25, 0.0, 0.0), ItemStack(Material.IRON_LEGGINGS), 0.7f, "body")
+            )
+        )
+        
+        // SIEGE_SNIPER - Hooded skeleton archer
+        modelBlueprints["siege_sniper"] = ModelBlueprint(
+            name = "siege_sniper",
+            bones = listOf(
+                BoneDefinition("body", org.bukkit.util.Vector(0.0, 0.8, 0.0), ItemStack(Material.LEATHER_CHESTPLATE), 0.9f),
+                BoneDefinition("head", org.bukkit.util.Vector(0.0, 1.6, 0.0), ItemStack(Material.SKELETON_SKULL), 0.85f, "body"),
+                BoneDefinition("hood", org.bukkit.util.Vector(0.0, 1.65, -0.05), ItemStack(Material.BLACK_WOOL), 0.5f, "head"),
+                BoneDefinition("left_arm", org.bukkit.util.Vector(-0.45, 1.2, 0.0), ItemStack(Material.BONE), 0.6f, "body"),
+                BoneDefinition("right_arm", org.bukkit.util.Vector(0.45, 1.2, 0.0), ItemStack(Material.BONE), 0.6f, "body"),
+                BoneDefinition("weapon", org.bukkit.util.Vector(0.0, -0.3, 0.3), ItemStack(Material.BOW), 1.0f, "left_arm"),
+                BoneDefinition("left_leg", org.bukkit.util.Vector(-0.2, 0.0, 0.0), ItemStack(Material.BONE), 0.6f, "body"),
+                BoneDefinition("right_leg", org.bukkit.util.Vector(0.2, 0.0, 0.0), ItemStack(Material.BONE), 0.6f, "body")
+            )
+        )
+        
+        // SIEGE_BREACHER - Heavy armored with axe
+        modelBlueprints["siege_breacher"] = ModelBlueprint(
+            name = "siege_breacher",
+            bones = listOf(
+                BoneDefinition("body", org.bukkit.util.Vector(0.0, 1.0, 0.0), ItemStack(Material.DIAMOND_CHESTPLATE), 1.2f),
+                BoneDefinition("head", org.bukkit.util.Vector(0.0, 1.9, 0.0), ItemStack(Material.IRON_BLOCK), 0.7f, "body"),
+                BoneDefinition("left_arm", org.bukkit.util.Vector(-0.6, 1.4, 0.0), ItemStack(Material.IRON_BARS), 0.9f, "body"),
+                BoneDefinition("right_arm", org.bukkit.util.Vector(0.6, 1.4, 0.0), ItemStack(Material.IRON_BARS), 0.9f, "body"),
+                BoneDefinition("weapon", org.bukkit.util.Vector(0.5, -0.5, 0.3), ItemStack(Material.DIAMOND_AXE), 1.1f, "right_arm"),
+                BoneDefinition("left_leg", org.bukkit.util.Vector(-0.3, 0.0, 0.0), ItemStack(Material.DIAMOND_LEGGINGS), 0.9f, "body"),
+                BoneDefinition("right_leg", org.bukkit.util.Vector(0.3, 0.0, 0.0), ItemStack(Material.DIAMOND_LEGGINGS), 0.9f, "body")
+            )
+        )
+        
+        // SIEGE_SABOTEUR - Cloaked sneaky figure
+        modelBlueprints["siege_saboteur"] = ModelBlueprint(
+            name = "siege_saboteur",
+            bones = listOf(
+                BoneDefinition("body", org.bukkit.util.Vector(0.0, 0.7, 0.0), ItemStack(Material.GRAY_WOOL), 0.85f),
+                BoneDefinition("cloak", org.bukkit.util.Vector(0.0, 0.8, -0.1), ItemStack(Material.BLACK_CARPET), 1.0f, "body"),
+                BoneDefinition("head", org.bukkit.util.Vector(0.0, 1.4, 0.0), ItemStack(Material.WITHER_SKELETON_SKULL), 0.7f, "body"),
+                BoneDefinition("left_arm", org.bukkit.util.Vector(-0.4, 1.0, 0.0), ItemStack(Material.STICK), 0.5f, "body"),
+                BoneDefinition("right_arm", org.bukkit.util.Vector(0.4, 1.0, 0.0), ItemStack(Material.STICK), 0.5f, "body"),
+                BoneDefinition("tool", org.bukkit.util.Vector(0.3, -0.2, 0.2), ItemStack(Material.TNT), 0.5f, "right_arm"),
+                BoneDefinition("left_leg", org.bukkit.util.Vector(-0.2, 0.0, 0.0), ItemStack(Material.STICK), 0.5f, "body"),
+                BoneDefinition("right_leg", org.bukkit.util.Vector(0.2, 0.0, 0.0), ItemStack(Material.STICK), 0.5f, "body")
+            )
+        )
+        
+        // SIEGE_COMMANDER - Massive armored boss
+        modelBlueprints["siege_commander"] = ModelBlueprint(
+            name = "siege_commander",
+            bones = listOf(
+                BoneDefinition("body", org.bukkit.util.Vector(0.0, 1.5, 0.0), ItemStack(Material.NETHERITE_CHESTPLATE), 1.8f),
+                BoneDefinition("head", org.bukkit.util.Vector(0.0, 2.8, 0.0), ItemStack(Material.DRAGON_HEAD), 1.0f, "body"),
+                BoneDefinition("crown", org.bukkit.util.Vector(0.0, 2.9, 0.0), ItemStack(Material.GOLDEN_HELMET), 0.6f, "head"),
+                BoneDefinition("left_arm", org.bukkit.util.Vector(-1.0, 2.0, 0.0), ItemStack(Material.NETHERITE_BLOCK), 1.2f, "body"),
+                BoneDefinition("right_arm", org.bukkit.util.Vector(1.0, 2.0, 0.0), ItemStack(Material.NETHERITE_BLOCK), 1.2f, "body"),
+                BoneDefinition("weapon", org.bukkit.util.Vector(0.8, -0.8, 0.5), ItemStack(Material.NETHERITE_SWORD), 1.5f, "right_arm"),
+                BoneDefinition("shield", org.bukkit.util.Vector(-0.5, -0.5, 0.3), ItemStack(Material.SHIELD), 1.2f, "left_arm"),
+                BoneDefinition("left_leg", org.bukkit.util.Vector(-0.4, 0.0, 0.0), ItemStack(Material.NETHERITE_LEGGINGS), 1.2f, "body"),
+                BoneDefinition("right_leg", org.bukkit.util.Vector(0.4, 0.0, 0.0), ItemStack(Material.NETHERITE_LEGGINGS), 1.2f, "body"),
+                BoneDefinition("cape", org.bukkit.util.Vector(0.0, 1.8, -0.3), ItemStack(Material.RED_BANNER), 1.0f, "body")
+            )
+        )
     }
     
     // ═══════════════════════════════════════════════════════════════════════════
