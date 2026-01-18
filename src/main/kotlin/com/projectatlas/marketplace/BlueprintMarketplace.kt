@@ -322,27 +322,52 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin, private val schemati
         val baseLocation = player.location.block.location
         val session = PreviewSession(blueprint, baseLocation)
 
+        // Calculate bounds for border outline
+        var minX = Int.MAX_VALUE; var maxX = Int.MIN_VALUE
+        var minY = Int.MAX_VALUE; var maxY = Int.MIN_VALUE
+        var minZ = Int.MAX_VALUE; var maxZ = Int.MIN_VALUE
+        
+        schematic.blocks.forEach { block ->
+            minX = minOf(minX, block.x); maxX = maxOf(maxX, block.x)
+            minY = minOf(minY, block.y); maxY = maxOf(maxY, block.y)
+            minZ = minOf(minZ, block.z); maxZ = maxOf(maxZ, block.z)
+        }
+
         session.taskId = plugin.server.scheduler.runTaskTimer(plugin, Runnable {
             if (!player.isOnline) {
                 cancelPreview(player)
                 return@Runnable
             }
 
+            val currentBase = player.location.block.location
+            var hasAnyCollision = false
+
+            // Draw block indicators (less frequent particles for subtlety)
             schematic.blocks.forEach { block ->
-                val loc = baseLocation.clone().add(block.x.toDouble() + 0.5, block.y.toDouble() + 0.5, block.z.toDouble() + 0.5)
+                val loc = currentBase.clone().add(block.x.toDouble() + 0.5, block.y.toDouble() + 0.5, block.z.toDouble() + 0.5)
                 val existing = loc.block
                 val hasCollision = existing.type !in ignoredMaterials
+                if (hasCollision) hasAnyCollision = true
 
-                val particle = if (hasCollision) Particle.DUST else Particle.END_ROD
-                if (hasCollision) {
-                    player.spawnParticle(particle, loc, 1, Particle.DustOptions(Color.RED, 0.5f))
-                } else {
-                    player.spawnParticle(particle, loc, 1, 0.0, 0.0, 0.0, 0.0)
-                }
+                // Subtle dust particles for block positions
+                val dustColor = if (hasCollision) Color.fromRGB(255, 80, 80) else Color.fromRGB(100, 255, 150)
+                player.spawnParticle(Particle.DUST, loc, 1, Particle.DustOptions(dustColor, 0.4f))
 
                 session.previewBlocks.add(loc)
             }
-        }, 0L, 10L)
+
+            // --- Subtle Border Outline ---
+            val borderColor = if (hasAnyCollision) Color.fromRGB(255, 100, 100) else Color.fromRGB(80, 180, 255)
+            val borderDust = Particle.DustOptions(borderColor, 0.6f)
+            
+            // Draw floor border (bottom edge outline)
+            val floorY = currentBase.blockY + minY
+            drawBorderEdge(player, currentBase, minX, maxX, minZ, maxZ, floorY, borderDust)
+            
+            // Draw vertical corner pillars (subtle)
+            drawCornerPillars(player, currentBase, minX, maxX, minZ, maxZ, minY, maxY, borderDust)
+
+        }, 0L, 8L) // Slightly faster refresh for smoother visuals
 
         previewSessions[player.uniqueId] = session
 
@@ -350,12 +375,69 @@ class BlueprintMarketplace(private val plugin: AtlasPlugin, private val schemati
         player.sendMessage(Component.text("  PREVIEW MODE", NamedTextColor.AQUA, TextDecoration.BOLD))
         player.sendMessage(Component.text("  Blueprint: ${blueprint.name}", NamedTextColor.YELLOW))
         player.sendMessage(Component.text("  Size: ${blueprint.width} x ${blueprint.height} x ${blueprint.length}", NamedTextColor.GRAY))
-        player.sendMessage(Component.text("  White = clear | Red = collision", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  Border shows placement area", NamedTextColor.GRAY))
+        player.sendMessage(Component.text("  Green = clear | Red = collision", NamedTextColor.GRAY))
         player.sendMessage(Component.text("  Move around and use /atlas blueprint place to confirm", NamedTextColor.GREEN))
         player.sendMessage(Component.text("  Use /atlas blueprint cancel to exit preview", NamedTextColor.YELLOW))
         player.sendMessage(Component.empty())
 
         return true
+    }
+    
+    /**
+     * Draws a subtle border outline around the bottom edge of the placement area
+     */
+    private fun drawBorderEdge(player: Player, base: Location, minX: Int, maxX: Int, minZ: Int, maxZ: Int, y: Int, dust: Particle.DustOptions) {
+        val step = 0.5 // Particle spacing along edges
+        
+        // North edge (minZ)
+        var x = minX.toDouble()
+        while (x <= maxX + 1) {
+            player.spawnParticle(Particle.DUST, base.clone().add(x, y.toDouble(), minZ.toDouble()), 1, dust)
+            x += step
+        }
+        
+        // South edge (maxZ + 1)
+        x = minX.toDouble()
+        while (x <= maxX + 1) {
+            player.spawnParticle(Particle.DUST, base.clone().add(x, y.toDouble(), maxZ.toDouble() + 1), 1, dust)
+            x += step
+        }
+        
+        // West edge (minX)
+        var z = minZ.toDouble()
+        while (z <= maxZ + 1) {
+            player.spawnParticle(Particle.DUST, base.clone().add(minX.toDouble(), y.toDouble(), z), 1, dust)
+            z += step
+        }
+        
+        // East edge (maxX + 1)
+        z = minZ.toDouble()
+        while (z <= maxZ + 1) {
+            player.spawnParticle(Particle.DUST, base.clone().add(maxX.toDouble() + 1, y.toDouble(), z), 1, dust)
+            z += step
+        }
+    }
+    
+    /**
+     * Draws subtle vertical corner pillars to indicate height of the placement area
+     */
+    private fun drawCornerPillars(player: Player, base: Location, minX: Int, maxX: Int, minZ: Int, maxZ: Int, minY: Int, maxY: Int, dust: Particle.DustOptions) {
+        val corners = listOf(
+            Pair(minX.toDouble(), minZ.toDouble()),
+            Pair(maxX.toDouble() + 1, minZ.toDouble()),
+            Pair(minX.toDouble(), maxZ.toDouble() + 1),
+            Pair(maxX.toDouble() + 1, maxZ.toDouble() + 1)
+        )
+        
+        for ((cx, cz) in corners) {
+            // Draw every other Y level for subtlety
+            var y = minY
+            while (y <= maxY + 1) {
+                player.spawnParticle(Particle.DUST, base.clone().add(cx, base.blockY + y.toDouble(), cz), 1, dust)
+                y += 2
+            }
+        }
     }
 
     fun cancelPreview(player: Player) {

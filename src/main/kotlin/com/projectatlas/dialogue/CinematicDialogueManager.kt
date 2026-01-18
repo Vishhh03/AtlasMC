@@ -33,7 +33,9 @@ class CinematicDialogueManager(private val plugin: AtlasPlugin) : Listener {
         var task: BukkitTask? = null,
         var isTyping: Boolean = false,
         var currentText: String = "",
-        val wasAIEnabled: Boolean = true
+        val wasAIEnabled: Boolean = true,
+        var isFading: Boolean = false,
+        var fadeoutTicks: Int = 0
     )
 
     fun startCinematicDialogue(player: Player, npc: NPC?, dialogue: Dialogue) {
@@ -133,6 +135,9 @@ class CinematicDialogueManager(private val plugin: AtlasPlugin) : Listener {
              )
         }
         session.player.sendMessage(Component.empty())
+        
+        // Auto-end session with fadeout if no option selected for a long time? 
+        // No, let's keep it open until they choose.
     }
 
     @EventHandler
@@ -157,9 +162,22 @@ class CinematicDialogueManager(private val plugin: AtlasPlugin) : Listener {
         }
     }
     
-    fun stopDialogue(player: Player) {
-        val session = activeSessions.remove(player.uniqueId) ?: return
+    fun stopDialogue(player: Player, instant: Boolean = true) {
+        val session = activeSessions[player.uniqueId] ?: return
+        
         session.task?.cancel()
+        
+        if (!instant) {
+            // Trigger Fadeout (Linger)
+            if (!session.isFading) {
+                session.isFading = true
+                session.fadeoutTicks = 60 // 3 seconds linger
+                return // Don't remove session yet
+            }
+        }
+        
+        // Actually Stop
+        activeSessions.remove(player.uniqueId)
         
         // Restore NPC AI
         val npcEntity = session.npcEntity
@@ -196,5 +214,36 @@ class CinematicDialogueManager(private val plugin: AtlasPlugin) : Listener {
         }
     }
     
-    fun tick() {}
+    fun tick() {
+        val iterator = activeSessions.values.iterator()
+        while (iterator.hasNext()) {
+            val session = iterator.next()
+            
+            // 1. NPC Tracking (Face player)
+            if (session.npcEntity != null && session.npcEntity.isValid) {
+                 val dir = session.player.location.toVector().subtract(session.npcEntity.location.toVector()).normalize()
+                 val loc = session.npcEntity.location.clone()
+                 loc.direction = dir
+                 session.npcEntity.teleport(loc)
+            }
+            
+            // 2. Fadeout Logic
+            if (session.isFading) {
+                session.fadeoutTicks--
+                if (session.fadeoutTicks <= 0) {
+                    // Restore AI
+                    val npcEntity = session.npcEntity
+                    if (npcEntity is org.bukkit.entity.LivingEntity && npcEntity.isValid) {
+                         if (session.wasAIEnabled) {
+                             npcEntity.setAI(true)
+                         }
+                    }
+                    // Clear UI
+                    session.player.sendActionBar(Component.empty())
+                    
+                    iterator.remove() // End session safely
+                }
+            }
+        }
+    }
 }

@@ -292,9 +292,30 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
 
     // --- Weapon Abilities ---
 
+    @EventHandler
+    fun onPlayerAttack(event: org.bukkit.event.entity.EntityDamageByEntityEvent) {
+        val player = event.damager as? Player ?: return
+        val item = player.inventory.itemInMainHand
+        val itemName = getItemName(item) ?: return
+        
+        // List of custom weapons that have durability mechanics
+        if (itemName !in listOf(HOLLOW_KNIGHT_BLADE, WARDEN_FLAME_SWORD, DRAGON_SLAYER, ENDER_SENTINEL_SCYTHE)) return
+        
+        val meta = item.itemMeta as? org.bukkit.inventory.meta.Damageable ?: return
+        val maxDurability = item.type.maxDurability
+        
+        // Check if "broken" (1 durability left)
+        if (meta.damage >= maxDurability - 1) {
+            event.damage = 1.0 // Punch damage
+            player.playSound(player.location, Sound.BLOCK_ANVIL_LAND, 0.5f, 1.5f)
+            player.sendMessage(Component.text("Your weapon is broken and ineffective!", NamedTextColor.RED))
+        }
+    }
+
     private val weaponCooldowns = mutableMapOf<String, Long>()
 
-    private fun checkWeaponCooldown(player: Player, weaponName: String, cooldownSeconds: Int): Boolean {
+    private fun checkWeaponUse(player: Player, weaponName: String, cooldownSeconds: Int, durabilityCost: Int): Boolean {
+        // 1. Cooldown Check
         val key = "${player.uniqueId}_$weaponName"
         val now = System.currentTimeMillis()
         val cooldownEnd = weaponCooldowns[key] ?: 0L
@@ -302,18 +323,40 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
         if (now < cooldownEnd) {
             val remaining = String.format("%.1f", (cooldownEnd - now) / 1000.0)
             player.sendActionBar(Component.text("$weaponName Cooldown: ${remaining}s", NamedTextColor.RED))
-            // Only play sound if clicked rapidly (optional check)
             player.playSound(player.location, Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.5f)
             return false
         }
         
+        // 2. Durability Check
+        val item = player.inventory.itemInMainHand
+        val meta = item.itemMeta as? org.bukkit.inventory.meta.Damageable
+        
+        if (meta != null && durabilityCost > 0) {
+            val maxDurability = item.type.maxDurability
+            val currentDamage = meta.damage
+            
+            // If applying cost would break it (or leave less than 1 durability)
+            if (currentDamage + durabilityCost >= maxDurability - 1) {
+                player.sendMessage(Component.text("Weapon is too damaged to use ability!", NamedTextColor.RED))
+                player.playSound(player.location, Sound.ITEM_SHIELD_BREAK, 1f, 0.5f)
+                return false
+            }
+            
+            // Apply durability cost
+            meta.damage = currentDamage + durabilityCost
+            item.itemMeta = meta
+            player.inventory.setItemInMainHand(item)
+        }
+        
+        // Success
         weaponCooldowns[key] = now + (cooldownSeconds * 1000L)
         return true
     }
 
     private fun useHollowKnightDash(player: Player) {
         val cooldown = plugin.configManager.hollowKnightDashCooldown
-        if (!checkWeaponCooldown(player, HOLLOW_KNIGHT_BLADE, cooldown)) return
+        val durability = plugin.configManager.hollowKnightDashDurability
+        if (!checkWeaponUse(player, HOLLOW_KNIGHT_BLADE, cooldown, durability)) return
         
         // Dash logic
         val direction = player.location.direction.clone().setY(0).normalize().multiply(1.5)
@@ -321,7 +364,7 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
         
         // Effects
         player.world.spawnParticle(Particle.SOUL_FIRE_FLAME, player.location, 20, 0.5, 0.5, 0.5, 0.1)
-        player.playSound(player.location, Sound.ENTITY_PHANTOM_FLAP, 1f, 0.8f)
+        player.playSound(player.location, "projectatlas:item.hollow_knight.dash", 1f, 0.8f)
         
         // Damage enemies in path
         val damage = plugin.configManager.hollowKnightDashDamage
@@ -335,7 +378,8 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
 
     private fun useWardenSonicBoom(player: Player) {
         val cooldown = plugin.configManager.wardenSonicBoomCooldown
-        if (!checkWeaponCooldown(player, WARDEN_FLAME_SWORD, cooldown)) return
+        val durability = plugin.configManager.wardenSonicBoomDurability
+        if (!checkWeaponUse(player, WARDEN_FLAME_SWORD, cooldown, durability)) return
         
         // Sonic Boom logic
         val origin = player.eyeLocation
@@ -343,7 +387,7 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
         val range = plugin.configManager.wardenSonicBoomRange
         val damage = plugin.configManager.wardenSonicBoomDamage
         
-        player.world.playSound(origin, Sound.ENTITY_WARDEN_SONIC_BOOM, 1f, 1f)
+        player.playSound(origin, "projectatlas:item.warden_sword.beam", 1f, 1f)
         
         // Beam
         for (i in 0..range) {
@@ -362,9 +406,10 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
 
     private fun useDragonRoar(player: Player) {
         val cooldown = plugin.configManager.dragonRoarCooldown
-        if (!checkWeaponCooldown(player, DRAGON_SLAYER, cooldown)) return
+        val durability = plugin.configManager.dragonRoarDurability
+        if (!checkWeaponUse(player, DRAGON_SLAYER, cooldown, durability)) return
         
-        player.world.playSound(player.location, Sound.ENTITY_ENDER_DRAGON_GROWL, 1f, 1f)
+        player.playSound(player.location, "projectatlas:item.dragon_slayer.roar", 1f, 1f)
         player.world.spawnParticle(Particle.EXPLOSION_EMITTER, player.location, 1)
         
         val damage = plugin.configManager.dragonRoarDamage
@@ -385,7 +430,8 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
 
     private fun useEnderTeleport(player: Player) {
         val cooldown = plugin.configManager.enderTeleportCooldown
-        if (!checkWeaponCooldown(player, ENDER_SENTINEL_SCYTHE, cooldown)) return
+        val durability = plugin.configManager.enderTeleportDurability
+        if (!checkWeaponUse(player, ENDER_SENTINEL_SCYTHE, cooldown, durability)) return
         
         val range = plugin.configManager.enderTeleportRange
         val targetBlock = player.getTargetBlockExact(range)
@@ -408,11 +454,11 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
         }
         
         player.world.spawnParticle(Particle.PORTAL, player.location, 30, 0.5, 1.0, 0.5)
-        player.playSound(player.location, Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f)
+        player.playSound(player.location, "projectatlas:item.ender_scythe.teleport", 1f, 1f)
         
         player.teleport(safeLoc.setDirection(player.location.direction))
         
-        player.playSound(player.location, Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f)
-        player.world.spawnParticle(Particle.DRAGON_BREATH, player.location, 20, 0.5, 0.5, 0.5)
+        player.playSound(player.location, "projectatlas:item.ender_scythe.teleport", 1f, 1f)
+        player.world.spawnParticle(Particle.END_ROD, player.location, 20, 0.5, 0.5, 0.5, 0.1)
     }
 }

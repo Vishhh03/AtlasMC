@@ -5,22 +5,26 @@
 > Task :compileKotlin
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/chat/ChatManager.kt:8:8 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/chat/ChatManager.kt:14:23 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/city/CityManager.kt:334:21 Condition is always 'false'.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/city/CityManager.kt:445:21 Condition is always 'false'.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/dialogue/CinematicDialogueManager.kt:14:8 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/dialogue/CinematicDialogueManager.kt:139:23 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/economy/MarketManager.kt:205:14 'fun line(p0: Int, p1: @NotNull() Component): Unit' is deprecated. Deprecated in Java.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/events/SupplyDropEvent.kt:257:21 Check for instance is always 'true'.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/events/SupplyDropEvent.kt:311:29 Check for instance is always 'true'.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/events/WanderingNPCListener.kt:171:29 'var isBaby: Boolean' is deprecated. Deprecated in Java.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/events/WanderingNPCListener.kt:185:29 'var isBaby: Boolean' is deprecated. Deprecated in Java.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/identity/IdentityManager.kt:35:25 Condition is always 'false'.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/integration/TypewriterManager.kt:20:114 'val description: @NotNull() PluginDescriptionFile' is deprecated. Deprecated in Java.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/items/CustomItemManager.kt:175:49 'val key: @NotNull() NamespacedKey' is deprecated. Deprecated in Java.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/mobs/MobCustomizer.kt:409:25 'var isBaby: Boolean' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/progression/MilestoneListener.kt:74:28 'var bedSpawnLocation: @Nullable() Location?' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:254:33 'var bedSpawnLocation: @Nullable() Location?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/progression/MilestoneListener.kt:74:28 'var bedSpawnLocation: @Nullable() Location!' is deprecated. Deprecated in Java.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:254:33 'var bedSpawnLocation: @Nullable() Location!' is deprecated. Deprecated in Java.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:368:23 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:453:29 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:523:31 'fun registerNewObjective(p0: @NotNull() String, p1: @NotNull() String, p2: @Nullable() Component?): @NotNull() Objective' is deprecated. Deprecated in Java.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:622:33 'var bedSpawnLocation: @Nullable() Location?' is deprecated. Deprecated in Java.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/qol/QoLManager.kt:622:33 'var bedSpawnLocation: @Nullable() Location!' is deprecated. Deprecated in Java.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/relics/RelicManager.kt:158:21 Condition is always 'true'.
-w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/siege/SiegeManager.kt:230:13 Check for instance is always 'false'.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/siege/SiegeManager.kt:810:20 'var isBaby: Boolean' is deprecated. Deprecated in Java.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/siege/SiegeManager.kt:889:13 Check for instance is always 'false'.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageJobManager.kt:234:28 'var title: @NotNull() String' is deprecated. Deprecated in Java.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/villager/VillageJobManager.kt:331:18 'var title: @NotNull() String' is deprecated. Deprecated in Java.
 w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/visuals/AtmosphereManager.kt:231:20 'val isOnGround: Boolean' is deprecated. Deprecated in Java.

@@ -1,0 +1,38 @@
+{
+    "item.hollow_knight.dash": {
+        "subtitle": "subtitles.item.hollow_knight.dash",
+        "sounds": [
+            {
+                "name": "minecraft:entity.phantom.flap",
+                "type": "event"
+            }
+        ]
+    },
+    "item.warden_sword.beam": {
+        "subtitle": "subtitles.item.warden_sword.beam",
+        "sounds": [
+            {
+                "name": "minecraft:entity.warden.sonic_boom",
+                "type": "event"
+            }
+        ]
+    },
+    "item.dragon_slayer.roar": {
+        "subtitle": "subtitles.item.dragon_slayer.roar",
+        "sounds": [
+            {
+                "name": "minecraft:entity.ender_dragon.growl",
+                "type": "event"
+            }
+        ]
+    },
+    "item.ender_scythe.teleport": {
+        "subtitle": "subtitles.item.ender_scythe.teleport",
+        "sounds": [
+            {
+                "name": "minecraft:entity.enderman.teleport",
+                "type": "event"
+            }
+        ]
+    }
+}

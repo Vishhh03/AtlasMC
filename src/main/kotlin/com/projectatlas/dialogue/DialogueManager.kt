@@ -101,8 +101,8 @@ class DialogueManager(private val plugin: AtlasPlugin) : Listener {
                 )
                 player.playSound(player.location, org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f)
                 
-                // FORCE END CINEMATIC
-                plugin.cinematicDialogueManager.stopDialogue(player)
+                // FORCE END CINEMATIC WITH FADEOUT
+                plugin.cinematicDialogueManager.stopDialogue(player, instant = false)
             }
         }
     }

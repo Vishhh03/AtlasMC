@@ -54,6 +54,12 @@ class ConfigManager(private val plugin: AtlasPlugin) {
     var dragonRoarKnockback: Double = 1.5
     var enderTeleportCooldown: Int = 5
     var enderTeleportRange: Int = 8
+
+    // Weapon Durability Costs (0 to disable)
+    var hollowKnightDashDurability: Int = 5
+    var wardenSonicBoomDurability: Int = 10
+    var dragonRoarDurability: Int = 15
+    var enderTeleportDurability: Int = 8
     
     // Infrastructure
     var turretCost: Int = 1500
@@ -172,6 +178,12 @@ class ConfigManager(private val plugin: AtlasPlugin) {
         dragonRoarKnockback = config.getDouble("weapons.dragon.knockback", 1.5)
         enderTeleportCooldown = config.getInt("weapons.ender.cooldown", 5)
         enderTeleportRange = config.getInt("weapons.ender.range", 8)
+
+        // Weapon Durability
+        hollowKnightDashDurability = config.getInt("weapons.hollow-knight.durability-cost", 5)
+        wardenSonicBoomDurability = config.getInt("weapons.warden.durability-cost", 10)
+        dragonRoarDurability = config.getInt("weapons.dragon.durability-cost", 15)
+        enderTeleportDurability = config.getInt("weapons.ender.durability-cost", 8)
         
         // Infrastructure
         turretCost = config.getInt("infrastructure.turret-cost", 1500)
