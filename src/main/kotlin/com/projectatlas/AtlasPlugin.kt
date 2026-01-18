@@ -208,6 +208,7 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(dungeonManager, this)
         server.pluginManager.registerEvents(blueprintMarketplace, this)
         server.pluginManager.registerEvents(skillTreeManager, this)
+        server.pluginManager.registerEvents(com.projectatlas.skills.SkillCombatListener(this), this)
         server.pluginManager.registerEvents(survivalManager, this)
         server.pluginManager.registerEvents(questBoardManager, this)
         server.pluginManager.registerEvents(marketManager, this) // Register Market Events
