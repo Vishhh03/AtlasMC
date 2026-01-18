@@ -42,6 +42,18 @@ class ConfigManager(private val plugin: AtlasPlugin) {
     var healingPulseAmount: Double = 4.0
     var dashCooldownTicks: Int = 100
     var dashVelocity: Double = 1.5
+
+    // Weapon Abilities
+    var hollowKnightDashCooldown: Int = 3
+    var hollowKnightDashDamage: Double = 6.0
+    var wardenSonicBoomCooldown: Int = 8
+    var wardenSonicBoomDamage: Double = 12.0
+    var wardenSonicBoomRange: Int = 16
+    var dragonRoarCooldown: Int = 12
+    var dragonRoarDamage: Double = 8.0
+    var dragonRoarKnockback: Double = 1.5
+    var enderTeleportCooldown: Int = 5
+    var enderTeleportRange: Int = 8
     
     // Infrastructure
     var turretCost: Int = 1500
@@ -148,6 +160,18 @@ class ConfigManager(private val plugin: AtlasPlugin) {
         healingPulseAmount = config.getDouble("abilities.healing-pulse.amount", 4.0)
         dashCooldownTicks = config.getInt("abilities.dash.cooldown-ticks", 100)
         dashVelocity = config.getDouble("abilities.dash.velocity", 1.5)
+
+        // Weapon Abilities
+        hollowKnightDashCooldown = config.getInt("weapons.hollow-knight.cooldown", 3)
+        hollowKnightDashDamage = config.getDouble("weapons.hollow-knight.damage", 6.0)
+        wardenSonicBoomCooldown = config.getInt("weapons.warden.cooldown", 8)
+        wardenSonicBoomDamage = config.getDouble("weapons.warden.damage", 12.0)
+        wardenSonicBoomRange = config.getInt("weapons.warden.range", 16)
+        dragonRoarCooldown = config.getInt("weapons.dragon.cooldown", 12)
+        dragonRoarDamage = config.getDouble("weapons.dragon.damage", 8.0)
+        dragonRoarKnockback = config.getDouble("weapons.dragon.knockback", 1.5)
+        enderTeleportCooldown = config.getInt("weapons.ender.cooldown", 5)
+        enderTeleportRange = config.getInt("weapons.ender.range", 8)
         
         // Infrastructure
         turretCost = config.getInt("infrastructure.turret-cost", 1500)

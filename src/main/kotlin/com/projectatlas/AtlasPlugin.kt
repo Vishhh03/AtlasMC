@@ -165,6 +165,16 @@ class AtlasPlugin : JavaPlugin() {
         
         // Smart Siege AI
         com.projectatlas.siege.SiegeMobBehavior(this).runTaskTimer(this, 30L, 20L) // Run every 1s
+        
+        // Register Siege Equipment Recipes (Banners, Barricades, Traps, Turrets)
+        com.projectatlas.siege.SiegeEquipment.registerRecipes(this)
+        
+        // Custom Item System
+        val deathCompassManager = com.projectatlas.items.DeathCompassManager(this)
+        val customItemManager = com.projectatlas.items.CustomItemManager(this)
+        server.pluginManager.registerEvents(deathCompassManager, this)
+        server.pluginManager.registerEvents(customItemManager, this)
+        logger.info("Custom Item System enabled (DeathCompass, HealingSalve, SpiritTotem, ExplorerCompass)!")
 
         logger.info("AtlasPlugin enabled successfully!")
         

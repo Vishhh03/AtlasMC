@@ -266,35 +266,84 @@ class CityManager(private val plugin: AtlasPlugin) {
         var cost: Int? = null
         var newLevel = 0
         var moduleName = ""
+        var isTurret = false
 
         when (module.lowercase()) {
+            // ═══════════════════════════════════════════════════════════════
+            // DEFENSIVE INFRASTRUCTURE
+            // ═══════════════════════════════════════════════════════════════
             "wall" -> {
                 cost = infra.getWallUpgradeCost()
                 newLevel = infra.wallLevel + 1
                 moduleName = "Wall"
             }
-            "generator" -> {
-                cost = infra.getGeneratorUpgradeCost()
-                newLevel = infra.generatorLevel + 1
-                moduleName = "Generator"
+            "turret" -> {
+                if (!infra.canAddTurret()) {
+                    player.sendMessage(Component.text("Maximum turrets reached (4).", NamedTextColor.RED))
+                    return
+                }
+                cost = CityInfrastructure.TURRET_COST
+                newLevel = infra.turretCount + 1
+                moduleName = "Turret"
+                isTurret = true
             }
             "barracks" -> {
                 cost = infra.getBarracksUpgradeCost()
                 newLevel = infra.barracksLevel + 1
                 moduleName = "Barracks"
             }
+            "watchtower" -> {
+                cost = infra.getWatchtowerUpgradeCost()
+                newLevel = infra.watchtowerLevel + 1
+                moduleName = "Watchtower"
+            }
+            "trapsystem", "trap" -> {
+                cost = infra.getTrapSystemUpgradeCost()
+                newLevel = infra.trapSystemLevel + 1
+                moduleName = "Trap System"
+            }
+            
+            // ═══════════════════════════════════════════════════════════════
+            // ECONOMIC INFRASTRUCTURE
+            // ═══════════════════════════════════════════════════════════════
+            "generator" -> {
+                cost = infra.getGeneratorUpgradeCost()
+                newLevel = infra.generatorLevel + 1
+                moduleName = "Generator"
+            }
             "market" -> {
                 cost = infra.getMarketUpgradeCost()
                 newLevel = infra.marketLevel + 1
                 moduleName = "Market"
             }
+            
+            // ═══════════════════════════════════════════════════════════════
+            // SUPPORT INFRASTRUCTURE
+            // ═══════════════════════════════════════════════════════════════
             "clinic" -> {
                 cost = infra.getClinicUpgradeCost()
                 newLevel = infra.clinicLevel + 1
                 moduleName = "Clinic"
             }
+            "healingbeacon", "beacon" -> {
+                cost = infra.getHealingBeaconUpgradeCost()
+                newLevel = infra.healingBeaconLevel + 1
+                moduleName = "Healing Beacon"
+            }
+            "armory" -> {
+                cost = infra.getArmoryUpgradeCost()
+                newLevel = infra.armoryLevel + 1
+                moduleName = "Armory"
+            }
+            "forge" -> {
+                cost = infra.getForgeUpgradeCost()
+                newLevel = infra.forgeLevel + 1
+                moduleName = "Forge"
+            }
+            
             else -> {
-                player.sendMessage(Component.text("Unknown module: $module. valid: wall, generator, barracks, market, clinic", NamedTextColor.RED))
+                player.sendMessage(Component.text("Unknown module: $module", NamedTextColor.RED))
+                player.sendMessage(Component.text("Valid modules: wall, turret, barracks, watchtower, trap, generator, market, clinic, beacon, armory, forge", NamedTextColor.GRAY))
                 return
             }
         }
@@ -305,7 +354,7 @@ class CityManager(private val plugin: AtlasPlugin) {
         }
 
         if (city.treasury < cost) {
-            player.sendMessage(Component.text("Insufficient funds. Need $cost g (Treasury: ${city.treasury})", NamedTextColor.RED))
+            player.sendMessage(Component.text("Insufficient funds. Need $cost g (Treasury: ${city.treasury.toInt()}g)", NamedTextColor.RED))
             return
         }
 
@@ -313,15 +362,77 @@ class CityManager(private val plugin: AtlasPlugin) {
         city.treasury -= cost
         when (module.lowercase()) {
             "wall" -> infra.wallLevel = newLevel
-            "generator" -> infra.generatorLevel = newLevel
+            "turret" -> infra.turretCount = newLevel
             "barracks" -> infra.barracksLevel = newLevel
+            "watchtower" -> infra.watchtowerLevel = newLevel
+            "trapsystem", "trap" -> infra.trapSystemLevel = newLevel
+            "generator" -> infra.generatorLevel = newLevel
             "market" -> infra.marketLevel = newLevel
             "clinic" -> infra.clinicLevel = newLevel
+            "healingbeacon", "beacon" -> infra.healingBeaconLevel = newLevel
+            "armory" -> infra.armoryLevel = newLevel
+            "forge" -> infra.forgeLevel = newLevel
         }
         
         saveCity(city)
-        player.sendMessage(Component.text("Upgraded $moduleName to Level $newLevel! (-$cost g)", NamedTextColor.GREEN))
-        plugin.historyManager.logEvent(city.id, "${city.name} built/upgraded $moduleName to Level $newLevel", EventType.CITY_UPGRADE)
+        
+        val levelText = if (isTurret) "Count: $newLevel/4" else "Level $newLevel"
+        player.sendMessage(Component.text("✓ Upgraded $moduleName to $levelText! (-$cost g)", NamedTextColor.GREEN))
+        plugin.historyManager.logEvent(city.id, "${city.name} upgraded $moduleName to $levelText", EventType.CITY_UPGRADE)
+    }
+    
+    fun getInfrastructureInfo(city: City): List<Component> {
+        val infra = city.infrastructure
+        val info = mutableListOf<Component>()
+        
+        info.add(Component.text("═══ ${city.name} Infrastructure ═══", NamedTextColor.GOLD))
+        info.add(Component.empty())
+        
+        // Defense Rating
+        info.add(Component.text("Defense Rating: ", NamedTextColor.WHITE)
+            .append(Component.text("${infra.getDefenseRating()}", NamedTextColor.GREEN)))
+        info.add(Component.empty())
+        
+        // Defensive
+        info.add(Component.text("⚔ DEFENSIVE", NamedTextColor.RED))
+        info.add(formatModuleLine("Wall", infra.wallLevel, 5, infra.getWallUpgradeCost()))
+        info.add(formatModuleLine("Turret", infra.turretCount, 4, if (infra.canAddTurret()) CityInfrastructure.TURRET_COST else null))
+        info.add(formatModuleLine("Barracks", infra.barracksLevel, 3, infra.getBarracksUpgradeCost()))
+        info.add(formatModuleLine("Watchtower", infra.watchtowerLevel, 3, infra.getWatchtowerUpgradeCost()))
+        info.add(formatModuleLine("Trap System", infra.trapSystemLevel, 3, infra.getTrapSystemUpgradeCost()))
+        info.add(Component.empty())
+        
+        // Economic
+        info.add(Component.text("💰 ECONOMIC", NamedTextColor.GOLD))
+        info.add(formatModuleLine("Generator", infra.generatorLevel, 3, infra.getGeneratorUpgradeCost()))
+        info.add(formatModuleLine("Market", infra.marketLevel, 3, infra.getMarketUpgradeCost()))
+        info.add(Component.empty())
+        
+        // Support
+        info.add(Component.text("💚 SUPPORT", NamedTextColor.GREEN))
+        info.add(formatModuleLine("Clinic", infra.clinicLevel, 3, infra.getClinicUpgradeCost()))
+        info.add(formatModuleLine("Healing Beacon", infra.healingBeaconLevel, 3, infra.getHealingBeaconUpgradeCost()))
+        info.add(formatModuleLine("Armory", infra.armoryLevel, 3, infra.getArmoryUpgradeCost()))
+        info.add(formatModuleLine("Forge", infra.forgeLevel, 3, infra.getForgeUpgradeCost()))
+        info.add(Component.empty())
+        
+        // City Core
+        info.add(Component.text("❤ City Core: ", NamedTextColor.WHITE)
+            .append(Component.text("${infra.coreHealth}/${infra.maxCoreHealth} HP", 
+                if (infra.getCoreHealthPercent() > 0.5) NamedTextColor.GREEN else NamedTextColor.RED)))
+        
+        return info
+    }
+    
+    private fun formatModuleLine(name: String, level: Int, maxLevel: Int, upgradeCost: Int?): Component {
+        val levelBars = "█".repeat(level) + "░".repeat(maxLevel - level)
+        val costText = if (upgradeCost != null) " [${upgradeCost}g]" else " [MAX]"
+        val costColor = if (upgradeCost != null) NamedTextColor.YELLOW else NamedTextColor.DARK_GRAY
+        
+        return Component.text("  $name: ", NamedTextColor.GRAY)
+            .append(Component.text(levelBars, NamedTextColor.AQUA))
+            .append(Component.text(" $level/$maxLevel", NamedTextColor.WHITE))
+            .append(Component.text(costText, costColor))
     }
 
     // Persistence

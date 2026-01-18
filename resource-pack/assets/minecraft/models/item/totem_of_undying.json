@@ -1,9 +1,0 @@
-{
-  "parent": "item/handheld",
-  "textures": {
-    "layer0": "item/totem_of_undying"
-  },
-  "overrides": [
-    { "predicate": { "custom_model_data": 6004 }, "model": "item/spirit_totem" }
-  ]
-}

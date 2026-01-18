@@ -295,7 +295,7 @@ class VillageJobManager(private val plugin: AtlasPlugin) : Listener {
             }
             action == "cleric_heal" -> {
                 if (plugin.economyManager.withdraw(player.uniqueId, 50.0)) {
-                    player.health = player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)!!.value
+                    player.health = player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)!!.value
                     player.foodLevel = 20
                     player.playSound(player.location, Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f)
                     player.sendMessage(Component.text("Restored!", NamedTextColor.LIGHT_PURPLE))

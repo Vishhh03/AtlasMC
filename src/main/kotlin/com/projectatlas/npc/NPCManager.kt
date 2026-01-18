@@ -57,12 +57,12 @@ class NPCManager(private val plugin: AtlasPlugin) : Listener {
             // Biome Aware Skin
             val biome = location.block.biome
             villager.villagerType = when {
-                biome.name.contains("DESERT") -> Villager.Type.DESERT
-                biome.name.contains("JUNGLE") -> Villager.Type.JUNGLE
-                biome.name.contains("SWAMP") -> Villager.Type.SWAMP
-                biome.name.contains("SAVANNA") -> Villager.Type.SAVANNA
-                biome.name.contains("SNOW") || biome.name.contains("ICE") -> Villager.Type.SNOW
-                biome.name.contains("TAIGA") -> Villager.Type.TAIGA
+                biome.toString().contains("DESERT") -> Villager.Type.DESERT
+                biome.toString().contains("JUNGLE") -> Villager.Type.JUNGLE
+                biome.toString().contains("SWAMP") -> Villager.Type.SWAMP
+                biome.toString().contains("SAVANNA") -> Villager.Type.SAVANNA
+                biome.toString().contains("SNOW") || biome.toString().contains("ICE") -> Villager.Type.SNOW
+                biome.toString().contains("TAIGA") -> Villager.Type.TAIGA
                 else -> Villager.Type.PLAINS
             }
             villager.persistentDataContainer.set(npcKey, PersistentDataType.STRING, npc.id)
@@ -216,12 +216,12 @@ class NPCManager(private val plugin: AtlasPlugin) : Listener {
                 // Biome Aware Skin
                 val biome = loc.block.biome
                 villager.villagerType = when {
-                    biome.name.contains("DESERT") -> Villager.Type.DESERT
-                    biome.name.contains("JUNGLE") -> Villager.Type.JUNGLE
-                    biome.name.contains("SWAMP") -> Villager.Type.SWAMP
-                    biome.name.contains("SAVANNA") -> Villager.Type.SAVANNA
-                    biome.name.contains("SNOW") || biome.name.contains("ICE") -> Villager.Type.SNOW
-                    biome.name.contains("TAIGA") -> Villager.Type.TAIGA
+                    biome.toString().contains("DESERT") -> Villager.Type.DESERT
+                    biome.toString().contains("JUNGLE") -> Villager.Type.JUNGLE
+                    biome.toString().contains("SWAMP") -> Villager.Type.SWAMP
+                    biome.toString().contains("SAVANNA") -> Villager.Type.SAVANNA
+                    biome.toString().contains("SNOW") || biome.toString().contains("ICE") -> Villager.Type.SNOW
+                    biome.toString().contains("TAIGA") -> Villager.Type.TAIGA
                     else -> Villager.Type.PLAINS
                 }
                 villager.persistentDataContainer.set(npcKey, PersistentDataType.STRING, npc.id)

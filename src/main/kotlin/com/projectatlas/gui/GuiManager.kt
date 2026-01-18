@@ -601,7 +601,7 @@ class GuiManager(private val plugin: AtlasPlugin) : Listener {
             "action:achievement_menu" -> {
                 player.closeInventory()
                 val (earned, total) = plugin.achievementManager.getProgress(player)
-                player.sendMessage(Component.text("═══ ACHIEVEMENTS ($earned/$total) ═══", NamedTextColor.GOLD, TextDecoration.BOLD))
+                player.sendMessage(Component.text("ACHIEVEMENTS ($earned/$total)", NamedTextColor.GOLD, TextDecoration.BOLD))
                 plugin.achievementManager.getAchievementsForPlayer(player).forEach { (ach, unlocked) ->
                     val status = if (unlocked) "§a✓" else "§c✗"
                     player.sendMessage(Component.text("  $status ${ach.name}: ${ach.description} (${ach.reward}g)"))

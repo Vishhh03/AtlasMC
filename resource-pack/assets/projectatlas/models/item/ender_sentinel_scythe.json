@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "projectatlas:item/ender_sentinel_scythe"
+  }
+}

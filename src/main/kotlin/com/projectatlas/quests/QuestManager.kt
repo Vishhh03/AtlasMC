@@ -300,7 +300,7 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
             val villager = player.world.spawn(player.location, org.bukkit.entity.Villager::class.java)
             villager.customName(Component.text("Escort Target", NamedTextColor.GREEN))
             villager.isCustomNameVisible = true
-            villager.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MOVEMENT_SPEED)?.baseValue = 0.3
+            villager.getAttribute(org.bukkit.attribute.Attribute.MOVEMENT_SPEED)?.baseValue = 0.3
             villager.age = 0 // Adult
             villager.profession = org.bukkit.entity.Villager.Profession.CARTOGRAPHER
             activeQuest.entityId = villager.uniqueId
@@ -680,7 +680,7 @@ class QuestManager(private val plugin: AtlasPlugin) : Listener {
                     if (this is org.bukkit.entity.Mob) {
                         this.target = player
                         // Boost follow range to ensure they keep tracking
-                        this.getAttribute(org.bukkit.attribute.Attribute.GENERIC_FOLLOW_RANGE)?.baseValue = 50.0
+                        this.getAttribute(org.bukkit.attribute.Attribute.FOLLOW_RANGE)?.baseValue = 50.0
                     }
                     
                     // Allow cleanup

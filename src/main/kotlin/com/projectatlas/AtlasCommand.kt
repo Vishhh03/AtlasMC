@@ -76,6 +76,7 @@ class AtlasCommand(
             // Resource Pack Command
             "resourcepack", "rp" -> handleResourcePack(player, args)
             "siege" -> handleSiege(player, args)
+            "debug" -> com.projectatlas.debug.TextureDebugKit.giveAllTextures(player)
 
             else -> player.sendMessage(Component.text("Unknown command. Type /atlas help for help.", NamedTextColor.RED))
         }
@@ -310,10 +311,21 @@ class AtlasCommand(
             "build", "upgrade" -> {
                 if (args.size < 3) {
                     player.sendMessage(Component.text("Usage: /atlas city build <module>", NamedTextColor.RED))
-                    player.sendMessage(Component.text("Modules: Wall, Generator, Barracks, Market, Clinic", NamedTextColor.GRAY))
+                    player.sendMessage(Component.text("Defense: wall, turret, barracks, watchtower, trap", NamedTextColor.RED))
+                    player.sendMessage(Component.text("Economy: generator, market", NamedTextColor.GOLD))
+                    player.sendMessage(Component.text("Support: clinic, beacon, armory, forge", NamedTextColor.GREEN))
                     return
                 }
                 cityManager.upgradeInfrastructure(player, args[2])
+            }
+            "infrastructure", "infra" -> {
+                val profile = identityManager.getPlayer(player.uniqueId)
+                if (profile?.cityId == null) {
+                    player.sendMessage(Component.text("You are not in a city.", NamedTextColor.RED))
+                    return
+                }
+                val city = cityManager.getCity(profile.cityId!!) ?: return
+                cityManager.getInfrastructureInfo(city).forEach { player.sendMessage(it) }
             }
             "invite" -> {
                 if (args.size < 3) {
@@ -1585,34 +1597,107 @@ class AtlasCommand(
         plugin.dialogueManager.handleDialogueCommand(player, args)
     }
     private fun handleSiege(player: Player, args: Array<out String>) {
-        if (!player.hasPermission("atlas.admin")) {
-            player.sendMessage(Component.text("No permission.", NamedTextColor.RED))
-            return
-        }
-        
         val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
         
-        if (args.size < 3 || !args[1].equals("start", ignoreCase = true)) {
-            player.sendMessage(Component.text("Usage: /atlas siege start <city_name>", NamedTextColor.RED))
+        if (args.size < 2) {
+            player.sendMessage(Component.text("═══ SIEGE COMMANDS ═══", NamedTextColor.DARK_RED))
+            player.sendMessage(Component.text("/atlas siege status - View active siege", NamedTextColor.GRAY))
+            player.sendMessage(Component.text("/atlas siege surrender - Give up (Mayor only)", NamedTextColor.GRAY))
+            if (player.hasPermission("atlas.admin")) {
+                player.sendMessage(Component.text("/atlas siege start <city> - Force start (Admin)", NamedTextColor.RED))
+                player.sendMessage(Component.text("/atlas siege give <tier> - Get siege banner (Admin)", NamedTextColor.RED))
+            }
             return
         }
         
-        val cityName = args.slice(2 until args.size).joinToString(" ")
-        // Find city by name (inefficient linear search, but okay for admin command)
-        val city = plugin.cityManager.getAllCities().find { it.name.equals(cityName, ignoreCase = true) }
-        
-        if (city == null) {
-             player.sendMessage(Component.text("City '$cityName' not found.", NamedTextColor.RED))
-             return
-        }
-        
-        // Pick a start location (Player's location or City center)
-        val startLoc = player.location
-        
-        if (plugin.siegeManager.startSiege(city, startLoc)) {
-            player.sendMessage(Component.text("Siege started against ${city.name}!", NamedTextColor.GREEN))
-        } else {
-            player.sendMessage(Component.text("Failed to start siege (Cooldown active? City already under siege?).", NamedTextColor.RED))
+        when (args[1].lowercase()) {
+            "status" -> {
+                val profile = plugin.identityManager.getPlayer(player.uniqueId)
+                if (profile?.cityId == null) {
+                    player.sendMessage(Component.text("You are not in a city.", NamedTextColor.RED))
+                    return
+                }
+                
+                val status = plugin.siegeManager.getSiegeStatus(profile.cityId!!)
+                if (status != null) {
+                    val city = plugin.cityManager.getCity(profile.cityId!!)
+                    player.sendMessage(Component.text("═══ ${city?.name ?: "Unknown"} SIEGE STATUS ═══", NamedTextColor.DARK_RED))
+                    player.sendMessage(Component.text(status, NamedTextColor.YELLOW))
+                } else {
+                    player.sendMessage(Component.text("Your city is not under siege.", NamedTextColor.GREEN))
+                }
+            }
+            
+            "surrender" -> {
+                val profile = plugin.identityManager.getPlayer(player.uniqueId)
+                if (profile?.cityId == null) {
+                    player.sendMessage(Component.text("You are not in a city.", NamedTextColor.RED))
+                    return
+                }
+                
+                val city = plugin.cityManager.getCity(profile.cityId!!) ?: return
+                if (city.mayor != player.uniqueId) {
+                    player.sendMessage(Component.text("Only the mayor can surrender.", NamedTextColor.RED))
+                    return
+                }
+                
+                if (plugin.siegeManager.forceSurrender(city)) {
+                    player.sendMessage(Component.text("Siege surrendered. Your city suffers defeat penalties.", NamedTextColor.RED))
+                } else {
+                    player.sendMessage(Component.text("Your city is not under siege.", NamedTextColor.GRAY))
+                }
+            }
+            
+            "give" -> {
+                if (!player.hasPermission("atlas.admin")) {
+                    player.sendMessage(Component.text("No permission.", NamedTextColor.RED))
+                    return
+                }
+                
+                val tierName = args.getOrNull(2)?.uppercase() ?: "BASIC"
+                val tier = try {
+                    com.projectatlas.siege.SiegeEquipment.SiegeBannerTier.valueOf(tierName)
+                } catch (e: Exception) {
+                    player.sendMessage(Component.text("Invalid tier. Valid: BASIC, WAR, CHAOS", NamedTextColor.RED))
+                    return
+                }
+                
+                val banner = com.projectatlas.siege.SiegeEquipment.createSiegeBanner(plugin, tier)
+                player.inventory.addItem(banner)
+                player.sendMessage(Component.text("Gave you a ${tier.displayName}!", tier.color))
+            }
+            
+            "start" -> {
+                if (!player.hasPermission("atlas.admin")) {
+                    player.sendMessage(Component.text("No permission.", NamedTextColor.RED))
+                    return
+                }
+                
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas siege start <city_name>", NamedTextColor.RED))
+                    return
+                }
+                
+                val cityName = args.slice(2 until args.size).joinToString(" ")
+                val city = plugin.cityManager.getAllCities().find { it.name.equals(cityName, ignoreCase = true) }
+                
+                if (city == null) {
+                    player.sendMessage(Component.text("City '$cityName' not found.", NamedTextColor.RED))
+                    return
+                }
+                
+                val startLoc = player.location
+                
+                if (plugin.siegeManager.startSiege(city, startLoc)) {
+                    player.sendMessage(Component.text("Siege started against ${city.name}!", NamedTextColor.GREEN))
+                } else {
+                    player.sendMessage(Component.text("Failed to start siege (Cooldown or Already Under Siege).", NamedTextColor.RED))
+                }
+            }
+            
+            else -> {
+                player.sendMessage(Component.text("Unknown siege command. Use /atlas siege for help.", NamedTextColor.RED))
+            }
         }
     }
 }

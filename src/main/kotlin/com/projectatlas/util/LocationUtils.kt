@@ -72,7 +72,8 @@ object LocationUtils {
             if (!isInvalidGround(groundBlock.type)) {
                 // Found valid ground, check if spawn point is clear
                 val spawnBlock = world.getBlockAt(x, y, z)
-                if (spawnBlock.type.isAir || isTreeBlock(spawnBlock.type)) {
+                // STRICT: Only allow spawning in air, never inside leaves or logs
+                if (spawnBlock.type.isAir) {
                     return y
                 }
             }

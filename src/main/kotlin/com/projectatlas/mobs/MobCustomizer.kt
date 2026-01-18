@@ -64,13 +64,13 @@ class MobCustomizer(private val plugin: AtlasPlugin) {
      */
     private fun createElite(mob: LivingEntity, tier: Int) {
         // Health scaling: 2x base health * tier modifier
-        val baseHealth = mob.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue ?: 20.0
+        val baseHealth = mob.getAttribute(Attribute.MAX_HEALTH)?.baseValue ?: 20.0
         val newHealth = baseHealth * (2.0 + tier * 0.5)
-        mob.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = newHealth
+        mob.getAttribute(Attribute.MAX_HEALTH)?.baseValue = newHealth
         mob.health = newHealth
         
         // Damage boost
-        mob.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE)?.let { attr ->
+        mob.getAttribute(Attribute.ATTACK_DAMAGE)?.let { attr ->
             attr.baseValue = (attr.baseValue ?: 1.0) * (1.0 + tier  * 0.2)
         }
         
@@ -96,20 +96,20 @@ class MobCustomizer(private val plugin: AtlasPlugin) {
     private fun createBoss(mob: LivingEntity, tier: Int = 1) {
         // Massive health pool
         val bossHealth = 200.0 + (tier * 100.0) // 300, 400, 500...
-        mob.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = bossHealth
+        mob.getAttribute(Attribute.MAX_HEALTH)?.baseValue = bossHealth
         mob.health = bossHealth
         
         // High damage
-        mob.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE)?.baseValue = 10.0 + (tier * 5.0)
+        mob.getAttribute(Attribute.ATTACK_DAMAGE)?.baseValue = 10.0 + (tier * 5.0)
         
         // Knockback resistance (can't be pushed around)
-        mob.getAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE)?.baseValue = 1.0
+        mob.getAttribute(Attribute.KNOCKBACK_RESISTANCE)?.baseValue = 1.0
         
         // Movement speed
-        mob.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)?.baseValue = 0.35
+        mob.getAttribute(Attribute.MOVEMENT_SPEED)?.baseValue = 0.35
         
         // Armor
-        mob.getAttribute(Attribute.GENERIC_ARMOR)?.baseValue = 10.0 + (tier * 2.0)
+        mob.getAttribute(Attribute.ARMOR)?.baseValue = 10.0 + (tier * 2.0)
         
         // Visual identity
         mob.customName(Component.text("☠ BOSS: ${mob.type.name.replace("_", " ")} ☠", NamedTextColor.DARK_RED, TextDecoration.BOLD))
@@ -132,9 +132,9 @@ class MobCustomizer(private val plugin: AtlasPlugin) {
      */
     private fun createRare(mob: LivingEntity, tier: Int) {
         // Moderate health boost
-        val baseHealth = mob.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue ?: 20.0
+        val baseHealth = mob.getAttribute(Attribute.MAX_HEALTH)?.baseValue ?: 20.0
         val newHealth = baseHealth * (1.5 + tier * 0.3)
-        mob.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = newHealth
+        mob.getAttribute(Attribute.MAX_HEALTH)?.baseValue = newHealth
         mob.health = newHealth
         
         // Visual identity
@@ -157,8 +157,8 @@ class MobCustomizer(private val plugin: AtlasPlugin) {
      */
     private fun createGuard(mob: LivingEntity, tier: Int) {
         // Moderate stats
-        val baseHealth = mob.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue ?: 20.0
-        mob.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = baseHealth * 1.5
+        val baseHealth = mob.getAttribute(Attribute.MAX_HEALTH)?.baseValue ?: 20.0
+        mob.getAttribute(Attribute.MAX_HEALTH)?.baseValue = baseHealth * 1.5
         mob.health = baseHealth * 1.5
         
         // Visual identity
@@ -178,13 +178,13 @@ class MobCustomizer(private val plugin: AtlasPlugin) {
      */
     private fun createDungeon(mob: LivingEntity, tier: Int) {
         // Health scaling: Base * (1.0 + Tier * 0.4)
-        val baseHealth = mob.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue ?: 20.0
+        val baseHealth = mob.getAttribute(Attribute.MAX_HEALTH)?.baseValue ?: 20.0
         val newHealth = baseHealth * (1.0 + tier * 0.4)
-        mob.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = newHealth
+        mob.getAttribute(Attribute.MAX_HEALTH)?.baseValue = newHealth
         mob.health = newHealth
         
         // Damage scaling: Base * (1.0 + Tier * 0.2)
-        mob.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE)?.let { attr ->
+        mob.getAttribute(Attribute.ATTACK_DAMAGE)?.let { attr ->
             attr.baseValue = (attr.baseValue ?: 1.0) * (1.0 + tier * 0.2)
         }
         
@@ -316,7 +316,7 @@ class MobCustomizer(private val plugin: AtlasPlugin) {
                 tickCounter++
                 
                 // Phase transitions based on health
-                val healthPercent = boss.health / (boss.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: 1.0)
+                val healthPercent = boss.health / (boss.getAttribute(Attribute.MAX_HEALTH)?.value ?: 1.0)
                 
                 when {
                     healthPercent < 0.25 -> phase = 3
@@ -342,7 +342,7 @@ class MobCustomizer(private val plugin: AtlasPlugin) {
             
             private fun enragedPhase(boss: LivingEntity) {
                 // Faster movement when below 50% health
-                boss.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)?.baseValue = 0.4
+                boss.getAttribute(Attribute.MOVEMENT_SPEED)?.baseValue = 0.4
                 boss.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, 999999, 1, false, false))
                 
                 // Summon minions every 20 seconds
@@ -353,7 +353,7 @@ class MobCustomizer(private val plugin: AtlasPlugin) {
             
             private fun desperatePhase(boss: LivingEntity) {
                 // Extremely dangerous when below 25%
-                boss.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)?.baseValue = 0.5
+                boss.getAttribute(Attribute.MOVEMENT_SPEED)?.baseValue = 0.05
                 boss.addPotionEffect(PotionEffect(PotionEffectType.STRENGTH, 999999, 2, false, false))
                 boss.addPotionEffect(PotionEffect(PotionEffectType.REGENERATION, 999999, 1, false, false))
                 
@@ -407,7 +407,7 @@ class MobCustomizer(private val plugin: AtlasPlugin) {
                 // Baby zombies are faster and more dangerous
                 if (Math.random() < 0.1 && getMobTier(mob) >= 2) {
                     mob.isBaby = true
-                    mob.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)?.baseValue = 0.5
+                    mob.getAttribute(Attribute.MOVEMENT_SPEED)?.baseValue = 0.5
                 }
                 
                 // At higher tiers, zombies get extra speed

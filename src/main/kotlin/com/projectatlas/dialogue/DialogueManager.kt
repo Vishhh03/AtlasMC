@@ -100,6 +100,9 @@ class DialogueManager(private val plugin: AtlasPlugin) : Listener {
                         .append(Component.text(": Safe travels!", NamedTextColor.WHITE))
                 )
                 player.playSound(player.location, org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f)
+                
+                // FORCE END CINEMATIC
+                plugin.cinematicDialogueManager.stopDialogue(player)
             }
         }
     }

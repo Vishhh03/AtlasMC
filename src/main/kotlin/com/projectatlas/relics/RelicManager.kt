@@ -117,7 +117,7 @@ class RelicManager(private val plugin: AtlasPlugin) : Listener {
         // Execute relic power
         when (type) {
             RelicType.PHOENIX_FEATHER -> {
-                player.health = player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
+                player.health = player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)?.value ?: 20.0
                 player.addPotionEffect(PotionEffect(PotionEffectType.FIRE_RESISTANCE, 600, 0))
                 player.world.spawnParticle(Particle.FLAME, player.location, 50, 1.0, 1.0, 1.0, 0.1)
                 player.playSound(player.location, Sound.ENTITY_BLAZE_SHOOT, 1.0f, 0.5f)

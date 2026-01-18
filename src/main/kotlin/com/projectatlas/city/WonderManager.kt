@@ -127,7 +127,7 @@ class WonderManager(private val plugin: AtlasPlugin) : Listener {
         // War Academy - Health Boost
         if (city.completedWonders.contains(CityWonder.WAR_ACADEMY)) {
              // 4 extra hearts
-             val attribute = player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)
+             val attribute = player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)
              if (attribute != null && attribute.baseValue < 24.0) {
                  attribute.baseValue = 24.0
              }

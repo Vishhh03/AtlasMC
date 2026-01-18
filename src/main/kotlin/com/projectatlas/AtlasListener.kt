@@ -144,7 +144,7 @@ class AtlasListener(
         val mobId = entity.uniqueId
         
         // Base XP Calculation: 10 + (Max HP / 2) -> Tougher mobs give more XP
-        val maxHp = entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
+        val maxHp = entity.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)?.value ?: 20.0
         val baseXp = 10.0 + (maxHp / 2.0)
         
         val contributors = damageMap.remove(mobId)

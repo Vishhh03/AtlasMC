@@ -238,16 +238,16 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
                     DropTier.RARE -> 60.0
                     DropTier.LEGENDARY -> 100.0
                 }
-                getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.baseValue = maxHealth
+                getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)?.baseValue = maxHealth
                 health = maxHealth
                 
-                getAttribute(org.bukkit.attribute.Attribute.GENERIC_ATTACK_DAMAGE)?.baseValue = when(tier) {
+                getAttribute(org.bukkit.attribute.Attribute.ATTACK_DAMAGE)?.baseValue = when(tier) {
                     DropTier.COMMON -> 6.0
                     DropTier.RARE -> 12.0
                     DropTier.LEGENDARY -> 18.0 // Hits hard
                 }
                 
-                getAttribute(org.bukkit.attribute.Attribute.GENERIC_KNOCKBACK_RESISTANCE)?.baseValue = when(tier) {
+                getAttribute(org.bukkit.attribute.Attribute.KNOCKBACK_RESISTANCE)?.baseValue = when(tier) {
                     DropTier.COMMON -> 0.2
                     DropTier.RARE -> 0.5
                     DropTier.LEGENDARY -> 1.0 // Unmovable

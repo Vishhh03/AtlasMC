@@ -11,6 +11,7 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.attribute.Attribute
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.UUID
@@ -149,14 +150,14 @@ class AbilityListener(private val plugin: AtlasPlugin) : Listener {
         val healAmount = plugin.configManager.healingPulseAmount
         
         // Self
-        val newHealth = (player.health + healAmount).coerceAtMost(player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0)
+        val newHealth = (player.health + healAmount).coerceAtMost(player.getAttribute(Attribute.MAX_HEALTH)?.value ?: 20.0)
         player.health = newHealth
         
         // Allies
         player.getNearbyEntities(5.0, 5.0, 5.0).forEach { entity ->
             if (entity is Player) {
-                val max = entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
-                entity.health = (entity.health + healAmount).coerceAtMost(max)
+                val maxHealth = player.getAttribute(Attribute.MAX_HEALTH)?.value ?: 20.0
+                entity.health = (entity.health + healAmount).coerceAtMost(maxHealth)
                 entity.sendMessage(Component.text("Healed by Pulse!", NamedTextColor.GREEN))
             }
         }

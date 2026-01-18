@@ -481,7 +481,7 @@ class SurvivalManager(private val plugin: AtlasPlugin) : Listener {
         val skillMultiplier = plugin.skillTreeManager.getRestMultiplier(player)
         
         val currentHealth = player.health
-        val maxHealth = player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
+        val maxHealth = player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)?.value ?: 20.0
         
         // Check if night was skipped (full sleep bonus)
         val world = player.world
@@ -597,7 +597,7 @@ class SurvivalManager(private val plugin: AtlasPlugin) : Listener {
         }
         
         val currentHealth = player.health
-        val maxHealth = player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
+        val maxHealth = player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)?.value ?: 20.0
         
         // Already at full health?
         if (currentHealth >= maxHealth) {

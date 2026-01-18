@@ -646,7 +646,7 @@ class PacketManager(private val plugin: AtlasPlugin) {
     fun shakeCamera(player: Player) {
         player.damage(0.01)
         player.health = (player.health + 0.01).coerceAtMost(
-            player.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)!!.value
+            player.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)!!.value
         )
     }
 

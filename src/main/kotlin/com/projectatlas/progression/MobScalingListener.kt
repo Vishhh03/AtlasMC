@@ -40,7 +40,7 @@ class MobScalingListener(private val plugin: AtlasPlugin) : Listener {
         
         // Apply health scaling
         if (healthMult > 1.0) {
-            val maxHealthAttr = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH) ?: return
+            val maxHealthAttr = entity.getAttribute(Attribute.MAX_HEALTH) ?: return
             val baseHealth = maxHealthAttr.baseValue
             val newHealth = baseHealth * healthMult
             

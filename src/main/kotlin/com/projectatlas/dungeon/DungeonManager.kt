@@ -268,7 +268,7 @@ class DungeonManager(private val plugin: AtlasPlugin) : Listener {
         dungeonLog.values.forEach { dungeon ->
             if (dungeon.bossEntity?.uniqueId == entity.uniqueId) {
                 val health = entity.health - event.finalDamage
-                val maxHealth = entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.value ?: 100.0
+                val maxHealth = entity.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)?.value ?: 100.0
                 val pct = (health / maxHealth).coerceIn(0.0, 1.0)
                 
                 plugin.packetManager.updateBossHealthBar(entity, "☠ ${dungeon.theme.name} Boss ☠", pct)

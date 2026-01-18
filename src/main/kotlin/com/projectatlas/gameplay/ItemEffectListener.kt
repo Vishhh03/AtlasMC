@@ -32,7 +32,7 @@ class ItemEffectListener(private val plugin: AtlasPlugin) : Listener {
                 event.isCancelled = true // Prevent drinking animation if using honey bottle base, or handle manually
                 
                 // Heal 4 HP (2 hearts)
-                val maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.value ?: 20.0
+                val maxHealth = player.getAttribute(Attribute.MAX_HEALTH)?.value ?: 20.0
                 if (player.health >= maxHealth) {
                     player.sendMessage(Component.text("You are already at full health.", NamedTextColor.RED))
                     return

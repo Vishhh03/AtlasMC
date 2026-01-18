@@ -67,7 +67,7 @@ class WorldBossManager(private val plugin: AtlasPlugin) : Listener {
         val entity = location.world.spawnEntity(location, type.entityType) as? LivingEntity ?: return false
         
         // Buff the boss
-        entity.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = type.health
+        entity.getAttribute(Attribute.MAX_HEALTH)?.baseValue = type.health
         entity.health = type.health
         entity.customName(Component.text("☠ ${type.displayName} ☠", NamedTextColor.DARK_RED, TextDecoration.BOLD))
         entity.isCustomNameVisible = true

@@ -26,6 +26,11 @@ class WanderingNPCListener(private val plugin: AtlasPlugin) : Listener {
 
     private val random = Random()
     private val wandererKey = NamespacedKey(plugin, "wandering_npc")
+    
+    // Cooldown: Track last cache spawn time per player (10 minute cooldown)
+    private val cacheCooldowns = mutableMapOf<UUID, Long>()
+    private val CACHE_COOLDOWN_MS = 10 * 60 * 1000L // 10 minutes
+    private val BARREL_DESPAWN_TICKS = 6000L // 5 minutes (300 seconds * 20 ticks)
 
     init {
         // Run checks every 30 seconds (600 ticks)
@@ -98,6 +103,10 @@ class WanderingNPCListener(private val plugin: AtlasPlugin) : Listener {
     }
     
     private fun spawnMinersCache(player: Player) {
+        // Check cooldown
+        val lastSpawn = cacheCooldowns[player.uniqueId] ?: 0L
+        if (System.currentTimeMillis() - lastSpawn < CACHE_COOLDOWN_MS) return
+        
         val spawnLoc = getSafeSpawnLocation(player) ?: return
         spawnLoc.block.type = Material.BARREL
         
@@ -116,6 +125,11 @@ class WanderingNPCListener(private val plugin: AtlasPlugin) : Listener {
         }
         
         barrel.update()
+        
+        // Set cooldown and schedule despawn
+        cacheCooldowns[player.uniqueId] = System.currentTimeMillis()
+        scheduleBarrelDespawn(spawnLoc)
+        
         player.world.spawnParticle(Particle.END_ROD, spawnLoc.clone().add(0.5, 1.0, 0.5), 10)
         player.sendMessage(Component.text("You spot a lost supply cache!", NamedTextColor.YELLOW))
     }
@@ -197,6 +211,10 @@ class WanderingNPCListener(private val plugin: AtlasPlugin) : Listener {
     
     // --- 3. Treasure Cache ---
     private fun spawnTreasureCache(player: Player) {
+        // Check cooldown
+        val lastSpawn = cacheCooldowns[player.uniqueId] ?: 0L
+        if (System.currentTimeMillis() - lastSpawn < CACHE_COOLDOWN_MS) return
+        
         val spawnLoc = getSafeSpawnLocation(player) ?: return
         spawnLoc.block.type = Material.BARREL
         
@@ -220,6 +238,10 @@ class WanderingNPCListener(private val plugin: AtlasPlugin) : Listener {
         }
         
         barrel.update()
+        
+        // Set cooldown and schedule despawn
+        cacheCooldowns[player.uniqueId] = System.currentTimeMillis()
+        scheduleBarrelDespawn(spawnLoc)
         
         // Visuals
         player.world.spawnParticle(Particle.END_ROD, spawnLoc.clone().add(0.5, 1.0, 0.5), 10)
@@ -253,6 +275,21 @@ class WanderingNPCListener(private val plugin: AtlasPlugin) : Listener {
         plugin.server.scheduler.runTaskLater(plugin, Runnable {
             if (entity.isValid) entity.remove()
         }, delayTicks)
+    }
+    
+    private fun scheduleBarrelDespawn(location: org.bukkit.Location) {
+        plugin.server.scheduler.runTaskLater(plugin, Runnable {
+            val block = location.block
+            if (block.type == Material.BARREL) {
+                // Return any remaining items to the ground before removing
+                val barrel = block.state as? org.bukkit.block.Barrel
+                barrel?.inventory?.contents?.filterNotNull()?.forEach { item ->
+                    location.world?.dropItemNaturally(location, item)
+                }
+                barrel?.inventory?.clear()
+                block.type = Material.AIR
+            }
+        }, BARREL_DESPAWN_TICKS)
     }
 
     @EventHandler

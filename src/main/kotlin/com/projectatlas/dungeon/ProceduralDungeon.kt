@@ -239,7 +239,7 @@ class ProceduralDungeon(
                          
                          if (modelName != null) {
                              // Restore Armor stats via Attributes (since physical armor is stripped by attachModel)
-                             val armorAttr = mob.getAttribute(org.bukkit.attribute.Attribute.GENERIC_ARMOR)
+                             val armorAttr = mob.getAttribute(org.bukkit.attribute.Attribute.ARMOR)
                              if (isBoss) {
                                  armorAttr?.baseValue = 12.0 // Approx Diamond Helm + Chest
                              } else {
@@ -277,11 +277,11 @@ class ProceduralDungeon(
         val hpMult = 1.0 + (diff * 0.4) // Lv 1 = 1.4x, Lv 5 = 3.0x
         val finalHp = baseHp * hpMult
         
-        entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_MAX_HEALTH)?.baseValue = finalHp
+        entity.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)?.baseValue = finalHp
         entity.health = finalHp
         
         val dmgMult = 1.0 + (diff * plugin.configManager.dungeonMobDamageScaling)
-        entity.getAttribute(org.bukkit.attribute.Attribute.GENERIC_ATTACK_DAMAGE)?.baseValue = 4.0 * dmgMult
+        entity.getAttribute(org.bukkit.attribute.Attribute.ATTACK_DAMAGE)?.baseValue = 4.0 * dmgMult
         
         // Armor
         // Lv 1-2: Leather/Chain, Lv 3-4: Iron, Lv 5: Diamond

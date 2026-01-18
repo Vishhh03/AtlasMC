@@ -1,0 +1,233 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:compass",
+    "scale": 32.0,
+    "entries": [
+      {
+        "threshold": 0.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_00"
+        }
+      },
+      {
+        "threshold": 1.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_01"
+        }
+      },
+      {
+        "threshold": 2.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_02"
+        }
+      },
+      {
+        "threshold": 3.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_03"
+        }
+      },
+      {
+        "threshold": 4.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_04"
+        }
+      },
+      {
+        "threshold": 5.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_05"
+        }
+      },
+      {
+        "threshold": 6.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_06"
+        }
+      },
+      {
+        "threshold": 7.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_07"
+        }
+      },
+      {
+        "threshold": 8.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_08"
+        }
+      },
+      {
+        "threshold": 9.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_09"
+        }
+      },
+      {
+        "threshold": 10.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_10"
+        }
+      },
+      {
+        "threshold": 11.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_11"
+        }
+      },
+      {
+        "threshold": 12.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_12"
+        }
+      },
+      {
+        "threshold": 13.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_13"
+        }
+      },
+      {
+        "threshold": 14.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_14"
+        }
+      },
+      {
+        "threshold": 15.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_15"
+        }
+      },
+      {
+        "threshold": 16.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_16"
+        }
+      },
+      {
+        "threshold": 17.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_17"
+        }
+      },
+      {
+        "threshold": 18.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_18"
+        }
+      },
+      {
+        "threshold": 19.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_19"
+        }
+      },
+      {
+        "threshold": 20.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_20"
+        }
+      },
+      {
+        "threshold": 21.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_21"
+        }
+      },
+      {
+        "threshold": 22.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_22"
+        }
+      },
+      {
+        "threshold": 23.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_23"
+        }
+      },
+      {
+        "threshold": 24.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_24"
+        }
+      },
+      {
+        "threshold": 25.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_25"
+        }
+      },
+      {
+        "threshold": 26.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_26"
+        }
+      },
+      {
+        "threshold": 27.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_27"
+        }
+      },
+      {
+        "threshold": 28.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_28"
+        }
+      },
+      {
+        "threshold": 29.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_29"
+        }
+      },
+      {
+        "threshold": 30.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_30"
+        }
+      },
+      {
+        "threshold": 31.0,
+        "model": {
+          "type": "minecraft:model",
+          "model": "projectatlas:item/recovery_compass_31"
+        }
+      }
+    ]
+  }
+}

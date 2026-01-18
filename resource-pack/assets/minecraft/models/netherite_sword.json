@@ -1,0 +1,32 @@
+{
+    "parent": "minecraft:item/handheld",
+    "textures": {
+        "layer0": "minecraft:item/netherite_sword"
+    },
+    "overrides": [
+        {
+            "predicate": {
+                "custom_model_data": 1001
+            },
+            "model": "minecraft:item/hollow_knight_blade"
+        },
+        {
+            "predicate": {
+                "custom_model_data": 3001
+            },
+            "model": "minecraft:item/warden_flame_sword"
+        },
+        {
+            "predicate": {
+                "custom_model_data": 4001
+            },
+            "model": "minecraft:item/ender_sentinel_scythe"
+        },
+        {
+            "predicate": {
+                "custom_model_data": 5001
+            },
+            "model": "minecraft:item/dragon_slayer"
+        }
+    ]
+}

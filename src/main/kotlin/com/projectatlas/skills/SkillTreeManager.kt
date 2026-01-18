@@ -360,9 +360,9 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         }
         
         // Apply Attribute Bonuses
-        player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0 + healthBonus
-        player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)?.baseValue = 0.1 + speedBonus
-        player.getAttribute(Attribute.GENERIC_ARMOR)?.baseValue = armorBonus
+        player.getAttribute(Attribute.MAX_HEALTH)?.baseValue = 20.0 + healthBonus
+        player.getAttribute(Attribute.MOVEMENT_SPEED)?.baseValue = 0.1 + speedBonus
+        player.getAttribute(Attribute.ARMOR)?.baseValue = armorBonus
     }
     
     private fun startPassiveEffectTask() {
@@ -659,14 +659,14 @@ class SkillTreeManager(private val plugin: AtlasPlugin) : Listener {
         plugin.identityManager.saveProfile(player.uniqueId)
         
         // Reset Attributes
-        player.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = 20.0
+        player.getAttribute(Attribute.MAX_HEALTH)?.baseValue = 20.0
         player.health = 20.0
-        player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)?.baseValue = 0.1
-        player.getAttribute(Attribute.GENERIC_ARMOR)?.baseValue = 0.0
-        player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE)?.baseValue = 1.0
-        // player.getAttribute(Attribute.GENERIC_LUCK)?.baseValue = 0.0
-        // player.getAttribute(Attribute.GENERIC_SCALE)?.baseValue = 1.0
-        // player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH)?.baseValue = 0.42
+        player.getAttribute(Attribute.MOVEMENT_SPEED)?.baseValue = 0.1
+        player.getAttribute(Attribute.ARMOR)?.baseValue = 0.0
+        player.getAttribute(Attribute.ATTACK_DAMAGE)?.baseValue = 1.0
+        // player.getAttribute(Attribute.LUCK)?.baseValue = 0.0
+        // player.getAttribute(Attribute.SCALE)?.baseValue = 1.0
+        // player.getAttribute(Attribute.JUMP_STRENGTH)?.baseValue = 0.42
         
         // Clear status effects
         player.activePotionEffects.forEach { player.removePotionEffect(it.type) }

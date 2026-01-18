@@ -80,11 +80,11 @@ class EraBossManager(private val plugin: AtlasPlugin) : Listener {
             skeleton.isCustomNameVisible = true
             
             // Stats
-            skeleton.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = BossType.HOLLOW_KNIGHT.baseHealth
+            skeleton.getAttribute(Attribute.MAX_HEALTH)?.baseValue = BossType.HOLLOW_KNIGHT.baseHealth
             skeleton.health = BossType.HOLLOW_KNIGHT.baseHealth
-            skeleton.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE)?.baseValue = 8.0
-            skeleton.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)?.baseValue = 0.28
-            skeleton.getAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE)?.baseValue = 0.8
+            skeleton.getAttribute(Attribute.ATTACK_DAMAGE)?.baseValue = 8.0
+            skeleton.getAttribute(Attribute.MOVEMENT_SPEED)?.baseValue = 0.28
+            skeleton.getAttribute(Attribute.KNOCKBACK_RESISTANCE)?.baseValue = 0.8
             
             // Equipment
             skeleton.equipment.helmet = ItemStack(Material.NETHERITE_HELMET)
@@ -118,9 +118,9 @@ class EraBossManager(private val plugin: AtlasPlugin) : Listener {
             evoker.customName(Component.text("💰 The Tax Collector 💰", NamedTextColor.DARK_GREEN, TextDecoration.BOLD))
             evoker.isCustomNameVisible = true
             
-            evoker.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = BossType.TAX_COLLECTOR.baseHealth
+            evoker.getAttribute(Attribute.MAX_HEALTH)?.baseValue = BossType.TAX_COLLECTOR.baseHealth
             evoker.health = BossType.TAX_COLLECTOR.baseHealth
-            evoker.getAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE)?.baseValue = 0.6
+            evoker.getAttribute(Attribute.KNOCKBACK_RESISTANCE)?.baseValue = 0.6
             
             evoker.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, PotionEffect.INFINITE_DURATION, 0, false, false))
             
@@ -148,7 +148,7 @@ class EraBossManager(private val plugin: AtlasPlugin) : Listener {
             blaze.customName(Component.text("🔥 Warden of Flames 🔥", NamedTextColor.GOLD, TextDecoration.BOLD))
             blaze.isCustomNameVisible = true
             
-            blaze.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = BossType.WARDEN_OF_FLAMES.baseHealth
+            blaze.getAttribute(Attribute.MAX_HEALTH)?.baseValue = BossType.WARDEN_OF_FLAMES.baseHealth
             blaze.health = BossType.WARDEN_OF_FLAMES.baseHealth
             
             blaze.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, PotionEffect.INFINITE_DURATION, 0, false, false))
@@ -177,10 +177,10 @@ class EraBossManager(private val plugin: AtlasPlugin) : Listener {
             enderman.customName(Component.text("👁 The Ender Sentinel 👁", NamedTextColor.DARK_PURPLE, TextDecoration.BOLD))
             enderman.isCustomNameVisible = true
             
-            enderman.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue = BossType.ENDER_SENTINEL.baseHealth
+            enderman.getAttribute(Attribute.MAX_HEALTH)?.baseValue = BossType.ENDER_SENTINEL.baseHealth
             enderman.health = BossType.ENDER_SENTINEL.baseHealth
-            enderman.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE)?.baseValue = 12.0
-            enderman.getAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE)?.baseValue = 1.0
+            enderman.getAttribute(Attribute.ATTACK_DAMAGE)?.baseValue = 12.0
+            enderman.getAttribute(Attribute.KNOCKBACK_RESISTANCE)?.baseValue = 1.0
             
             enderman.addPotionEffect(PotionEffect(PotionEffectType.GLOWING, PotionEffect.INFINITE_DURATION, 0, false, false))
             enderman.addPotionEffect(PotionEffect(PotionEffectType.SPEED, PotionEffect.INFINITE_DURATION, 1, false, false))
@@ -229,7 +229,7 @@ class EraBossManager(private val plugin: AtlasPlugin) : Listener {
                     return
                 }
                 
-                val maxHealth = bossEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH)?.baseValue ?: 100.0
+                val maxHealth = bossEntity.getAttribute(Attribute.MAX_HEALTH)?.baseValue ?: 100.0
                 bossBar.progress = (bossEntity.health / maxHealth).coerceIn(0.0, 1.0)
                 
                 // Add nearby players to boss bar
