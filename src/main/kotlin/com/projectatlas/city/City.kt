@@ -21,7 +21,8 @@ data class City(
     val completedMilestones: MutableSet<String> = mutableSetOf(), // milestone IDs
     var specialization: CitySpecialization = CitySpecialization.NONE,
     var energy: Int = 0, // Redstone (Industrial Power)
-    var mana: Int = 0 // Lapis (Arcane Power)
+    var mana: Int = 0, // Lapis (Arcane Power)
+    val placedStructures: MutableMap<String, MutableList<String>> = mutableMapOf() // StructureType -> List<"world:x,y,z">
 ) {
     fun addMember(uuid: UUID) {
         if (!members.contains(uuid)) members.add(uuid)

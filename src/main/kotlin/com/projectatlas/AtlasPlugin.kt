@@ -89,6 +89,8 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var globalThreatManager: com.projectatlas.threat.GlobalThreatManager
     lateinit var animationSystem: AnimationSystem
     lateinit var skillEffectSystem: SkillEffectSystem
+    lateinit var cityVisualizer: com.projectatlas.city.CityVisualizer
+    lateinit var buildingPlacementManager: com.projectatlas.city.BuildingPlacementManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -154,6 +156,15 @@ class AtlasPlugin : JavaPlugin() {
         // Initialize Skill Effect System (visual feedback for skill tree abilities and weapon effects)
         skillEffectSystem = SkillEffectSystem(this)
         logger.info("Skill Effect System enabled!")
+        
+        // Initialize City Visualizer
+        cityVisualizer = com.projectatlas.city.CityVisualizer(this)
+        cityVisualizer.startTask()
+        
+        // Initialize Building Placement
+        buildingPlacementManager = com.projectatlas.city.BuildingPlacementManager(this)
+        buildingPlacementManager.startTask()
+        server.pluginManager.registerEvents(buildingPlacementManager, this)
         
         val entityCleanupManager = com.projectatlas.util.EntityCleanupManager(this) // Auto-starts task
         globalThreatManager = com.projectatlas.threat.GlobalThreatManager(this) // Starts threat loop

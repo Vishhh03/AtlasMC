@@ -5,12 +5,12 @@
   "alignment": 0,
   "balance": 977894.0,
   "cityId": "72757805-eac8-409e-8727-560b56f8e365",
-  "currentXp": 1405,
-  "level": 16,
+  "currentXp": 142,
+  "level": 17,
   "titles": [
     "achievement:quest_complete"
   ],
-  "unlockedSkillNodes": "origin,ber_dmg1,sco_spd1,ber_crit1,ber_dmg2,ber_leech1,ber_leech2,ber_crit2,van_hp1,van_arm1,van_hp2,van_hp3,van_hp4",
+  "unlockedSkillNodes": "origin,ber_dmg1,sco_spd1,ber_crit1,ber_dmg2,ber_leech1,ber_leech2,ber_crit2,van_hp1,van_arm1,van_hp2,van_hp3,van_hp4,ber_dmg3",
   "settings": {
     "quest_count_1": true,
     "scoreboard": false

@@ -326,6 +326,31 @@ class AtlasCommand(
                 val city = cityManager.getCity(profile.cityId!!) ?: return
                 cityManager.getInfrastructureInfo(city).forEach { player.sendMessage(it) }
             }
+            "borders", "border", "visualize" -> {
+                org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java).cityVisualizer.toggle(player)
+            }
+            "place" -> {
+                if (args.size < 3) {
+                    player.sendMessage(Component.text("Usage: /atlas city place <type>", NamedTextColor.RED))
+                    player.sendMessage(Component.text("Types: TURRET, GENERATOR, BARRACKS, MARKET, CLINIC...", NamedTextColor.GRAY))
+                    return
+                }
+                
+                val typeStr = args[2].uppercase()
+                val profile = identityManager.getPlayer(player.uniqueId)
+                if (profile?.cityId == null) {
+                    player.sendMessage(Component.text("You must be in a city to build.", NamedTextColor.RED))
+                    return
+                }
+                
+                try {
+                    val type = com.projectatlas.structures.StructureType.valueOf(typeStr)
+                    // Start Placement
+                    org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java).buildingPlacementManager.startPlacement(player, type, profile.cityId!!)
+                } catch (e: IllegalArgumentException) {
+                    player.sendMessage(Component.text("Invalid structure type: $typeStr", NamedTextColor.RED))
+                }
+            }
             "invite" -> {
                 if (args.size < 3) {
                     player.sendMessage(Component.text("Usage: /atlas city invite <player>", NamedTextColor.RED))

@@ -400,14 +400,14 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
         
         player.playSound(origin, "projectatlas:item.warden_sword.beam", 1f, 1f)
         
-        // Enhanced beam effect
+        // Enhanced beam effect - handles visuals
         plugin.skillEffectSystem.playSonicBoomEffect(origin, direction, range)
         
         // Beam with hit detection
         val hitEntities = mutableSetOf<org.bukkit.entity.LivingEntity>()
         for (i in 0..range) {
             val point = origin.clone().add(direction.clone().multiply(i.toDouble()))
-            player.world.spawnParticle(Particle.SONIC_BOOM, point, 1)
+            // Visuals handled by SkillEffectSystem, removed redundant spawnParticle here to avoid potential Color data errors
             
             // Hit detection
             point.getNearbyEntities(1.5, 1.5, 1.5).forEach { entity ->
@@ -416,7 +416,7 @@ class CustomItemManager(private val plugin: AtlasPlugin) : Listener {
                     entity.damage(damage, player)
                     entity.velocity = direction.clone().multiply(1.5).setY(0.5)
                     // Impact effect
-                    entity.world.spawnParticle(Particle.FLASH, entity.location.add(0.0, 1.0, 0.0), 1)
+                    // entity.world.spawnParticle(Particle.FLASH, entity.location.add(0.0, 1.0, 0.0), 1) 
                 }
             }
         }

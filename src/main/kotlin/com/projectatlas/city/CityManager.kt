@@ -90,6 +90,12 @@ class CityManager(private val plugin: AtlasPlugin) {
         val cityId = chunkMap[getChunkKey(chunk)] ?: return null
         return getCity(cityId)
     }
+
+    fun getCityAt(worldName: String, x: Int, z: Int): City? {
+        val key = "${worldName}:${x},${z}"
+        val cityId = chunkMap[key] ?: return null
+        return getCity(cityId)
+    }
     
     // Management
     private val invites = ConcurrentHashMap<UUID, String>() // PlayerUUID -> CityID
@@ -433,6 +439,41 @@ class CityManager(private val plugin: AtlasPlugin) {
             .append(Component.text(levelBars, NamedTextColor.AQUA))
             .append(Component.text(" $level/$maxLevel", NamedTextColor.WHITE))
             .append(Component.text(costText, costColor))
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // BUILDING PLACEMENT
+    // ═══════════════════════════════════════════════════════════════
+    fun confirmBuildingPlacement(cityId: String, type: com.projectatlas.structures.StructureType, location: org.bukkit.Location): Boolean {
+        val city = getCity(cityId) ?: return false
+        
+        // Check Limits
+        val currentCount = city.placedStructures[type.name]?.size ?: 0
+        
+        if (type == com.projectatlas.structures.StructureType.TURRET) {
+            if (!city.infrastructure.canAddTurret()) return false
+        } else {
+             // Limit 1 for major structures for now
+            if (currentCount >= 1) return false
+        }
+        
+        // Build It
+        plugin.structureManager.spawnStructure(type, location)
+        
+        // Update City Data
+        val locStr = "${location.world.name}:${location.blockX},${location.blockY},${location.blockZ}"
+        city.placedStructures.computeIfAbsent(type.name) { mutableListOf() }.add(locStr)
+        
+        // Update Infrastructure Stats
+        when(type) {
+            com.projectatlas.structures.StructureType.TURRET -> city.infrastructure.turretCount++
+            com.projectatlas.structures.StructureType.GENERATOR -> if(city.infrastructure.generatorLevel == 0) city.infrastructure.generatorLevel = 1
+            com.projectatlas.structures.StructureType.BARRACKS -> if(city.infrastructure.barracksLevel == 0) city.infrastructure.barracksLevel = 1
+            else -> { /* No specific stat update for others yet */ }
+        }
+        
+        saveCity(city)
+        return true
     }
 
     // Persistence
