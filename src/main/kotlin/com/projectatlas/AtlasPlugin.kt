@@ -274,6 +274,9 @@ class AtlasPlugin : JavaPlugin() {
 
     override fun onDisable() {
         logger.info("Project Atlas is shutting down...")
+        if (::builderModeManager.isInitialized) {
+            builderModeManager.shutdown()
+        }
         if (::identityManager.isInitialized) {
             identityManager.saveAll()
         }

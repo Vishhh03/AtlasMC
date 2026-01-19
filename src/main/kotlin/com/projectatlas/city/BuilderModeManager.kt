@@ -28,6 +28,8 @@ import org.bukkit.util.Transformation
 import org.bukkit.util.Vector
 import org.joml.AxisAngle4f
 import org.joml.Vector3f
+import org.bukkit.scoreboard.DisplaySlot
+import org.bukkit.scoreboard.Criteria
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -55,7 +57,8 @@ class BuilderModeManager(private val plugin: AtlasPlugin) : Listener {
         var rotation: Int = 0, // 0, 90, 180, 270
         var lastPreviewLocation: Location? = null,
         val ghostBlocks: MutableList<BlockDisplay> = mutableListOf(),
-        val borderBlocks: MutableList<BlockDisplay> = mutableListOf() // City boundary markers
+        val borderBlocks: MutableList<BlockDisplay> = mutableListOf(), // City boundary markers
+        val previousScoreboard: org.bukkit.scoreboard.Scoreboard // Store for restoration
     )
     
     enum class PlacementResult(val message: String, val color: NamedTextColor) {
@@ -106,9 +109,15 @@ class BuilderModeManager(private val plugin: AtlasPlugin) : Listener {
             exitBuildMode(player, silent = true)
         }
         
+        // Store previous scoreboard
+        val previousScoreboard = player.scoreboard
+
         // Create new session
-        val session = BuildModeSession(player, cityId)
+        val session = BuildModeSession(player, cityId, previousScoreboard = previousScoreboard)
         sessions[player.uniqueId] = session
+        
+        // Setup Sidebar UI
+        setupScoreboard(player, session)
         
         // Force third-person view
         setThirdPerson(player, true)
@@ -157,6 +166,9 @@ class BuilderModeManager(private val plugin: AtlasPlugin) : Listener {
         clearGhostBlocks(session)
         clearBorderBlocks(session)
         
+        // Restore scoreboard
+        player.scoreboard = session.previousScoreboard
+        
         // Restore first-person view
         setThirdPerson(player, false)
         
@@ -164,6 +176,17 @@ class BuilderModeManager(private val plugin: AtlasPlugin) : Listener {
             player.sendMessage(Component.text("Exited Build Mode.", NamedTextColor.YELLOW))
             player.playSound(player.location, Sound.BLOCK_BEACON_DEACTIVATE, 0.8f, 1.2f)
         }
+    }
+    
+    /**
+     * Cleanup all active sessions (e.g. on server disable)
+     */
+    fun shutdown() {
+        val activePlayers = sessions.keys.toList()
+        activePlayers.mapNotNull { plugin.server.getPlayer(it) }.forEach { player ->
+            exitBuildMode(player, silent = true)
+        }
+        sessions.clear()
     }
     
     /**
@@ -184,10 +207,14 @@ class BuilderModeManager(private val plugin: AtlasPlugin) : Listener {
         player.sendMessage(Component.text("Selected: ", NamedTextColor.GRAY)
             .append(Component.text(type.name.replace("_", " "), NamedTextColor.AQUA, TextDecoration.BOLD))
             .append(Component.text(" (${type.width}x${type.depth}x${type.height})", NamedTextColor.DARK_GRAY)))
+        
         player.sendMessage(Component.text("  Cost: ", NamedTextColor.GRAY)
             .append(Component.text("$cost gold", NamedTextColor.GOLD)))
         
         player.playSound(player.location, Sound.UI_BUTTON_CLICK, 0.7f, 1.3f)
+        
+        // Update Sidebar
+        updateScoreboard(player, session)
     }
     
     /**
@@ -821,6 +848,73 @@ class BuilderModeManager(private val plugin: AtlasPlugin) : Listener {
         }
         
         session.player.sendMessage(Component.text("City borders shown in green.", NamedTextColor.GREEN))
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // SIDEBAR UI (Scoreboard)
+    // ═══════════════════════════════════════════════════════════════
+    
+    private fun setupScoreboard(player: Player, session: BuildModeSession) {
+        val manager = plugin.server.scoreboardManager
+        val board = manager.newScoreboard
+        val objective = board.registerNewObjective("build_mode", Criteria.DUMMY, Component.text("BUILDER MODE", NamedTextColor.GOLD, TextDecoration.BOLD))
+        objective.displaySlot = DisplaySlot.SIDEBAR
+        
+        // Static Controls
+        objective.getScore("§1").score = 15 // Space
+        objective.getScore("§eControls:").score = 14
+        objective.getScore(" Scroll: Select").score = 13
+        objective.getScore(" L-Click: Place").score = 12
+        objective.getScore(" R-Click: Rotate").score = 11
+        objective.getScore(" Q: Exit").score = 10
+        objective.getScore("§2").score = 9 // Space
+        
+        objective.getScore("§bSelection:").score = 8
+        // Dynamic lines will be set in updateScoreboard
+        
+        player.scoreboard = board
+        updateScoreboard(player, session)
+    }
+    
+    private fun updateScoreboard(player: Player, session: BuildModeSession) {
+        val board = player.scoreboard
+        val objective = board.getObjective("build_mode") ?: return
+        
+        // Clear previous dynamic lines (simple way: reset scores 1-8)
+        // Ideally we track exact strings, but for now we iterate/clear known prefixes or just overwrite?
+        // Scoreboard entries are strings. We must remove old strings to "update" them.
+        // A simple way is to use Team prefixes, but raw scores work if we just clear all entries below 9?
+        // Let's brute force cleanup for simplicity or use specific placeholders.
+        
+        board.entries.forEach { entry ->
+            val score = objective.getScore(entry).score
+            if (score < 9) {
+                board.resetScores(entry)
+            }
+        }
+        
+        val type = session.selectedStructure
+        val city = plugin.cityManager.getCity(session.cityId)
+        val treasury = city?.treasury?.toInt() ?: 0
+        
+        if (type != null) {
+            val name = type.name.replace("_", " ").toLowerCase().capitalize()
+            objective.getScore(" §f$name").score = 7
+            objective.getScore(" §7${type.width}x${type.depth}x${type.height}").score = 6
+            
+            val cost = getStructureCost(type)
+            val costColor = if (treasury >= cost) "§6" else "§c"
+            objective.getScore(" Cost: $costColor${cost}g").score = 5
+        } else {
+            objective.getScore(" §7(None)").score = 7
+        }
+        
+        objective.getScore("§3").score = 4 // Space
+        
+        objective.getScore("§6Treasury:").score = 3
+        objective.getScore(" §e${treasury}g").score = 2
+        
+        objective.getScore("§4").score = 1 // Space
     }
     
     private fun showErrorPulse(player: Player, location: Location, type: StructureType) {
