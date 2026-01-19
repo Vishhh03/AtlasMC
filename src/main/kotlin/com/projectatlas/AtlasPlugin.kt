@@ -91,6 +91,7 @@ class AtlasPlugin : JavaPlugin() {
     lateinit var skillEffectSystem: SkillEffectSystem
     lateinit var cityVisualizer: com.projectatlas.city.CityVisualizer
     lateinit var buildingPlacementManager: com.projectatlas.city.BuildingPlacementManager
+    lateinit var builderModeManager: com.projectatlas.city.BuilderModeManager
 
     override fun onEnable() {
         logger.info("Project Atlas is waking up...")
@@ -165,6 +166,11 @@ class AtlasPlugin : JavaPlugin() {
         buildingPlacementManager = com.projectatlas.city.BuildingPlacementManager(this)
         buildingPlacementManager.startTask()
         server.pluginManager.registerEvents(buildingPlacementManager, this)
+        
+        // Initialize Legends-Style Builder Mode
+        builderModeManager = com.projectatlas.city.BuilderModeManager(this)
+        server.pluginManager.registerEvents(builderModeManager, this)
+        logger.info("Builder Mode System enabled!")
         
         val entityCleanupManager = com.projectatlas.util.EntityCleanupManager(this) // Auto-starts task
         globalThreatManager = com.projectatlas.threat.GlobalThreatManager(this) // Starts threat loop

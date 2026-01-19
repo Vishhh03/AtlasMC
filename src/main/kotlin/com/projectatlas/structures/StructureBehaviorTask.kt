@@ -50,9 +50,13 @@ class StructureBehaviorTask(private val plugin: AtlasPlugin) : BukkitRunnable() 
     }
     
     private fun handleTurretLogic(center: org.bukkit.Location) {
+        // Identify owner city from location
+        val city = plugin.cityManager.getCityAt(center.chunk)
+        val cityId = city?.id
+        
         // Find nearest valid target
         val target = center.world.getNearbyEntities(center, 15.0, 15.0, 15.0)
-            .filter { it is Monster || (it is Player && !isPlayerFriendly(it)) }
+            .filter { it is Monster || (it is Player && !isPlayerFriendly(it, cityId)) }
             .minByOrNull { it.location.distanceSquared(center) }
             
         if (target != null) {
@@ -104,11 +108,19 @@ class StructureBehaviorTask(private val plugin: AtlasPlugin) : BukkitRunnable() 
         }
     }
     
-    private fun isPlayerFriendly(player: Player): Boolean {
-        // TODO: Faction/City check
-        // For now, turrets shoot everyone not in a city?
-        // Let's assume turrets owned by "World" shoot everyone for now (Hostile Structure)
-        // Or if we implement ownership later, check owner.
-        return false // Hostile to all players for demo
+    private fun isPlayerFriendly(player: Player, turretCityId: String?): Boolean {
+        // If turret has no city (wild), it shoots everyone (hostile)
+        if (turretCityId == null) return false
+        
+        // Members of the city are friendly
+        val profile = plugin.identityManager.getPlayer(player.uniqueId)
+        if (profile?.cityId == turretCityId) return true
+        
+        // RELAXED TARGETING:
+        // Neutrals (players with no city) are IGNORED (Friendly)
+        if (profile?.cityId == null) return true
+        
+        // Players from OTHER cities are Hostile (Intruders)
+        return false
     }
 }

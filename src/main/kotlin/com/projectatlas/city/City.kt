@@ -22,7 +22,7 @@ data class City(
     var specialization: CitySpecialization = CitySpecialization.NONE,
     var energy: Int = 0, // Redstone (Industrial Power)
     var mana: Int = 0, // Lapis (Arcane Power)
-    val placedStructures: MutableMap<String, MutableList<String>> = mutableMapOf() // StructureType -> List<"world:x,y,z">
+    var placedStructures: MutableMap<String, MutableList<String>> = mutableMapOf() // StructureType -> List<"world:x,y,z">
 ) {
     fun addMember(uuid: UUID) {
         if (!members.contains(uuid)) members.add(uuid)

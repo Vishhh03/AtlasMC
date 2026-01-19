@@ -486,6 +486,9 @@ class CityManager(private val plugin: AtlasPlugin) {
                 if (city.infrastructure == null) {
                     city.infrastructure = CityInfrastructure()
                 }
+                if (city.placedStructures == null) {
+                    city.placedStructures = mutableMapOf()
+                }
                 cities[city.id] = city
                 city.claimedChunks.forEach { chunkKey ->
                     chunkMap[chunkKey] = city.id

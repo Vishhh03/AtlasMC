@@ -75,6 +75,7 @@ class AtlasCommand(
             // Resource Pack Command
             "resourcepack", "rp" -> handleResourcePack(player, args)
             "siege" -> handleSiege(player, args)
+            "build" -> handleBuild(player, args)
             "debug" -> com.projectatlas.debug.TextureDebugKit.giveAllTextures(player)
 
             else -> player.sendMessage(Component.text("Unknown command. Type /atlas help for help.", NamedTextColor.RED))
@@ -607,6 +608,89 @@ class AtlasCommand(
             player.sendMessage(Component.text("  /atlas relic spawn - Force relic spawn", NamedTextColor.DARK_RED))
         }
         player.sendMessage(Component.empty())
+    }
+    
+    private fun handleBuild(player: Player, args: Array<out String>) {
+        val plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(AtlasPlugin::class.java)
+        
+        // Check if player is in a city
+        val profile = identityManager.getPlayer(player.uniqueId)
+        if (profile?.cityId == null) {
+            player.sendMessage(Component.text("You must be in a city to use Build Mode.", NamedTextColor.RED))
+            player.sendMessage(Component.text("Create or join a city first: /atlas city create <name>", NamedTextColor.GRAY))
+            return
+        }
+        
+        // If already in build mode, handle subcommands
+        if (plugin.builderModeManager.isInBuildMode(player)) {
+            if (args.size < 2) {
+                // Show current mode info
+                player.sendMessage(Component.text("You are in Build Mode.", NamedTextColor.AQUA))
+                player.sendMessage(Component.text("Use LEFT CLICK to place, RIGHT CLICK to rotate, Q to exit.", NamedTextColor.GRAY))
+                return
+            }
+            
+            when (args[1].lowercase()) {
+                "exit", "quit", "leave", "cancel" -> {
+                    plugin.builderModeManager.exitBuildMode(player)
+                }
+                "rotate", "r" -> {
+                    plugin.builderModeManager.rotateStructure(player)
+                }
+                "select" -> {
+                    if (args.size < 3) {
+                        player.sendMessage(Component.text("Usage: /atlas build select <structure>", NamedTextColor.RED))
+                        player.sendMessage(Component.text("Structures: TURRET, BARRACKS, GENERATOR, MERCHANT_HUT, QUEST_CAMP, NEXUS", NamedTextColor.GRAY))
+                        return
+                    }
+                    try {
+                        val type = com.projectatlas.structures.StructureType.valueOf(args[2].uppercase())
+                        plugin.builderModeManager.selectStructure(player, type)
+                    } catch (e: IllegalArgumentException) {
+                        player.sendMessage(Component.text("Invalid structure: ${args[2]}", NamedTextColor.RED))
+                    }
+                }
+                "demolish", "destroy", "remove", "sell" -> {
+                    // Exit build mode first
+                    plugin.builderModeManager.exitBuildMode(player, silent = true)
+                    
+                    // Get the block the player is looking at
+                    val targetBlock = player.getTargetBlock(null, 10)
+                    if (targetBlock == null || targetBlock.type.isAir) {
+                        player.sendMessage(Component.text("Look at a structure to demolish it.", NamedTextColor.RED))
+                        return
+                    }
+                    
+                    // Try to demolish at this location
+                    val result = plugin.builderModeManager.demolishStructure(player, targetBlock.location)
+                    if (!result) {
+                        // Re-enter build mode if demolish failed
+                        plugin.builderModeManager.enterBuildMode(player, profile.cityId!!)
+                    }
+                }
+                else -> {
+                    player.sendMessage(Component.text("Build commands: exit, rotate, select <type>, demolish", NamedTextColor.YELLOW))
+                }
+            }
+            return
+        }
+        
+        // Not in build mode - enter it
+        val city = cityManager.getCity(profile.cityId!!)
+        if (city == null) {
+            player.sendMessage(Component.text("City not found.", NamedTextColor.RED))
+            return
+        }
+        
+        // Check if player is in city territory
+        val currentCity = cityManager.getCityAt(player.location.chunk)
+        if (currentCity?.id != city.id) {
+            player.sendMessage(Component.text("⚠ You must be in your city territory to enter Build Mode.", NamedTextColor.RED))
+            player.sendMessage(Component.text("Go to your city and try again.", NamedTextColor.GRAY))
+            return
+        }
+        
+        plugin.builderModeManager.enterBuildMode(player, profile.cityId!!)
     }
 
     // --- Tab Completion ---
@@ -1596,7 +1680,7 @@ class AtlasCommand(
                 "dungeon", "party", "bounty", "boss", "relic", "blueprint", "bp", "schem", "spawn",
                 "sort", "stats", "scoreboard", "sb", "damage", "dmg", "quickstack", "qs",
                 "atmosphere", "ambient", "shaders", "quest", "heal", "medkit", "skills", "skill", "tree",
-                "admin", "anim", "animation"
+                "admin", "anim", "animation", "build", "siege"
             ).filter { it.startsWith(args[0].lowercase()) }
             
             2 -> when (args[0].lowercase()) {
@@ -1620,6 +1704,13 @@ class AtlasCommand(
                     .filter { it.lowercase().startsWith(args[1].lowercase()) }
                 "admin" -> if (sender.hasPermission("atlas.admin")) listOf("give", "reset", "xp", "threat", "altar", "villager", "market", "questboard", "history").filter { it.startsWith(args[1].lowercase()) } else emptyList()
                 "anim", "animation" -> if (sender.hasPermission("atlas.admin")) listOf("spawn", "attach", "play", "stop", "detach", "list", "effect", "recoil", "proc").filter { it.startsWith(args[1].lowercase()) } else emptyList()
+                "build" -> {
+                    if (plugin.builderModeManager.isInBuildMode(sender)) {
+                        listOf("exit", "rotate", "select", "demolish").filter { it.startsWith(args[1].lowercase()) }
+                    } else {
+                        listOf("demolish").filter { it.startsWith(args[1].lowercase()) }
+                    }
+                }
                 else -> emptyList()
             }
             

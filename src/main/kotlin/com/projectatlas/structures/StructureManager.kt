@@ -14,7 +14,13 @@ enum class StructureType(val width: Int, val height: Int, val depth: Int) {
     BARRACKS(9, 6, 9),
     NEXUS(3, 5, 3),
     TURRET(3, 7, 3),
-    GENERATOR(3, 4, 3)
+    GENERATOR(3, 4, 3),
+    // Defensive structures
+    WALL(3, 4, 1),        // Single wall segment
+    WALL_CORNER(3, 4, 3), // Corner piece
+    GATE(3, 5, 1),        // Player-activatable gate
+    RAMP(3, 3, 5),        // Sloped access ramp
+    WATCHTOWER(5, 10, 5)  // Tall observation tower
 }
 
 class StructureManager(private val plugin: AtlasPlugin) {
@@ -38,6 +44,11 @@ class StructureManager(private val plugin: AtlasPlugin) {
             StructureType.NEXUS -> buildNexus(startLoc)
             StructureType.TURRET -> buildTurret(startLoc)
             StructureType.GENERATOR -> buildGenerator(startLoc)
+            StructureType.WALL -> buildWall(startLoc)
+            StructureType.WALL_CORNER -> buildWallCorner(startLoc)
+            StructureType.GATE -> buildGate(startLoc)
+            StructureType.RAMP -> buildRamp(startLoc)
+            StructureType.WATCHTOWER -> buildWatchtower(startLoc)
         }
         
         // Register Health
@@ -45,6 +56,10 @@ class StructureManager(private val plugin: AtlasPlugin) {
             StructureType.NEXUS, StructureType.GENERATOR -> 500.0
             StructureType.BARRACKS -> 300.0
             StructureType.TURRET -> 150.0
+            StructureType.WATCHTOWER -> 200.0
+            StructureType.WALL, StructureType.WALL_CORNER -> 100.0
+            StructureType.GATE -> 120.0
+            StructureType.RAMP -> 80.0
             else -> 100.0
         }
         val radius = kotlin.math.max(type.width, type.depth) / 1.5 // Approx radius covering most of it
@@ -285,7 +300,7 @@ class StructureManager(private val plugin: AtlasPlugin) {
         center.clone().add(-2.0, 1.0, -2.0).block.type = Material.CHEST
         center.clone().add(2.0, 1.0, 2.0).block.type = Material.BARREL
         center.clone().add(0.0, 1.0, -2.0).block.type = Material.SMITHING_TABLE
-        center.clone().add(-2.0, 1.0, 1.0).block.type = Material.ARMOR_STAND
+        center.clone().add(-2.0, 1.0, 1.0).block.type = Material.ANVIL
         
         // Campfire in center
         center.block.type = Material.CAMPFIRE
@@ -347,5 +362,165 @@ class StructureManager(private val plugin: AtlasPlugin) {
         center.clone().add(-1.0, 1.0, 0.0).block.type = Material.PISTON
         center.clone().add(0.0, 1.0, 1.0).block.type = Material.PISTON
         center.clone().add(0.0, 1.0, -1.0).block.type = Material.PISTON
+    }
+    
+    // ═══════════════════════════════════════════════════════════════
+    // DEFENSIVE STRUCTURES
+    // ═══════════════════════════════════════════════════════════════
+    
+    // 3x4x1 Wall Segment (Stone Brick)
+    private fun buildWall(center: Location) {
+        val base = center.clone().add(-1.0, 0.0, 0.0)
+        
+        // Main wall body
+        for (x in 0..2) {
+            for (y in 0..3) {
+                val block = base.clone().add(x.toDouble(), y.toDouble(), 0.0).block
+                block.type = if (y == 3) Material.STONE_BRICK_WALL else Material.STONE_BRICKS
+            }
+        }
+        
+        // Decorative top crenellations
+        base.clone().add(0.0, 4.0, 0.0).block.type = Material.STONE_BRICK_SLAB
+        base.clone().add(2.0, 4.0, 0.0).block.type = Material.STONE_BRICK_SLAB
+    }
+    
+    // 3x4x3 Wall Corner (L-shaped)
+    private fun buildWallCorner(center: Location) {
+        val base = center.clone().add(-1.0, 0.0, -1.0)
+        
+        // L-shape: X-axis and Z-axis walls meeting at corner
+        for (y in 0..3) {
+            // X-axis wall
+            for (x in 0..2) {
+                val block = base.clone().add(x.toDouble(), y.toDouble(), 0.0).block
+                block.type = if (y == 3) Material.STONE_BRICK_WALL else Material.STONE_BRICKS
+            }
+            // Z-axis wall (skip overlap at 0,0)
+            for (z in 1..2) {
+                val block = base.clone().add(0.0, y.toDouble(), z.toDouble()).block
+                block.type = if (y == 3) Material.STONE_BRICK_WALL else Material.STONE_BRICKS
+            }
+        }
+        
+        // Corner pillar is thicker
+        for (y in 0..4) {
+            base.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.CHISELED_STONE_BRICKS
+        }
+    }
+    
+    // 3x5x1 Gate (Openable with interaction)
+    private fun buildGate(center: Location) {
+        val base = center.clone().add(-1.0, 0.0, 0.0)
+        
+        // Gate pillars (sides)
+        for (y in 0..4) {
+            base.clone().add(0.0, y.toDouble(), 0.0).block.type = Material.DEEPSLATE_BRICK_WALL
+            base.clone().add(2.0, y.toDouble(), 0.0).block.type = Material.DEEPSLATE_BRICK_WALL
+        }
+        
+        // Gate arch (top)
+        base.clone().add(1.0, 4.0, 0.0).block.type = Material.DEEPSLATE_BRICKS
+        
+        // Iron bars (the actual gate)
+        for (y in 0..3) {
+            val gateBlock = base.clone().add(1.0, y.toDouble(), 0.0).block
+            gateBlock.type = Material.IRON_BARS
+        }
+        
+        // Lanterns on pillars
+        base.clone().add(0.0, 3.0, 0.5).block.type = Material.LANTERN
+        base.clone().add(2.0, 3.0, 0.5).block.type = Material.LANTERN
+    }
+    
+    // 3x3x5 Ramp (Sloped stairs for wall access)
+    private fun buildRamp(center: Location) {
+        val base = center.clone().add(-1.0, 0.0, -2.0)
+        
+        // Build stairs going up
+        for (z in 0..4) {
+            val y = z // 1 block up for each Z
+            for (x in 0..2) {
+                if (y < 3) {
+                    val stairBlock = base.clone().add(x.toDouble(), y.toDouble(), z.toDouble()).block
+                    stairBlock.type = Material.STONE_BRICK_STAIRS
+                    // Set stair direction
+                    val stairData = stairBlock.blockData as? org.bukkit.block.data.type.Stairs
+                    stairData?.facing = org.bukkit.block.BlockFace.SOUTH
+                    stairBlock.blockData = stairData ?: stairBlock.blockData
+                }
+            }
+            // Fill underneath
+            for (fillY in 0 until y) {
+                for (x in 0..2) {
+                    base.clone().add(x.toDouble(), fillY.toDouble(), z.toDouble()).block.type = Material.COBBLESTONE
+                }
+            }
+        }
+        
+        // Railings
+        for (z in 0..4) {
+            val y = z
+            if (y < 3) {
+                base.clone().add(-0.0, y + 1.0, z.toDouble()).block.type = Material.COBBLESTONE_WALL
+                base.clone().add(2.0, y + 1.0, z.toDouble()).block.type = Material.COBBLESTONE_WALL
+            }
+        }
+    }
+    
+    // 5x10x5 Watchtower (Tall observation post)
+    private fun buildWatchtower(center: Location) {
+        val base = center.clone().add(-2.0, 0.0, -2.0)
+        
+        // Foundation (solid base)
+        for (x in 0..4) {
+            for (z in 0..4) {
+                base.clone().add(x.toDouble(), 0.0, z.toDouble()).block.type = Material.COBBLESTONE
+            }
+        }
+        
+        // Tower shaft (hollow)
+        for (y in 1..7) {
+            for (x in 0..4) {
+                for (z in 0..4) {
+                    // Only build outer walls
+                    if (x == 0 || x == 4 || z == 0 || z == 4) {
+                        val material = when {
+                            y % 3 == 0 -> Material.CHISELED_STONE_BRICKS
+                            else -> Material.STONE_BRICKS
+                        }
+                        base.clone().add(x.toDouble(), y.toDouble(), z.toDouble()).block.type = material
+                    }
+                }
+            }
+        }
+        
+        // Interior ladder
+        for (y in 1..7) {
+            base.clone().add(2.0, y.toDouble(), 1.0).block.type = Material.LADDER
+        }
+        
+        // Top platform (wider overhang)
+        for (x in -1..5) {
+            for (z in -1..5) {
+                val floorLoc = base.clone().add(x.toDouble(), 8.0, z.toDouble())
+                if (floorLoc.block.type.isAir) {
+                    floorLoc.block.type = Material.DARK_OAK_PLANKS
+                }
+            }
+        }
+        
+        // Battlements on top
+        for (x in -1..5) {
+            base.clone().add(x.toDouble(), 9.0, -1.0).block.type = Material.STONE_BRICK_WALL
+            base.clone().add(x.toDouble(), 9.0, 5.0).block.type = Material.STONE_BRICK_WALL
+        }
+        for (z in 0..4) {
+            base.clone().add(-1.0, 9.0, z.toDouble()).block.type = Material.STONE_BRICK_WALL
+            base.clone().add(5.0, 9.0, z.toDouble()).block.type = Material.STONE_BRICK_WALL
+        }
+        
+        // Roof peak
+        center.clone().add(0.0, 9.0, 0.0).block.type = Material.CAMPFIRE
     }
 }
