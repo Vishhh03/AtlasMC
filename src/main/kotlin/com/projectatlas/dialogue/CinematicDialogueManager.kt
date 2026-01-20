@@ -73,7 +73,7 @@ class CinematicDialogueManager(private val plugin: AtlasPlugin) : Listener {
         typeLine(session)
     }
 
-    private fun typeLine(session: DialogueSession) {
+    fun typeLine(session: DialogueSession) {
         val fullText = if (session.currentLineIndex == 0) {
              "${session.dialogue.speakerName}: ${session.dialogue.text}"
         } else {
@@ -109,13 +109,15 @@ class CinematicDialogueManager(private val plugin: AtlasPlugin) : Listener {
                 session.isTyping = false
                 session.task?.cancel()
                 
-                // Show "Sneak to Continue" in Action Bar
-                session.player.sendActionBar(
-                    Component.text(session.currentText, NamedTextColor.GOLD)
-                        .append(Component.text("  [Sneak >]", NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
-                )
+                // Auto-advance to options immediately
+                proceedToOptions(session)
             }
         }, 0L, 1L) 
+    }
+
+    private fun proceedToOptions(session: DialogueSession) {
+        session.currentLineIndex++
+        showOptions(session)
     }
 
     private fun showOptions(session: DialogueSession) {
@@ -198,19 +200,15 @@ class CinematicDialogueManager(private val plugin: AtlasPlugin) : Listener {
         val session = activeSessions[event.player.uniqueId] ?: return
         
         if (session.isTyping) {
-            // Instant finish
+            // Instant finish (Skip) calling proceedToOptions directly
             session.isTyping = false
             session.task?.cancel()
-            val fullText = "${session.dialogue.speakerName}: ${session.dialogue.text}"
             
-            session.player.sendActionBar(
-                Component.text(fullText, NamedTextColor.GOLD)
-                    .append(Component.text("  [Sneak >]", NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
-            )
-        } else {
-            // Next line (or options)
-            session.currentLineIndex++
-            typeLine(session)
+            // Show full text quickly before options? 
+            // The user wants to see options click, so let's just go straight to options
+            // But usually 'skip' means 'show full text', then 'next' goes to options.
+            // Since we are auto-advancing, 'Skip' -> 'Show Options' is fine.
+            proceedToOptions(session)
         }
     }
     
@@ -218,6 +216,33 @@ class CinematicDialogueManager(private val plugin: AtlasPlugin) : Listener {
         val iterator = activeSessions.values.iterator()
         while (iterator.hasNext()) {
             val session = iterator.next()
+            
+            // 0. Safety Checks
+            if (session.npcEntity != null) {
+                // Check if dead
+                if (!session.npcEntity.isValid || session.npcEntity.isDead) {
+                    session.player.sendActionBar(Component.empty())
+                    iterator.remove() // Silent close
+                    continue
+                }
+                
+                // Check distance
+                if (session.distanceToPlayer() > 10.0) {
+                     stopDialogue(session.player, instant = true)
+                     continue // stopDialogue removes from map? No, stopDialogue uses separate lookup. 
+                     // We should be careful here. stopDialogue modifies activeSessions.
+                     // Since we are iterating, we must use iterator.remove() OR handle differently.
+                     // But stopDialogue uses activeSessions.remove(player.uniqueId).
+                     // This will cause ConcurrentModificationException if we use map.values.iterator() directly?
+                     // activeSessions is ConcurrentHashMap, so keySet iterator is weakly consistent.
+                     // But let's be safe.
+                }
+            }
+            // Also check player online/world match?
+            if (!session.player.isOnline || (session.npcEntity != null && session.player.world != session.npcEntity.world)) {
+                iterator.remove()
+                continue
+            }
             
             // 1. NPC Tracking (Face player)
             if (session.npcEntity != null && session.npcEntity.isValid) {
@@ -245,5 +270,10 @@ class CinematicDialogueManager(private val plugin: AtlasPlugin) : Listener {
                 }
             }
         }
+    }
+    
+    // Helper extension
+    private fun DialogueSession.distanceToPlayer(): Double {
+        return npcEntity?.location?.distance(player.location) ?: 0.0
     }
 }

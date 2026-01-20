@@ -41,12 +41,12 @@ class SkillEffectSystem(private val plugin: AtlasPlugin) {
         val loc = target.location.add(0.0, 1.0, 0.0)
         
         // Red crit particles in a sweep pattern
-        for (i in 0..10) {
-            val offset = (i - 5) * 0.1
+        for (i in 0..5) {
+            val offset = (i - 2) * 0.15
             loc.world.spawnParticle(
                 Particle.DUST,
                 loc.clone().add(offset, 0.0, offset),
-                3,
+                1,
                 0.1, 0.2, 0.1,
                 0.0,
                 Particle.DustOptions(Color.RED, 1.5f)
@@ -79,7 +79,7 @@ class SkillEffectSystem(private val plugin: AtlasPlugin) {
             override fun run() {
                 if (tick >= maxTicks) {
                     // Final burst at player
-                    player.world.spawnParticle(Particle.HEART, to, 5, 0.3, 0.3, 0.3, 0.0)
+                    player.world.spawnParticle(Particle.HEART, to, 2, 0.2, 0.2, 0.2, 0.0)
                     player.playSound(player.location, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.5f)
                     cancel()
                     return
@@ -98,7 +98,7 @@ class SkillEffectSystem(private val plugin: AtlasPlugin) {
                 current.world.spawnParticle(
                     Particle.DUST,
                     current,
-                    3,
+                    1,
                     0.1, 0.1, 0.1,
                     0.0,
                     Particle.DustOptions(Color.LIME, 1.0f)
@@ -119,21 +119,21 @@ class SkillEffectSystem(private val plugin: AtlasPlugin) {
         val loc = player.location
         
         // Speed line particles radiating outward
-        for (i in 0..8) {
-            val angle = (2 * PI * i) / 8
+        for (i in 0..4) {
+            val angle = (2 * PI * i) / 4
             val direction = Vector(cos(angle) * 0.8, 0.2, sin(angle) * 0.8)
             
             loc.world.spawnParticle(
                 Particle.CLOUD,
                 loc.clone().add(0.0, 1.0, 0.0),
-                2,
+                1,
                 direction.x, direction.y, direction.z,
                 0.15
             )
         }
         
         // Motion blur effect
-        loc.world.spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, loc.clone().add(0.0, 1.0, 0.0), 10, 0.3, 0.5, 0.3, 0.02)
+        loc.world.spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, loc.clone().add(0.0, 1.0, 0.0), 4, 0.3, 0.5, 0.3, 0.02)
         
         // Woosh sound
         player.playSound(loc, Sound.ENTITY_PHANTOM_FLAP, 1.0f, 1.5f)
@@ -150,14 +150,14 @@ class SkillEffectSystem(private val plugin: AtlasPlugin) {
         val loc = target.location.add(0.0, 1.5, 0.0)
         
         // Dark skull particles
-        loc.world.spawnParticle(Particle.SOUL, loc, 20, 0.3, 0.3, 0.3, 0.05)
-        loc.world.spawnParticle(Particle.SMOKE, loc, 15, 0.4, 0.5, 0.4, 0.03)
+        loc.world.spawnParticle(Particle.SOUL, loc, 8, 0.3, 0.3, 0.3, 0.05)
+        loc.world.spawnParticle(Particle.SMOKE, loc, 5, 0.4, 0.5, 0.4, 0.03)
         
         // Blood splatter
         loc.world.spawnParticle(
             Particle.DUST,
             loc,
-            25,
+            10,
             0.5, 0.5, 0.5,
             0.1,
             Particle.DustOptions(Color.fromRGB(100, 0, 0), 2.0f)
@@ -179,13 +179,13 @@ class SkillEffectSystem(private val plugin: AtlasPlugin) {
         val attackerLoc = attacker.location.add(0.0, 1.0, 0.0)
         
         // Thorns particles around player
-        for (i in 0..6) {
-            val angle = (2 * PI * i) / 6
+        for (i in 0..3) {
+            val angle = (2 * PI * i) / 4
             val offset = Vector(cos(angle) * 0.6, 0.0, sin(angle) * 0.6)
             playerLoc.world.spawnParticle(
                 Particle.CRIT,
                 playerLoc.clone().add(offset),
-                3,
+                1,
                 0.1, 0.2, 0.1,
                 0.05
             )
@@ -193,12 +193,12 @@ class SkillEffectSystem(private val plugin: AtlasPlugin) {
         
         // Damage line to attacker
         val direction = attackerLoc.toVector().subtract(playerLoc.toVector()).normalize()
-        for (i in 0..5) {
-            val point = playerLoc.clone().add(direction.clone().multiply(i * 0.4))
+        for (i in 0..3) {
+            val point = playerLoc.clone().add(direction.clone().multiply(i * 0.5))
             point.world.spawnParticle(
                 Particle.DUST,
                 point,
-                2,
+                1,
                 0.05, 0.05, 0.05,
                 0.0,
                 Particle.DustOptions(Color.PURPLE, 1.0f)
@@ -250,7 +250,7 @@ class SkillEffectSystem(private val plugin: AtlasPlugin) {
                 
                 // Occasional flame burst
                 if (tick % 20 == 0) {
-                    loc.world.spawnParticle(Particle.FLAME, loc, 5, 0.3, 0.3, 0.3, 0.02)
+                    loc.world.spawnParticle(Particle.FLAME, loc, 2, 0.3, 0.3, 0.3, 0.02)
                 }
                 
                 tick++
@@ -283,21 +283,21 @@ class SkillEffectSystem(private val plugin: AtlasPlugin) {
         val loc = player.location
         
         // Feather burst particles
-        for (i in 0..12) {
-            val angle = (2 * PI * i) / 12
+        for (i in 0..6) {
+            val angle = (2 * PI * i) / 6
             val direction = Vector(cos(angle) * 0.5, -0.3, sin(angle) * 0.5)
             
             loc.world.spawnParticle(
                 Particle.FIREWORK,
                 loc.clone().add(0.0, 0.5, 0.0),
-                2,
+                1,
                 direction.x, direction.y, direction.z,
                 0.1
             )
         }
         
         // Cloud puff
-        loc.world.spawnParticle(Particle.CLOUD, loc.clone().add(0.0, 0.2, 0.0), 8, 0.3, 0.1, 0.3, 0.02)
+        loc.world.spawnParticle(Particle.CLOUD, loc.clone().add(0.0, 0.2, 0.0), 3, 0.3, 0.1, 0.3, 0.02)
         
         // Sound
         player.playSound(loc, Sound.ENTITY_BAT_TAKEOFF, 0.8f, 1.2f)
@@ -311,21 +311,21 @@ class SkillEffectSystem(private val plugin: AtlasPlugin) {
         val loc = player.location
         
         // Ground impact ring
-        for (i in 0..12) {
-            val angle = (2 * PI * i) / 12
+        for (i in 0..6) {
+            val angle = (2 * PI * i) / 6
             val offset = Vector(cos(angle) * 1.2, 0.1, sin(angle) * 1.2)
             
             loc.world.spawnParticle(
                 Particle.DUST,
                 loc.clone().add(offset),
-                3,
+                1,
                 0.1, 0.0, 0.1,
                 0.0,
                 Particle.DustOptions(Color.GRAY, 1.5f)
             )
         }
         
-        loc.world.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, loc, 5, 0.3, 0.1, 0.3, 0.01)
+        loc.world.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, loc, 2, 0.3, 0.1, 0.3, 0.01)
         
         // Soft landing sound
         player.playSound(loc, Sound.BLOCK_WOOL_FALL, 1.0f, 0.8f)
@@ -350,7 +350,7 @@ class SkillEffectSystem(private val plugin: AtlasPlugin) {
         }
         
         // Afterimage effect (dark smoke at origin)
-        startLoc.world.spawnParticle(Particle.LARGE_SMOKE, startLoc.clone().add(0.0, 1.0, 0.0), 10, 0.2, 0.5, 0.2, 0.01)
+        startLoc.world.spawnParticle(Particle.LARGE_SMOKE, startLoc.clone().add(0.0, 1.0, 0.0), 4, 0.2, 0.5, 0.2, 0.01)
     }
     
     /**
@@ -432,8 +432,8 @@ class SkillEffectSystem(private val plugin: AtlasPlugin) {
      */
     fun playEnderTeleportEffect(from: Location, to: Location) {
         // Origin effect - dissolving
-        from.world.spawnParticle(Particle.PORTAL, from.clone().add(0.0, 1.0, 0.0), 50, 0.3, 0.6, 0.3, 0.5)
-        from.world.spawnParticle(Particle.REVERSE_PORTAL, from.clone().add(0.0, 1.0, 0.0), 30, 0.2, 0.4, 0.2, 0.3)
+        from.world.spawnParticle(Particle.PORTAL, from.clone().add(0.0, 1.0, 0.0), 20, 0.3, 0.6, 0.3, 0.5)
+        from.world.spawnParticle(Particle.REVERSE_PORTAL, from.clone().add(0.0, 1.0, 0.0), 10, 0.2, 0.4, 0.2, 0.3)
         
         // Rift line connecting origin to destination
         val direction = to.toVector().subtract(from.toVector())
@@ -458,8 +458,8 @@ class SkillEffectSystem(private val plugin: AtlasPlugin) {
         
         // Destination effect - reforming
         plugin.server.scheduler.runTaskLater(plugin, Runnable {
-            to.world.spawnParticle(Particle.PORTAL, to.clone().add(0.0, 1.0, 0.0), 40, 0.3, 0.6, 0.3, 0.3)
-            to.world.spawnParticle(Particle.END_ROD, to.clone().add(0.0, 1.0, 0.0), 20, 0.3, 0.5, 0.3, 0.1)
+            to.world.spawnParticle(Particle.PORTAL, to.clone().add(0.0, 1.0, 0.0), 15, 0.3, 0.6, 0.3, 0.3)
+            to.world.spawnParticle(Particle.END_ROD, to.clone().add(0.0, 1.0, 0.0), 8, 0.3, 0.5, 0.3, 0.1)
             to.world.playSound(to, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.2f)
         }, (distance / 2).toLong().coerceAtLeast(5L))
     }

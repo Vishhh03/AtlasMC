@@ -39,8 +39,10 @@ class SummoningAltarManager(private val plugin: AtlasPlugin) : Listener {
         var portalEntity: UUID? = null
     )
 
-    private val altars = ConcurrentHashMap<Location, Altar>()
+    private val altars = ConcurrentHashMap<String, Altar>()
     private val cooldowns = ConcurrentHashMap<UUID, Long>()
+    
+    private fun locKey(loc: Location): String = "${loc.world.name}:${loc.blockX}:${loc.blockY}:${loc.blockZ}"
 
     // ══════════════════════════════════════════════════════════════
     // CREATION & INTERACTION
@@ -57,7 +59,7 @@ class SummoningAltarManager(private val plugin: AtlasPlugin) : Listener {
             val location = block.location
 
             // Is this an existing altar?
-            val altar = altars[location]
+            val altar = altars[locKey(location)]
             if (altar != null) {
                 // Toggle/Use Altar
                 handleAltarInteraction(player, altar)
@@ -106,7 +108,7 @@ class SummoningAltarManager(private val plugin: AtlasPlugin) : Listener {
             cityId = cityIdUUID
         )
         
-        altars[location] = altar
+        altars[locKey(location)] = altar
         
         player.sendMessage(Component.text("Summoning Altar created!", NamedTextColor.GREEN))
         player.sendMessage(Component.text("Right-click with Nether Star to activate portal.", NamedTextColor.GRAY))

@@ -172,6 +172,9 @@ class AtlasPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(builderModeManager, this)
         logger.info("Builder Mode System enabled!")
         
+        // Passive Border Visualization (Proximity based)
+        com.projectatlas.visual.CityBorderVisualizer(this).runTaskTimer(this, 100L, 10L)
+        
         val entityCleanupManager = com.projectatlas.util.EntityCleanupManager(this) // Auto-starts task
         globalThreatManager = com.projectatlas.threat.GlobalThreatManager(this) // Starts threat loop
 

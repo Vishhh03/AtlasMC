@@ -20,7 +20,12 @@ enum class StructureType(val width: Int, val height: Int, val depth: Int) {
     WALL_CORNER(3, 4, 3), // Corner piece
     GATE(3, 5, 1),        // Player-activatable gate
     RAMP(3, 3, 5),        // Sloped access ramp
-    WATCHTOWER(5, 10, 5)  // Tall observation tower
+    WATCHTOWER(5, 10, 5), // Tall observation tower
+    
+    // Tools
+    TOOL_REPAIR(1, 1, 1),
+    TOOL_MOVE(1, 1, 1),
+    TOOL_DELETE(1, 1, 1)
 }
 
 class StructureManager(private val plugin: AtlasPlugin) {
@@ -49,9 +54,14 @@ class StructureManager(private val plugin: AtlasPlugin) {
             StructureType.GATE -> buildGate(startLoc)
             StructureType.RAMP -> buildRamp(startLoc)
             StructureType.WATCHTOWER -> buildWatchtower(startLoc)
+            else -> {}
         }
         
         // Register Health
+        registerStructureHealth(type, startLoc)
+    }
+
+    fun registerStructureHealth(type: StructureType, center: Location) {
         val maxHealth = when (type) {
             StructureType.NEXUS, StructureType.GENERATOR -> 500.0
             StructureType.BARRACKS -> 300.0
@@ -62,8 +72,8 @@ class StructureManager(private val plugin: AtlasPlugin) {
             StructureType.RAMP -> 80.0
             else -> 100.0
         }
-        val radius = kotlin.math.max(type.width, type.depth) / 1.5 // Approx radius covering most of it
-        plugin.structureHealthManager.registerStructure(java.util.UUID.randomUUID(), type, maxHealth, startLoc, radius)
+        val radius = kotlin.math.max(type.width, type.depth) / 1.5 
+        plugin.structureHealthManager.registerStructure(java.util.UUID.randomUUID(), type, maxHealth, center, radius)
     }
     
     fun canBuild(location: Location, type: StructureType): Boolean {

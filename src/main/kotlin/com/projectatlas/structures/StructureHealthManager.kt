@@ -67,6 +67,18 @@ class StructureHealthManager(private val plugin: AtlasPlugin) {
         
         return health.getPhase()
     }
+
+    fun repairStructure(id: UUID, amount: Double): DamagePhase? {
+        val health = healthMap[id] ?: return null
+        
+        health.currentHealth = (health.currentHealth + amount).coerceAtMost(health.maxHealth)
+        
+        if (health.currentHealth > 0) {
+            health.isRuined = false
+        }
+        
+        return health.getPhase()
+    }
     
     fun getHealth(id: UUID): StructureHealth? = healthMap[id]
     

@@ -1,0 +1,17 @@
+> Task :checkKotlinGradlePluginConfigurationErrors SKIPPED
+
+> Task :compileKotlin
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/city/BuilderModeManager.kt:918:52 'fun String.toLowerCase(): String' is deprecated. Use lowercase() instead.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/city/BuilderModeManager.kt:918:66 'fun String.capitalize(): String' is deprecated. Use replaceFirstChar instead.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/dialogue/CinematicDialogueManager.kt:14:8 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/dialogue/CinematicDialogueManager.kt:146:23 'class AsyncPlayerChatEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/items/DeathCompassManager.kt:14:8 'class PlayerPickupItemEvent : PlayerEvent, Cancellable' is deprecated. Deprecated in Java.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/AtlasCommand.kt:659:25 Condition is always 'false'.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/AtlasCommand.kt:1387:73 'static fun valueOf(p0: @NotNull() String): @NotNull() Villager.Profession' is deprecated. Deprecated in Java.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/AtlasCommand.kt:1807:67 'static fun values(): (Array<@NotNull() Villager.Profession>..Array<out @NotNull() Villager.Profession>?)' is deprecated. Deprecated in Java.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/city/CityManager.kt:486:21 Condition is always 'false'.
+w: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/city/CityManager.kt:489:21 Condition is always 'false'.
+
+BUILD SUCCESSFUL in 10s
+1 actionable task: 1 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.2.1/userguide/configuration_cache_enabling.html
