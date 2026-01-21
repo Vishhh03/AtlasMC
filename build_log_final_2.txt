@@ -2,7 +2,6 @@
 > Task :processResources UP-TO-DATE
 
 > Task :compileKotlin FAILED
-e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/events/SupplyDropEvent.kt:328:31 Unresolved reference 'uniqueId'.
 e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/events/SupplyDropEvent.kt:331:5 Syntax error: Expecting a top level declaration.
 e: file:///C:/Users/visha/Desktop/Mc_Plugin/src/main/kotlin/com/projectatlas/events/SupplyDropEvent.kt:332:1 Syntax error: Expecting a top level declaration.
 
@@ -19,5 +18,5 @@ Execution failed for task ':compileKotlin'.
 > Run with --scan to generate a Build Scan (powered by Develocity).
 > Get more help at https://help.gradle.org.
 
-BUILD FAILED in 3s
+BUILD FAILED in 1s
 2 actionable tasks: 1 executed, 1 up-to-date

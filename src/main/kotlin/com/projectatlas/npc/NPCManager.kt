@@ -250,13 +250,8 @@ class NPCManager(private val plugin: AtlasPlugin) : Listener {
             
             if (plugin.economyManager.withdraw(player.uniqueId, price.toDouble())) {
                 // Give Item
-                val give = clickedItem.clone()
-                // Remove price tag lore
-                val lore = give.lore() ?: mutableListOf()
-                if (lore.size >= 2) {
-                   val newLore = lore.dropLast(2)
-                   give.lore(newLore)
-                }
+                // Create a FRESH item so it stacks with vanilla items (removes name, price lore, PDC)
+                val give = org.bukkit.inventory.ItemStack(clickedItem.type, clickedItem.amount)
                 
                 // Add to inventory
                 val left = player.inventory.addItem(give)

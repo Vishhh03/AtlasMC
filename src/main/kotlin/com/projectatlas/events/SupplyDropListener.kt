@@ -47,24 +47,44 @@ class SupplyDropListener(private val plugin: AtlasPlugin) : Listener {
     }
 
     private fun updateGuardianGlowing() {
+        // 1. Guardian Glowing (reduced range to 20)
         supplyDropGuardians.values.forEach { guardianSet ->
             guardianSet.forEach { uuid ->
                 val entity = plugin.server.getEntity(uuid) as? LivingEntity ?: return@forEach
                 if (!entity.isValid) return@forEach
                 
                 // Check for nearby players
-                val nearbyPlayer = entity.getNearbyEntities(40.0, 40.0, 40.0).any { it is Player }
+                val nearbyPlayer = entity.getNearbyEntities(20.0, 20.0, 20.0).any { it is Player }
                 
                 if (nearbyPlayer) {
-                    // Apply glowing for 2.5 seconds (overlapping slightly with 2s task)
+                    // Apply glowing for 2.5 seconds
                     entity.addPotionEffect(org.bukkit.potion.PotionEffect(
                         org.bukkit.potion.PotionEffectType.GLOWING, 
-                        50, // 2.5s
+                        50, 
                         0, 
                         false, 
-                        false // No Particles
+                        false 
                     ))
                 }
+            }
+        }
+        
+        // 2. Chest Visibility (Particles)
+        supplyDropGuardians.keys.forEach { locKey ->
+            val parts = locKey.split(",")
+            if (parts.size != 4) return@forEach
+            
+            val world = plugin.server.getWorld(parts[3]) ?: return@forEach
+            val x = parts[0].toIntOrNull() ?: return@forEach
+            val y = parts[1].toIntOrNull() ?: return@forEach
+            val z = parts[2].toIntOrNull() ?: return@forEach
+            val loc = org.bukkit.Location(world, x.toDouble() + 0.5, y.toDouble() + 1.0, z.toDouble() + 0.5)
+            
+            // Check for nearby players within 20 blocks
+            if (world.getNearbyEntities(loc, 20.0, 20.0, 20.0).any { it is Player }) {
+                // Play Beacon-like particles
+                world.spawnParticle(org.bukkit.Particle.END_ROD, loc, 5, 0.2, 0.5, 0.2, 0.05)
+                world.spawnParticle(org.bukkit.Particle.GLOW, loc, 3, 0.3, 0.3, 0.3, 0.05)
             }
         }
     }
@@ -134,6 +154,35 @@ class SupplyDropListener(private val plugin: AtlasPlugin) : Listener {
         // Remove from all tracked supply drops
         supplyDropGuardians.values.forEach { guardianSet ->
             guardianSet.remove(entity.uniqueId)
+        }
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL)
+    fun onEntityTarget(event: org.bukkit.event.entity.EntityTargetLivingEntityEvent) {
+        val entity = event.entity
+        val target = event.target ?: return
+        
+        // 1. Check if attacker is a Guardian
+        if (!entity.persistentDataContainer.has(guardKey, PersistentDataType.BYTE)) return
+        
+        // 2. Check if target is also a Guardian (Redundant with Team logic but safer for AI)
+        if (target.persistentDataContainer.has(guardKey, PersistentDataType.BYTE)) {
+            event.isCancelled = true
+            return
+        }
+        
+        // 3. Check if target is a Quest NPC
+        // Method A: Check for "atlas_npc" tag (Best)
+        val npcKey = NamespacedKey(plugin, "atlas_npc")
+        if (target.persistentDataContainer.has(npcKey, PersistentDataType.STRING)) {
+            event.isCancelled = true
+            return
+        }
+        
+        // Method B: Fallback - Don't attack any Villagers with custom names (Likely NPCs)
+        if (target is org.bukkit.entity.Villager && target.customName() != null) {
+             event.isCancelled = true
+             return
         }
     }
     

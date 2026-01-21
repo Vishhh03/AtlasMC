@@ -1,391 +1,61 @@
-[19:31:57] [ServerMain/INFO]: [bootstrap] Running Java 23 (Java HotSpot(TM) 64-Bit Server VM 23.0.1+11-39; Oracle Corporation null) on Windows 11 10.0 (amd64)
-[19:31:57] [ServerMain/INFO]: [bootstrap] Loading Paper 1.21.11-69-main@94d0c97 (2025-12-30T20:33:30Z) for Minecraft 1.21.11
-[19:31:58] [ServerMain/INFO]: [PluginInitializerManager] Initializing plugins...
-[19:31:58] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Remapping plugin 'plugins\ProjectAtlas.jar'...
-[19:32:00] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Done remapping plugin 'plugins\ProjectAtlas.jar' in 1662ms.
-[19:32:00] [ServerMain/INFO]: [PluginInitializerManager] Initialized 1 plugin
-[19:32:00] [ServerMain/INFO]: [PluginInitializerManager] Bukkit plugins (1):
+[22:50:10] [ServerMain/INFO]: [bootstrap] Running Java 23 (Java HotSpot(TM) 64-Bit Server VM 23.0.1+11-39; Oracle Corporation null) on Windows 11 10.0 (amd64)
+[22:50:10] [ServerMain/INFO]: [bootstrap] Loading Paper 1.21.11-69-main@94d0c97 (2025-12-30T20:33:30Z) for Minecraft 1.21.11
+[22:50:11] [ServerMain/INFO]: [PluginInitializerManager] Initializing plugins...
+[22:50:11] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Remapping plugin 'plugins\ProjectAtlas.jar'...
+[22:50:13] [Paper Plugin Remapper Thread - 2/INFO]: [PluginRemapper] Done remapping plugin 'plugins\ProjectAtlas.jar' in 1471ms.
+[22:50:13] [ServerMain/INFO]: [PluginInitializerManager] Initialized 1 plugin
+[22:50:13] [ServerMain/INFO]: [PluginInitializerManager] Bukkit plugins (1):
  - ProjectAtlas (1.0-SNAPSHOT)
-[19:32:23] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
-[19:32:25] [ServerMain/INFO]: Loaded 1470 recipes
-[19:32:25] [ServerMain/INFO]: Loaded 1584 advancements
-[19:32:25] [ServerMain/INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Initialising converters for DataConverter...
-[19:32:25] [ServerMain/INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Finished initialising converters for DataConverter in 316.3ms
-[19:32:25] [Server thread/INFO]: Starting minecraft server version 1.21.11
-[19:32:25] [Server thread/INFO]: Loading properties
-[19:32:25] [Server thread/INFO]: This server is running Paper version 1.21.11-69-main@94d0c97 (2025-12-30T20:33:30Z) (Implementing API version 1.21.11-R0.1-SNAPSHOT)
-[19:32:25] [Server thread/INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
-[19:32:25] [Server thread/INFO]: Server Ping Player Sample Count: 12
-[19:32:25] [Server thread/INFO]: Using 4 threads for Netty based IO
-[19:32:26] [Server thread/INFO]: [MoonriseCommon] Paper is using 3 worker threads, 1 I/O threads
-[19:32:26] [Server thread/INFO]: Default game type: SURVIVAL
-[19:32:26] [Server thread/INFO]: Generating keypair
-[19:32:26] [Server thread/INFO]: Starting Minecraft server on *:25565
-[19:32:26] [Server thread/INFO]: Paper: Using Java compression from Velocity.
-[19:32:26] [Server thread/INFO]: Paper: Using Java cipher from Velocity.
-[19:32:27] [Server thread/INFO]: [ProjectAtlas] Loading server plugin ProjectAtlas v1.0-SNAPSHOT
-[19:32:27] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
-[19:32:27] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
-[19:32:27] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
-[19:32:27] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
-[19:32:27] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
-[19:32:27] [Server thread/INFO]: Preparing level "world"
-[19:32:27] [Server thread/INFO]: Loading 0 persistent chunks for world 'minecraft:overworld'...
-[19:32:27] [Server thread/INFO]: Preparing spawn area: 100%
-[19:32:27] [Server thread/INFO]: Prepared spawn area in 2 ms
-[19:32:27] [Server thread/INFO]: Loading 0 persistent chunks for world 'minecraft:the_nether'...
-[19:32:27] [Server thread/INFO]: Prepared spawn area in 1 ms
-[19:32:27] [Server thread/INFO]: Loading 0 persistent chunks for world 'minecraft:the_end'...
-[19:32:27] [Server thread/INFO]: Prepared spawn area in 0 ms
-[19:32:27] [Server thread/INFO]: Done preparing level "world" (0.546s)
-[19:32:27] [Server thread/INFO]: [ProjectAtlas] Enabling ProjectAtlas v1.0-SNAPSHOT
-[19:32:27] [Server thread/INFO]: [ProjectAtlas] Project Atlas is waking up...
-[19:32:27] [Server thread/INFO]: [ProjectAtlas] Configuration loaded successfully!
-[19:32:28] [Server thread/INFO]: [ProjectAtlas] Loaded 7 NPCs
-[19:32:28] [Server thread/INFO]: [ProjectAtlas] Registered Recall Totem recipe!
-[19:32:28] [Server thread/INFO]: [ProjectAtlas] PacketManager enabled with native Display Entities!
-[19:32:28] [Server thread/INFO]: [ProjectAtlas] MobCustomizer enabled!
-[19:32:28] [Server thread/INFO]: [ProjectAtlas] Animation System initialized with 26 animations and 14 model blueprints!
-[19:32:28] [Server thread/INFO]: [ProjectAtlas] Animation System enabled with 26 animations and 14 model blueprints!
-[19:32:28] [Server thread/INFO]: [ProjectAtlas] Skill Effect System enabled!
-[19:32:28] [Server thread/INFO]: [ProjectAtlas] Builder Mode System enabled!
-[19:32:28] [Server thread/INFO]: [ProjectAtlas] Registered 6 siege equipment recipes!
-[19:32:28] [Server thread/INFO]: [ProjectAtlas] Custom Item System enabled (DeathCompass, HealingSalve, SpiritTotem, ExplorerCompass)!
-[19:32:28] [Server thread/INFO]: [ProjectAtlas] AtlasPlugin enabled successfully!
-[19:32:28] [Server thread/WARN]: Typewriter plugin not found. Visuals will be disabled.
-[19:32:28] [Server thread/INFO]: [ProjectAtlas] Project Atlas has fully loaded v1.3 - Dungeon Update!
-[19:32:29] [Server thread/INFO]: [spark] Starting background profiler...
-[19:32:29] [Server thread/INFO]: [spark] The async-profiler engine is not supported for your os/arch (windows11/amd64), so the built-in Java engine will be used instead.
-[19:32:29] [Server thread/INFO]: Running delayed init tasks
-[19:32:29] [Server thread/INFO]: Done (33.089s)! For help, type "help"
-[19:32:35] [User Authenticator #0/INFO]: UUID of player VishShaji is eb432bf4-697b-3788-bb81-22c8915b3256
-[19:32:36] [Server thread/INFO]: VishShaji joined the game
-[19:32:37] [Server thread/INFO]: VishShaji[/127.0.0.1:63056] logged in with entity id 124 at ([world]-29.072730853778836, 96.73746760401228, -8.315925574342847)
-[19:32:58] [Server thread/INFO]: VishShaji issued server command: /atlas build
-[19:35:29] [Server thread/INFO]: [ProjectAtlas] Cleaned up 2 expired entities.
-[19:36:18] [Server thread/INFO]: VishShaji issued server command: /atlas build exit
-[19:36:33] [Server thread/INFO]: [VishShaji: Set own game mode to Survival Mode]
-[19:36:59] [Server thread/INFO]: [ProjectAtlas] Quest board spawned: Bone Collectors at 121, 66, -36
-[19:37:29] [Server thread/INFO]: [ProjectAtlas] Supply drop (COMMON) spawned at 406, 69, 331
-[19:37:39] [Server thread/INFO]: [VishShaji: Set own game mode to Creative Mode]
-[19:38:53] [Server thread/INFO]: [VishShaji: Set own game mode to Survival Mode]
-[19:38:59] [Server thread/INFO]: [ProjectAtlas] Quest board spawned: Poultry Problem at 468, 63, 381
-[19:39:43] [Server thread/INFO]: [VishShaji: Set own game mode to Creative Mode]
-[19:40:11] [Server thread/INFO]: [VishShaji: Set own game mode to Survival Mode]
-[19:41:29] [Server thread/INFO]: [ProjectAtlas] Cleaned up 2 expired entities.
-[19:41:42] [Server thread/INFO]: VishShaji issued server command: /atlas admin
-[19:41:54] [Server thread/INFO]: VishShaji issued server command: /atlas admin
-[19:42:12] [Server thread/INFO]: VishShaji issued server command: /atlas dialogue trade temp_99daf7d3-3e38-4648-b5c7-c0fbce7eb651
-[19:42:17] [Server thread/INFO]: Villager Villager['Traveling Merchant'/14581, uuid='20668a6c-01e0-4df5-a8ce-029440b9b2f3', l='ServerLevel[world]', x=416.78, y=64.00, z=174.82, cpos=[26, 10], tl=372, v=true] died, message: 'Traveling Merchant was blown up by Creeper'
-[19:42:17] [Server thread/INFO]: Named entity Villager['Traveling Merchant'/14581, uuid='20668a6c-01e0-4df5-a8ce-029440b9b2f3', l='ServerLevel[world]', x=416.78, y=64.00, z=174.82, cpos=[26, 10], tl=372, v=true] died: Traveling Merchant was blown up by Creeper
-[19:42:20] [Server thread/INFO]: VishShaji issued server command: /atlas dialogue trade temp_99daf7d3-3e38-4648-b5c7-c0fbce7eb651
-[19:42:39] [Server thread/INFO]: Named entity Vindicator['Elite Bandit'/14650, uuid='342a6859-ea18-4b81-8461-42c48a500a8f', l='ServerLevel[world]', x=409.15, y=64.00, z=187.30, cpos=[25, 11], tl=203, v=true] died: Elite Bandit was slain by VishShaji using [Warden Flame Sword]
-[19:42:57] [Server thread/INFO]: Named entity Vindicator['Elite Bandit'/14652, uuid='4e3d7ae9-f220-4f52-a368-518eca31ea3c', l='ServerLevel[world]', x=419.09, y=64.00, z=192.54, cpos=[26, 12], tl=568, v=true] died: Elite Bandit was slain by VishShaji using [Warden Flame Sword]
-[19:43:03] [Server thread/INFO]: Named entity Vindicator['Elite Bandit'/14651, uuid='4ecc21ed-cf2b-4443-8f2e-75cd43067469', l='ServerLevel[world]', x=425.95, y=64.00, z=200.72, cpos=[26, 12], tl=682, v=true] died: Elite Bandit was slain by VishShaji using [Hollow Knight Blade]
-[19:47:29] [Server thread/INFO]: [ProjectAtlas] Cleaned up 3 expired entities.
-[19:48:13] [Server thread/INFO]: VishShaji was blown up by Creeper
-[19:51:29] [Server thread/INFO]: [ProjectAtlas] Quest board spawned: Jungle Fever at 377, 68, 140
-[19:53:29] [Server thread/INFO]: VishShaji is now AFK
-[20:00:59] [Server thread/INFO]: [ProjectAtlas] [DeathCompass] Gave death compass to VishShaji
-[20:01:00] [Server thread/INFO]: VishShaji is no longer AFK
-[20:01:58] [Server thread/INFO]: VishShaji issued server command: /atlas dialogue trade temp_99daf7d3-3e38-4648-b5c7-c0fbce7eb651
-[20:02:19] [Server thread/INFO]: VishShaji issued server command: /atlas debug
-[20:02:19] [Server thread/INFO]: [TEXTURE DEBUG] NETHERITE_SWORD has NO CustomModelData (Using Item Model?)
-[20:02:19] [Server thread/INFO]: [TEXTURE DEBUG] NETHERITE_SWORD has NO CustomModelData (Using Item Model?)
-[20:02:19] [Server thread/INFO]: [TEXTURE DEBUG] NETHERITE_SWORD has NO CustomModelData (Using Item Model?)
-[20:02:19] [Server thread/INFO]: [TEXTURE DEBUG] NETHERITE_SWORD has NO CustomModelData (Using Item Model?)
-[20:02:19] [Server thread/INFO]: [TEXTURE DEBUG] Gave VishShaji full texture test kit (16 items)
-[20:03:45] [Server thread/INFO]: VishShaji issued server command: /atlas dialogue trade temp_99daf7d3-3e38-4648-b5c7-c0fbce7eb651
-[20:05:26] [Server thread/INFO]: [VishShaji: Set own game mode to Creative Mode]
-[20:06:04] [Server thread/INFO]: [VishShaji: Set own game mode to Survival Mode]
-[20:07:29] [Server thread/INFO]: [ProjectAtlas] Supply drop (LEGENDARY) spawned at -158, 73, 413
-[20:07:59] [Server thread/INFO]: [ProjectAtlas] [CustomItem] VishShaji was saved by Spirit Totem
-[20:08:10] [Server thread/INFO]: VishShaji was slain by Zombie
-[20:13:25] [Server thread/INFO]: [ProjectAtlas] [DeathCompass] Gave death compass to VishShaji
-[20:13:41] [Server thread/INFO]: [ProjectAtlas] [CustomItem] VishShaji located Village plains at 72 blocks
-[20:14:38] [Server thread/INFO]: [VishShaji: Set own game mode to Creative Mode]
-[20:14:56] [Server thread/INFO]: [VishShaji: Set own game mode to Survival Mode]
-[20:16:04] [Server thread/INFO]: [VishShaji: Set own game mode to Creative Mode]
-[20:16:11] [Server thread/INFO]: VishShaji has made the advancement [Who is Cutting Onions?]
-[20:16:14] [Server thread/INFO]: [VishShaji: Set own game mode to Survival Mode]
-[20:16:37] [Server thread/INFO]: [VishShaji: Set own game mode to Creative Mode]
-[20:18:11] [Server thread/ERROR]: Could not pass event PlayerInteractEvent to ProjectAtlas v1.0-SNAPSHOT
-java.lang.IllegalArgumentException: missing required data class java.lang.Float
-	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:217) ~[guava-33.5.0-jre.jar:?]
-	at org.bukkit.craftbukkit.CraftParticle.createParticleParam(CraftParticle.java:70) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1785) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4157) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1773) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4007) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.World.spawnParticle(World.java:3986) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.activateAltar(SummoningAltarManager.kt:178) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.handleAltarInteraction(SummoningAltarManager.kt:139) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.onInteract(SummoningAltarManager.kt:63) ~[?:?]
-	at co.aikar.timings.TimedEventExecutor.execute(TimedEventExecutor.java:80) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:71) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at io.papermc.paper.plugin.manager.PaperEventManager.callEvent(PaperEventManager.java:54) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at io.papermc.paper.plugin.manager.PaperPluginManagerImpl.callEvent(PaperPluginManagerImpl.java:131) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:628) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerInteractEvent(CraftEventFactory.java:654) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.level.ServerPlayerGameMode.useItemOn(ServerPlayerGameMode.java:507) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.network.ServerGamePacketListenerImpl.handleUseItemOn(ServerGamePacketListenerImpl.java:2089) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:45) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:10) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor$ListenerAndPacket.handle(PacketProcessor.java:99) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor.executeSinglePacket(PacketProcessor.java:33) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.pollTask(MinecraftServer.java:1501) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.recordTaskExecutionTimeWhileWaiting(MinecraftServer.java:1232) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1343) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:388) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at java.base/java.lang.Thread.run(Thread.java:1575) ~[?:?]
-[20:18:13] [Server thread/ERROR]: Could not pass event PlayerInteractEvent to ProjectAtlas v1.0-SNAPSHOT
-java.lang.IllegalArgumentException: missing required data class java.lang.Float
-	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:217) ~[guava-33.5.0-jre.jar:?]
-	at org.bukkit.craftbukkit.CraftParticle.createParticleParam(CraftParticle.java:70) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1785) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4157) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1773) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4007) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.World.spawnParticle(World.java:3986) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.activateAltar(SummoningAltarManager.kt:178) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.handleAltarInteraction(SummoningAltarManager.kt:139) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.onInteract(SummoningAltarManager.kt:63) ~[?:?]
-	at co.aikar.timings.TimedEventExecutor.execute(TimedEventExecutor.java:80) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:71) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at io.papermc.paper.plugin.manager.PaperEventManager.callEvent(PaperEventManager.java:54) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at io.papermc.paper.plugin.manager.PaperPluginManagerImpl.callEvent(PaperPluginManagerImpl.java:131) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:628) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerInteractEvent(CraftEventFactory.java:654) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.level.ServerPlayerGameMode.useItemOn(ServerPlayerGameMode.java:507) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.network.ServerGamePacketListenerImpl.handleUseItemOn(ServerGamePacketListenerImpl.java:2089) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:45) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:10) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor$ListenerAndPacket.handle(PacketProcessor.java:99) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor.executeSinglePacket(PacketProcessor.java:33) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.pollTask(MinecraftServer.java:1501) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.recordTaskExecutionTimeWhileWaiting(MinecraftServer.java:1232) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1343) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:388) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at java.base/java.lang.Thread.run(Thread.java:1575) ~[?:?]
-[20:18:22] [Server thread/ERROR]: Could not pass event PlayerInteractEvent to ProjectAtlas v1.0-SNAPSHOT
-java.lang.IllegalArgumentException: missing required data class java.lang.Float
-	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:217) ~[guava-33.5.0-jre.jar:?]
-	at org.bukkit.craftbukkit.CraftParticle.createParticleParam(CraftParticle.java:70) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1785) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4157) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1773) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4007) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.World.spawnParticle(World.java:3986) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.activateAltar(SummoningAltarManager.kt:178) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.handleAltarInteraction(SummoningAltarManager.kt:139) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.onInteract(SummoningAltarManager.kt:63) ~[?:?]
-	at co.aikar.timings.TimedEventExecutor.execute(TimedEventExecutor.java:80) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:71) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at io.papermc.paper.plugin.manager.PaperEventManager.callEvent(PaperEventManager.java:54) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at io.papermc.paper.plugin.manager.PaperPluginManagerImpl.callEvent(PaperPluginManagerImpl.java:131) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:628) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerInteractEvent(CraftEventFactory.java:654) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.level.ServerPlayerGameMode.useItemOn(ServerPlayerGameMode.java:507) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.network.ServerGamePacketListenerImpl.handleUseItemOn(ServerGamePacketListenerImpl.java:2089) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:45) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:10) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor$ListenerAndPacket.handle(PacketProcessor.java:99) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor.executeSinglePacket(PacketProcessor.java:33) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.pollTask(MinecraftServer.java:1501) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.recordTaskExecutionTimeWhileWaiting(MinecraftServer.java:1232) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1343) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:388) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at java.base/java.lang.Thread.run(Thread.java:1575) ~[?:?]
-[20:18:22] [Server thread/ERROR]: Could not pass event PlayerInteractEvent to ProjectAtlas v1.0-SNAPSHOT
-java.lang.IllegalArgumentException: missing required data class java.lang.Float
-	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:217) ~[guava-33.5.0-jre.jar:?]
-	at org.bukkit.craftbukkit.CraftParticle.createParticleParam(CraftParticle.java:70) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1785) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4157) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1773) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4007) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.World.spawnParticle(World.java:3986) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.activateAltar(SummoningAltarManager.kt:178) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.handleAltarInteraction(SummoningAltarManager.kt:139) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.onInteract(SummoningAltarManager.kt:63) ~[?:?]
-	at co.aikar.timings.TimedEventExecutor.execute(TimedEventExecutor.java:80) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:71) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at io.papermc.paper.plugin.manager.PaperEventManager.callEvent(PaperEventManager.java:54) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at io.papermc.paper.plugin.manager.PaperPluginManagerImpl.callEvent(PaperPluginManagerImpl.java:131) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:628) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerInteractEvent(CraftEventFactory.java:654) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.level.ServerPlayerGameMode.useItemOn(ServerPlayerGameMode.java:507) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.network.ServerGamePacketListenerImpl.handleUseItemOn(ServerGamePacketListenerImpl.java:2089) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:45) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:10) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor$ListenerAndPacket.handle(PacketProcessor.java:99) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor.executeSinglePacket(PacketProcessor.java:33) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.pollTask(MinecraftServer.java:1501) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.recordTaskExecutionTimeWhileWaiting(MinecraftServer.java:1232) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1343) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:388) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at java.base/java.lang.Thread.run(Thread.java:1575) ~[?:?]
-[20:18:22] [Server thread/ERROR]: Could not pass event PlayerInteractEvent to ProjectAtlas v1.0-SNAPSHOT
-java.lang.IllegalArgumentException: missing required data class java.lang.Float
-	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:217) ~[guava-33.5.0-jre.jar:?]
-	at org.bukkit.craftbukkit.CraftParticle.createParticleParam(CraftParticle.java:70) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1785) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4157) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1773) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4007) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.World.spawnParticle(World.java:3986) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.activateAltar(SummoningAltarManager.kt:178) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.handleAltarInteraction(SummoningAltarManager.kt:139) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.onInteract(SummoningAltarManager.kt:63) ~[?:?]
-	at co.aikar.timings.TimedEventExecutor.execute(TimedEventExecutor.java:80) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:71) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at io.papermc.paper.plugin.manager.PaperEventManager.callEvent(PaperEventManager.java:54) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at io.papermc.paper.plugin.manager.PaperPluginManagerImpl.callEvent(PaperPluginManagerImpl.java:131) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:628) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerInteractEvent(CraftEventFactory.java:654) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.level.ServerPlayerGameMode.useItemOn(ServerPlayerGameMode.java:507) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.network.ServerGamePacketListenerImpl.handleUseItemOn(ServerGamePacketListenerImpl.java:2089) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:45) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:10) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor$ListenerAndPacket.handle(PacketProcessor.java:99) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor.executeSinglePacket(PacketProcessor.java:33) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.pollTask(MinecraftServer.java:1501) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.recordTaskExecutionTimeWhileWaiting(MinecraftServer.java:1232) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1343) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:388) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at java.base/java.lang.Thread.run(Thread.java:1575) ~[?:?]
-[20:18:22] [Server thread/ERROR]: Could not pass event PlayerInteractEvent to ProjectAtlas v1.0-SNAPSHOT
-java.lang.IllegalArgumentException: missing required data class java.lang.Float
-	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:217) ~[guava-33.5.0-jre.jar:?]
-	at org.bukkit.craftbukkit.CraftParticle.createParticleParam(CraftParticle.java:70) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1785) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4157) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1773) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4007) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.World.spawnParticle(World.java:3986) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.activateAltar(SummoningAltarManager.kt:178) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.handleAltarInteraction(SummoningAltarManager.kt:139) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.onInteract(SummoningAltarManager.kt:63) ~[?:?]
-	at co.aikar.timings.TimedEventExecutor.execute(TimedEventExecutor.java:80) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:71) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at io.papermc.paper.plugin.manager.PaperEventManager.callEvent(PaperEventManager.java:54) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at io.papermc.paper.plugin.manager.PaperPluginManagerImpl.callEvent(PaperPluginManagerImpl.java:131) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:628) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerInteractEvent(CraftEventFactory.java:654) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.level.ServerPlayerGameMode.useItemOn(ServerPlayerGameMode.java:507) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.network.ServerGamePacketListenerImpl.handleUseItemOn(ServerGamePacketListenerImpl.java:2089) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:45) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:10) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor$ListenerAndPacket.handle(PacketProcessor.java:99) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor.executeSinglePacket(PacketProcessor.java:33) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.pollTask(MinecraftServer.java:1501) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.recordTaskExecutionTimeWhileWaiting(MinecraftServer.java:1232) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1343) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:388) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at java.base/java.lang.Thread.run(Thread.java:1575) ~[?:?]
-[20:18:23] [Server thread/ERROR]: Could not pass event PlayerInteractEvent to ProjectAtlas v1.0-SNAPSHOT
-java.lang.IllegalArgumentException: missing required data class java.lang.Float
-	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:217) ~[guava-33.5.0-jre.jar:?]
-	at org.bukkit.craftbukkit.CraftParticle.createParticleParam(CraftParticle.java:70) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1785) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4157) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1773) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4007) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.World.spawnParticle(World.java:3986) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.activateAltar(SummoningAltarManager.kt:178) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.handleAltarInteraction(SummoningAltarManager.kt:139) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.onInteract(SummoningAltarManager.kt:63) ~[?:?]
-	at co.aikar.timings.TimedEventExecutor.execute(TimedEventExecutor.java:80) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:71) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at io.papermc.paper.plugin.manager.PaperEventManager.callEvent(PaperEventManager.java:54) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at io.papermc.paper.plugin.manager.PaperPluginManagerImpl.callEvent(PaperPluginManagerImpl.java:131) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:628) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerInteractEvent(CraftEventFactory.java:654) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.level.ServerPlayerGameMode.useItemOn(ServerPlayerGameMode.java:507) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.network.ServerGamePacketListenerImpl.handleUseItemOn(ServerGamePacketListenerImpl.java:2089) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:45) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:10) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor$ListenerAndPacket.handle(PacketProcessor.java:99) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor.executeSinglePacket(PacketProcessor.java:33) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.pollTask(MinecraftServer.java:1501) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.recordTaskExecutionTimeWhileWaiting(MinecraftServer.java:1232) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1343) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:388) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at java.base/java.lang.Thread.run(Thread.java:1575) ~[?:?]
-[20:18:23] [Server thread/ERROR]: Could not pass event PlayerInteractEvent to ProjectAtlas v1.0-SNAPSHOT
-java.lang.IllegalArgumentException: missing required data class java.lang.Float
-	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:217) ~[guava-33.5.0-jre.jar:?]
-	at org.bukkit.craftbukkit.CraftParticle.createParticleParam(CraftParticle.java:70) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1785) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4157) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1773) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4007) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.World.spawnParticle(World.java:3986) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.activateAltar(SummoningAltarManager.kt:178) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.handleAltarInteraction(SummoningAltarManager.kt:139) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.onInteract(SummoningAltarManager.kt:63) ~[?:?]
-	at co.aikar.timings.TimedEventExecutor.execute(TimedEventExecutor.java:80) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:71) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at io.papermc.paper.plugin.manager.PaperEventManager.callEvent(PaperEventManager.java:54) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at io.papermc.paper.plugin.manager.PaperPluginManagerImpl.callEvent(PaperPluginManagerImpl.java:131) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:628) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerInteractEvent(CraftEventFactory.java:654) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.level.ServerPlayerGameMode.useItemOn(ServerPlayerGameMode.java:507) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.network.ServerGamePacketListenerImpl.handleUseItemOn(ServerGamePacketListenerImpl.java:2089) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:45) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:10) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor$ListenerAndPacket.handle(PacketProcessor.java:99) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor.executeSinglePacket(PacketProcessor.java:33) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.pollTask(MinecraftServer.java:1501) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.recordTaskExecutionTimeWhileWaiting(MinecraftServer.java:1232) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1343) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:388) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at java.base/java.lang.Thread.run(Thread.java:1575) ~[?:?]
-[20:18:38] [Server thread/ERROR]: Could not pass event PlayerInteractEvent to ProjectAtlas v1.0-SNAPSHOT
-java.lang.IllegalArgumentException: missing required data class java.lang.Float
-	at com.google.common.base.Preconditions.checkArgument(Preconditions.java:217) ~[guava-33.5.0-jre.jar:?]
-	at org.bukkit.craftbukkit.CraftParticle.createParticleParam(CraftParticle.java:70) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1785) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4157) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.CraftWorld.spawnParticle(CraftWorld.java:1773) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.World.spawnParticle(World.java:4007) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.World.spawnParticle(World.java:3986) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.activateAltar(SummoningAltarManager.kt:178) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.handleAltarInteraction(SummoningAltarManager.kt:139) ~[?:?]
-	at ProjectAtlas.jar//com.projectatlas.progression.SummoningAltarManager.onInteract(SummoningAltarManager.kt:63) ~[?:?]
-	at co.aikar.timings.TimedEventExecutor.execute(TimedEventExecutor.java:80) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.plugin.RegisteredListener.callEvent(RegisteredListener.java:71) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at io.papermc.paper.plugin.manager.PaperEventManager.callEvent(PaperEventManager.java:54) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at io.papermc.paper.plugin.manager.PaperPluginManagerImpl.callEvent(PaperPluginManagerImpl.java:131) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at org.bukkit.plugin.SimplePluginManager.callEvent(SimplePluginManager.java:628) ~[paper-api-1.21.11-R0.1-SNAPSHOT.jar:?]
-	at org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerInteractEvent(CraftEventFactory.java:654) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.level.ServerPlayerGameMode.useItemOn(ServerPlayerGameMode.java:507) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.network.ServerGamePacketListenerImpl.handleUseItemOn(ServerGamePacketListenerImpl.java:2089) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:45) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.protocol.game.ServerboundUseItemOnPacket.handle(ServerboundUseItemOnPacket.java:10) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor$ListenerAndPacket.handle(PacketProcessor.java:99) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.network.PacketProcessor.executeSinglePacket(PacketProcessor.java:33) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.pollTask(MinecraftServer.java:1501) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.recordTaskExecutionTimeWhileWaiting(MinecraftServer.java:1232) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1343) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:388) ~[paper-1.21.11.jar:1.21.11-69-94d0c97]
-	at java.base/java.lang.Thread.run(Thread.java:1575) ~[?:?]
-[20:18:51] [Server thread/INFO]: [VishShaji: Set own game mode to Survival Mode]
-[20:20:07] [Server thread/INFO]: [VishShaji: Set own game mode to Creative Mode]
-[20:20:15] [Server thread/INFO]: [VishShaji: Set own game mode to Adventure Mode]
-[20:20:17] [Server thread/INFO]: VishShaji fell from a high place
-[20:20:22] [Server thread/INFO]: [ProjectAtlas] [DeathCompass] Gave death compass to VishShaji
-[20:22:59] [Server thread/INFO]: [VishShaji: Set own game mode to Creative Mode]
-[20:23:00] [Server thread/INFO]: [VishShaji: Set own game mode to Adventure Mode]
-[20:23:06] [Server thread/INFO]: [VishShaji: Set own game mode to Survival Mode]
-[20:24:32] [Server thread/INFO]: [ProjectAtlas] Cleaned up 2 expired entities.
-[20:26:45] [Server thread/INFO]: VishShaji was shot by Skeleton
-[20:27:27] [Server thread/INFO]: [ProjectAtlas] [DeathCompass] Gave death compass to VishShaji
-[20:28:15] [Server thread/INFO]: VishShaji was slain by Spider
-[20:29:11] [Server thread/INFO]: [ProjectAtlas] [DeathCompass] Gave death compass to VishShaji
-[20:30:52] [Server thread/INFO]: Stopping server
-[20:30:52] [Server thread/INFO]: [ProjectAtlas] Disabling ProjectAtlas v1.0-SNAPSHOT
-[20:30:52] [Server thread/INFO]: [ProjectAtlas] Project Atlas is shutting down...
-[20:30:52] [Server thread/INFO]: Saving players
-[20:30:52] [Server thread/INFO]: VishShaji lost connection: Server closed
-[20:30:52] [Server thread/INFO]: VishShaji left the game
+[22:50:19] [ServerMain/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[22:50:21] [ServerMain/INFO]: Loaded 1470 recipes
+[22:50:21] [ServerMain/INFO]: Loaded 1584 advancements
+[22:50:21] [ServerMain/INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Initialising converters for DataConverter...
+[22:50:21] [ServerMain/INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Finished initialising converters for DataConverter in 424.4ms
+[22:50:21] [Server thread/INFO]: Starting minecraft server version 1.21.11
+[22:50:21] [Server thread/INFO]: Loading properties
+[22:50:21] [Server thread/INFO]: This server is running Paper version 1.21.11-69-main@94d0c97 (2025-12-30T20:33:30Z) (Implementing API version 1.21.11-R0.1-SNAPSHOT)
+[22:50:21] [Server thread/INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
+[22:50:21] [Server thread/INFO]: Server Ping Player Sample Count: 12
+[22:50:21] [Server thread/INFO]: Using 4 threads for Netty based IO
+[22:50:22] [Server thread/INFO]: [MoonriseCommon] Paper is using 3 worker threads, 1 I/O threads
+[22:50:22] [Server thread/INFO]: Default game type: SURVIVAL
+[22:50:22] [Server thread/INFO]: Generating keypair
+[22:50:22] [Server thread/INFO]: Starting Minecraft server on *:25565
+[22:50:22] [Server thread/INFO]: Paper: Using Java compression from Velocity.
+[22:50:22] [Server thread/INFO]: Paper: Using Java cipher from Velocity.
+[22:50:23] [Server thread/INFO]: [ProjectAtlas] Loading server plugin ProjectAtlas v1.0-SNAPSHOT
+[22:50:23] [Server thread/INFO]: Server permissions file permissions.yml is empty, ignoring it
+[22:50:23] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[22:50:23] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
+[22:50:23] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[22:50:23] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[22:50:23] [Server thread/INFO]: Preparing level "world"
+[22:50:23] [Server thread/INFO]: Loading 0 persistent chunks for world 'minecraft:overworld'...
+[22:50:23] [Server thread/INFO]: Preparing spawn area: 100%
+[22:50:23] [Server thread/INFO]: Prepared spawn area in 2 ms
+[22:50:23] [Server thread/INFO]: Loading 0 persistent chunks for world 'minecraft:the_nether'...
+[22:50:23] [Server thread/INFO]: Prepared spawn area in 2 ms
+[22:50:23] [Server thread/INFO]: Loading 0 persistent chunks for world 'minecraft:the_end'...
+[22:50:23] [Server thread/INFO]: Prepared spawn area in 2 ms
+[22:50:23] [Server thread/INFO]: Done preparing level "world" (0.604s)
+[22:50:23] [Server thread/INFO]: [ProjectAtlas] Enabling ProjectAtlas v1.0-SNAPSHOT
+[22:50:23] [Server thread/INFO]: [ProjectAtlas] Project Atlas is waking up...
+[22:50:24] [Server thread/INFO]: [ProjectAtlas] Configuration loaded successfully!
+[22:50:24] [Server thread/INFO]: [ProjectAtlas] Loaded 8 NPCs
+[22:50:24] [Server thread/INFO]: [ProjectAtlas] Registered Recall Totem recipe!
+[22:50:24] [Server thread/INFO]: [ProjectAtlas] PacketManager enabled with native Display Entities!
+[22:50:24] [Server thread/INFO]: [ProjectAtlas] MobCustomizer enabled!
+[22:50:24] [Server thread/INFO]: [ProjectAtlas] Animation System initialized with 26 animations and 14 model blueprints!
+[22:50:24] [Server thread/INFO]: [ProjectAtlas] Animation System enabled with 26 animations and 14 model blueprints!
+[22:50:24] [Server thread/INFO]: [ProjectAtlas] Skill Effect System enabled!
+[22:50:24] [Server thread/INFO]: [ProjectAtlas] Builder Mode System enabled!
+[22:50:24] [Server thread/INFO]: [ProjectAtlas] Registered 6 siege equipment recipes!
+[22:50:24] [Server thread/INFO]: [ProjectAtlas] Custom Item System enabled (DeathCompass, HealingSalve, SpiritTotem, ExplorerCompass)!
+[22:50:24] [Server thread/INFO]: [ProjectAtlas] AtlasPlugin enabled successfully!
+[22:50:24] [Server thread/WARN]: Typewriter plugin not found. Visuals will be disabled.
+[22:50:25] [Server thread/INFO]: [ProjectAtlas] Project Atlas has fully loaded v1.3 - Dungeon Update!
+[22:50:25] [Server thread/INFO]: [spark] Starting background profiler...
+[22:50:25] [Server thread/INFO]: [spark] The async-profiler engine is not supported for your os/arch (windows11/amd64), so the built-in Java engine will be used instead.
+[22:50:25] [Server thread/INFO]: Running delayed init tasks
+[22:50:25] [Server thread/INFO]: Done (16.101s)! For help, type "help"
+[22:55:26] [Server thread/INFO]: [ProjectAtlas] Supply drop (COMMON) spawned at -117, 73, -39

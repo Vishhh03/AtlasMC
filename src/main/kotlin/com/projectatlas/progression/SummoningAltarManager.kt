@@ -177,7 +177,7 @@ class SummoningAltarManager(private val plugin: AtlasPlugin) : Listener {
         altar.portalEntity = display.uniqueId
         
         loc.world.playSound(loc, Sound.BLOCK_PORTAL_TRIGGER, 1.0f, 0.5f)
-        loc.world.spawnParticle(Particle.DRAGON_BREATH, loc, 50, 0.5, 1.0, 0.5, 0.05)
+        loc.world.spawnParticle(Particle.DRAGON_BREATH, loc, 50, 0.5, 1.0, 0.5)
     }
 
     private fun deactivateAltar(altar: Altar) {

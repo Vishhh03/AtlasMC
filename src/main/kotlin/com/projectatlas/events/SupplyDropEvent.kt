@@ -313,7 +313,19 @@ class SupplyDropEvent(private val plugin: AtlasPlugin) {
                         }
                     }
                 }
+                
+                // --- TEAM ASSIGNMENT (NO FRIENDLY FIRE) ---
+                val scoreboard = plugin.server.scoreboardManager.mainScoreboard
+                var team = scoreboard.getTeam("AtlasGuards")
+                if (team == null) {
+                    team = scoreboard.registerNewTeam("AtlasGuards")
+                    team.setAllowFriendlyFire(false)
+                    team.color(NamedTextColor.RED)
+                    team.setOption(org.bukkit.scoreboard.Team.Option.COLLISION_RULE, org.bukkit.scoreboard.Team.OptionStatus.NEVER) // Prevent pushing each other
+                }
+                team.addEntry(uniqueId.toString())
             }
         }
     }
 }
+
